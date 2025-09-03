@@ -457,12 +457,13 @@
       .message-input {
         padding: 0.75rem 1rem;
         font-size: 0.9rem;
-        min-height: 60px;
+        min-height: 44px; /* Adjusted from 60px for better balance */
       }
 
       .send-button {
         padding: 0.75rem 1.25rem;
         font-size: 0.9rem;
+        min-height: 44px; /* Match input height */
       }
     }
 
@@ -518,16 +519,15 @@
             <textarea 
               id="input" 
               class="message-input" 
-              placeholder="Ask about accounts, loans, branches, or any banking service..."
+              placeholder="Ask about accounts, loans, branches..."
               rows="1"
               required
             ></textarea>
             <button type="submit" class="send-button">
               <i class="fas fa-paper-plane"></i>
-              Send
+              <span class="send-text">Send</span>
             </button>
           </form>
-          
         </div>
       </div>
 
@@ -601,6 +601,7 @@
     const form = document.getElementById('composer');
     const input = document.getElementById('input');
     const sendButton = form.querySelector('button[type="submit"]');
+    const sendButtonText = sendButton.querySelector('.send-text');
 
     let sessionId = null;
 
@@ -632,7 +633,7 @@ How can I assist you today?`);
 
     function addMsg(role, text) {
       const div = document.createElement('div');
-      div.className = `msg ${role}`;
+      div.className = `message ${role}`;
       
       const content = document.createElement('div');
       content.className = 'msg-content';
@@ -644,15 +645,21 @@ How can I assist you today?`);
     }
 
     function showTyping() {
+      // Avoid showing multiple typing indicators
+      if (document.getElementById('typing-indicator')) return;
+
       const typingDiv = document.createElement('div');
-      typingDiv.className = 'typing-indicator';
+      typingDiv.className = 'message assistant';
       typingDiv.id = 'typing-indicator';
       typingDiv.innerHTML = `
-        <span>Assistant is typing</span>
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
+        <div class="msg-content">
+          <div class="typing-indicator">
+            <div class="typing-dots">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
         </div>
       `;
       chatEl.appendChild(typingDiv);
@@ -665,13 +672,14 @@ How can I assist you today?`);
     }
 
     async function sendMessage(message) {
-      if (!message) message = input.value.trim();
-      if (!message) return;
+      const msgText = (message || input.value).trim();
+      if (!msgText) return;
       
       input.value = '';
+      input.style.height = 'auto'; // Reset height
       sendButton.disabled = true;
       
-      addMsg('user', message);
+      addMsg('user', msgText);
       showTyping();
 
       try {
@@ -679,7 +687,7 @@ How can I assist you today?`);
         const resp = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: sid, message })
+          body: JSON.stringify({ sessionId: sid, message: msgText })
         });
 
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -703,8 +711,7 @@ How can I assist you today?`);
     }
 
     function sendQuickMessage(message) {
-      input.value = message;
-      sendMessage();
+      sendMessage(message);
     }
 
     // Auto-resize textarea
@@ -725,6 +732,20 @@ How can I assist you today?`);
       e.preventDefault();
       await sendMessage();
     });
+
+    // Hide "Send" text on smaller screens
+    function adjustSendButton() {
+        if (window.innerWidth <= 768) {
+            sendButtonText.style.display = 'none';
+            sendButton.setAttribute('aria-label', 'Send');
+        } else {
+            sendButtonText.style.display = 'inline';
+            sendButton.removeAttribute('aria-label');
+        }
+    }
+
+    window.addEventListener('resize', adjustSendButton);
+    window.addEventListener('DOMContentLoaded', adjustSendButton);
 
     // Focus input on load
     input.focus();
