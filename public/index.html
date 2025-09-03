@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Amantin and Kasei Community Bank - Digital Assistant</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -101,11 +104,10 @@
     .main-content {
       flex: 1;
       display: flex;
-      max-width: 1200px;
+      max-width: 1000px;
       margin: 0 auto;
       width: 100%;
       padding: 2rem 1.5rem;
-      gap: 2rem;
     }
 
     .chat-container {
@@ -116,6 +118,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      max-width: 100%;
     }
 
     .chat-header {
@@ -407,73 +410,87 @@
       }
     }
 
-    @media (max-width: 768px) {
+    /* Mobile-first approach - Cards horizontal by default on small screens */
+    @media screen and (max-width: 768px) {
       .header-content {
-        padding: 0 1rem;
-        flex-direction: column;
-        gap: 0.5rem;
-        text-align: center;
+        padding: 0 1rem !important;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        text-align: center !important;
       }
 
       .logo {
-        font-size: 1.25rem;
+        font-size: 1.25rem !important;
       }
 
       .main-content {
-        padding: 1rem;
-        flex-direction: column-reverse;
+        padding: 1rem !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
       }
 
       .chat-container {
-        max-height: none;
-        flex: 1; /* Allow chat to fill available space */
-      }
-
-      .user .msg-content,
-      .assistant .msg-content {
-        max-width: 95%;
-        font-size: 0.9rem;
+        flex: 1 !important;
+        min-height: 60vh !important; /* Ensure chat takes up most of the screen */
+        order: 2 !important; /* Chat appears after sidebar */
       }
 
       .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 1rem;
-        width: 100%;
-        padding-bottom: 10px; /* Add space for scrollbar if visible */
-        -ms-overflow-style: none;  /* Hide scrollbar IE and Edge */
-        scrollbar-width: none;  /* Hide scrollbar Firefox */
+        order: 1 !important; /* Sidebar appears first */
+        width: 100% !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        gap: 1rem !important;
+        padding: 0.5rem 0 !important;
+        -ms-overflow-style: none !important;  /* Hide scrollbar IE and Edge */
+        scrollbar-width: none !important;  /* Hide scrollbar Firefox */
       }
 
       /* Hide scrollbar for Chrome, Safari and Opera */
       .sidebar::-webkit-scrollbar {
-        display: none;
+        display: none !important;
       }
 
       .info-card {
-        min-width: 280px; /* Set a minimum width to prevent squishing */
-        flex-shrink: 0; /* Prevent cards from shrinking */
-        padding: 1rem;
+        min-width: 250px !important; /* Compact width for mobile */
+        max-width: 250px !important;
+        flex-shrink: 0 !important; /* Prevent cards from shrinking */
+        padding: 0.875rem !important;
+      }
+
+      .info-card-title {
+        font-size: 0.9rem !important;
+      }
+
+      .info-item {
+        padding: 0.25rem 0 !important;
+        font-size: 0.8rem !important;
+      }
+
+      .user .msg-content,
+      .assistant .msg-content {
+        max-width: 95% !important;
+        font-size: 0.9rem !important;
       }
 
       .header-subtitle {
-        display: none;
+        display: none !important;
       }
 
       .input-container {
-        padding: 1rem;
+        padding: 1rem !important;
       }
 
       .message-input {
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
-        min-height: 44px; /* Adjusted from 60px for better balance */
+        padding: 0.75rem 1rem !important;
+        font-size: 0.9rem !important;
+        min-height: 44px !important;
       }
 
       .send-button {
-        padding: 0.75rem 1.25rem;
-        font-size: 0.9rem;
-        min-height: 44px; /* Match input height */
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.9rem !important;
+        min-height: 44px !important;
       }
     }
 
@@ -540,69 +557,6 @@
           </form>
         </div>
       </div>
-
-      <aside class="sidebar">
-        <div class="info-card clickable" onclick="sendQuickMessage('contact us')">
-          <div class="info-card-header">
-            <div class="info-card-icon">
-              <i class="fas fa-phone"></i>
-            </div>
-            <div class="info-card-title">Contact Us</div>
-          </div>
-          <ul class="info-list">
-            <li class="info-item">
-              <i class="fas fa-phone"></i>
-              0202055171
-            </li>
-            <li class="info-item">
-              <i class="fas fa-envelope"></i>
-              info@amankacombank.com
-            </li>
-            <li class="info-item">
-              <i class="fas fa-map-marker-alt"></i>
-              Amantin, Bono East
-            </li>
-          </ul>
-        </div>
-
-        <div class="info-card clickable" onclick="sendQuickMessage('business hours')">
-          <div class="info-card-header">
-            <div class="info-card-icon">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div class="info-card-title">Business Hours</div>
-          </div>
-          <ul class="info-list">
-            <li class="info-item">
-              <i class="fas fa-check"></i>
-              Mon - Fri: 8:00AM - 4:00PM
-            </li>
-            <li class="info-item">
-              <i class="fas fa-times" style="color: var(--error-color)"></i>
-              Weekends: Closed
-            </li>
-          </ul>
-        </div>
-
-        <div class="info-card clickable" onclick="sendQuickMessage('security notice')">
-          <div class="info-card-header">
-            <div class="info-card-icon">
-              <i class="fas fa-shield-alt"></i>
-            </div>
-            <div class="info-card-title">Security Notice</div>
-          </div>
-          <ul class="info-list">
-            <li class="info-item">
-              <i class="fas fa-info-circle"></i>
-              Never share passwords or PINs
-            </li>
-            <li class="info-item">
-              <i class="fas fa-info-circle"></i>
-              We'll never ask for full card numbers
-            </li>
-          </ul>
-        </div>
-      </aside>
     </main>
   </div>
 
