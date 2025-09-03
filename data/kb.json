@@ -22,9 +22,15 @@
   {"id":"loan_rates","product":"Loan_Rates","patterns":["loan.*(rate|interest|percentage|%)|interest.*rate.*loan|(rate|interest|percentage|%).*loan|what.*interest.*loan|loan.*interest|interest.*loan|what.*rate.*loan|rate.*loan"],"answer":"Current loan interest rates (subject to change):\\n• Salary Loan: 31% P.A.\\n• Agric Loan: 36% P.A.\\n• Business Loan: 29% P.A.\\n• Susu Loan: 36% P.A.\\n• Funeral Loan: 12% P.A.\\n• Inventory Loan: 36% P.A.\\n\\nRates depend on loan amount, term, collateral, and risk assessment. Visit any branch for personalized rate quotes and current promotions.\\n\\nNote: This is general information only, not financial advice. Consult our loan officers for guidance."},
   {"id":"savings_rates","product":"Savings","patterns":["savings.*(rate|interest|percentage|%)|(rate|interest|percentage|%).*savings|what.*interest.*savings"],"answer":"Current savings interest rates:\\n• Savings Account: 8-12% per annum (variable)\\n• Fixed Deposit: 15-20% per annum (depending on term)\\n• Christmas Account: 10-14% per annum\\n• Sala Account: 12-16% per annum\\n\\nRates are subject to change and may vary by deposit amount and term. Visit any branch for current rates and terms.\\n\\nNote: This is general information only, not financial advice."},
   {
+    "id": "ceo",
+    "product": "CEO",
+    "patterns": ["who.*ceo|ceo.*who|chief executive|chief executive officer"],
+    "answer": "Our Chief Executive Officer is **MICHAEL WILBERFORCE OSAE**."
+  },
+  {
     "id": "management_team",
     "product": "Management",
-    "patterns": ["management|leadership|team|ceo|head of|director|who.*runs|senior.*team"],
+    "patterns": ["management|leadership|team|senior.*team|who.*runs|executive.*team"],
     "answer": "Our Senior Management & Unit Heads:\\n\\n- **MICHAEL WILBERFORCE OSAE**\\n  CHIEF EXECUTIVE OFFICER\\n\\n- **STEVE TAKYI SARPONG JUNIOR**\\n  HEAD OF AUDIT\\n\\n- **MICHAEL DEBRAH BEMPONG**\\n  HEAD OF CREDIT\\n\\n- **GEOFFERY OWUSU BOATENG**\\n  HEAD OF ANTI-MONEY LAUNDERING, RISK AND COMPLIANCE\\n\\n- **MARK ERNEST**\\n  HEAD OF IT\\n\\n- **MR. SAMUEL ACHEAMPONG**\\n  HEAD OF ADMINISTRATION & HR\\n\\n- **ERIC NANJOR JANJA**\\n  HEAD OF OPERATIONS\\n\\n- **DANIEL OPOKU**\\n  UNIT HEAD (MARKETING)"
   },
   {
