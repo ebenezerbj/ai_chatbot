@@ -601,7 +601,19 @@ How can I assist you today?`);
       
       const content = document.createElement('div');
       content.className = 'msg-content';
-      content.textContent = text;
+      // Normalize assistant text to display literal \n as real line breaks
+      const normalize = (s) => {
+        try {
+          return String(s)
+            .replace(/\\r\\n/g, '\n')
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '    ');
+        } catch {
+          return s;
+        }
+      };
+      const processed = role === 'assistant' ? normalize(text) : text;
+      content.textContent = processed;
       
       div.appendChild(content);
       chatEl.appendChild(div);
