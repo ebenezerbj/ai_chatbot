@@ -137,8 +137,132 @@ export function retrieveKB(query: string): KBEntry[] {
       matches.push(entry);
     }
   }
-  // Return more matches to allow specific requirement entries to be included
-  return matches.slice(0, 6);
+  if (matches.length > 0) {
+    return matches.slice(0, 6);
+  }
+
+  // Fuzzy fallback: conservative approximate matching for common misspellings
+  // Goals:
+  // - Recover near-misses like "laon"->loan, "maneger"->manager, "ahwia"->ahwiaa
+  // - Avoid matching unrelated queries (e.g., jokes), so keep thresholds strict
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '') // strip diacritics
+      .replace(/[^a-z0-9\s]/g, ' ') // keep alphanum
+      .replace(/\s+/g, ' ') // collapse spaces
+      .trim();
+
+  const qNorm = norm(query);
+  if (!qNorm) return [];
+  const qTokens = qNorm.split(' ').filter(Boolean);
+
+  // Simple Levenshtein distance (placed early for use by anchors gate)
+  const lev = (a: string, b: string) => {
+    if (a === b) return 0;
+    const m = a.length, n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+    const dp = new Array(n + 1);
+    for (let j = 0; j <= n; j++) dp[j] = j;
+    for (let i = 1; i <= m; i++) {
+      let prev = i - 1;
+      dp[0] = i;
+      for (let j = 1; j <= n; j++) {
+        const temp = dp[j];
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[j] = Math.min(
+          dp[j] + 1,
+          dp[j - 1] + 1,
+          prev + cost
+        );
+        prev = temp;
+      }
+    }
+    return dp[n];
+  };
+
+  // Require at least one domain anchor approximately present in the query to enable fuzzy
+  const anchorList = [
+    'loan','loans','credit','rate','rates','interest',
+    'account','accounts','current','savings','saving','salary','susu','deposit',
+    'branch','branches','manager','manageress','officer','charge',
+    'contact','phone','email','address','gps','hours','time',
+    'investment','invest','smart','atm','ezwich','gh-link','apex','transfer','interbank','ach','ussd','ghana','pay',
+    'ceo','management','head','audit','risk','compliance','it','operations','marketing','credit'
+  ];
+  const hasAnchor = (() => {
+    for (const qt of qTokens) {
+      for (const a of anchorList) {
+        const d = lev(qt, a);
+        if ((a.length <= 6 && d <= 1) || (a.length > 6 && d <= 2) || qt === a) return true;
+      }
+    }
+    return false;
+  })();
+  if (!hasAnchor) return [];
+
+  // (lev definition moved above)
+
+  const cleanupPattern = (src: string) =>
+    norm(
+      src
+        .replace(/\\b/g, ' ')
+        .replace(/\(\?:|\(\?=|\(\?!/g, '(')
+        .replace(/[\^$.*+?()[\]{}|\\]/g, ' ') // drop regex meta
+    );
+
+  type Scored = { entry: KBEntry; score: number };
+  const scored: Scored[] = [];
+
+  for (const entry of currentKB) {
+    // Candidates: product name and simplified regex sources
+    const candStrings: string[] = [entry.product];
+    for (const re of entry.questionPatterns) {
+      const c = cleanupPattern(re.source);
+      if (c && !candStrings.includes(c)) candStrings.push(c);
+    }
+
+    // Tokenize candidates
+    const candTokens = new Set<string>();
+    for (const s of candStrings) {
+      for (const t of s.split(' ')) if (t) candTokens.add(t);
+    }
+
+    if (candTokens.size === 0) continue;
+
+    // Compute overlap and near-miss counts
+    let overlap = 0;
+    let near = 0;
+    for (const qt of qTokens) {
+      if (candTokens.has(qt)) {
+        overlap++;
+        continue;
+      }
+      // consider near if within edit distance <=1 for short tokens (<=6), <=2 for longer
+      let tokenNear = false;
+      for (const ct of candTokens) {
+        const d = lev(qt, ct);
+        if ((ct.length <= 6 && d <= 1) || (ct.length > 6 && d <= 2)) {
+          tokenNear = true;
+          break;
+        }
+      }
+      if (tokenNear) near++;
+    }
+
+    // Conservative scoring: require at least some anchor tokens
+    const score = overlap * 3 + near; // exact matches weigh more
+    if (score >= 3) {
+      scored.push({ entry, score });
+    }
+  }
+
+  if (scored.length === 0) return [];
+  scored.sort((a, b) => b.score - a.score);
+  // Be conservative with fuzzy: cap to top 2 to avoid over-broad matches
+  return scored.slice(0, 2).map(s => s.entry);
 }
 
 export function getKB(): KBEntry[] {
