@@ -102,7 +102,9 @@ export class MockProvider implements LLMProvider {
         smart: /\b(smart|atm|gh-?link|e\W?zwich|ezwich|apex|inter\s?bank|ach|interoperability)\b/i.test(lower),
         invest: /\b(invest|investment|fixed deposit|christmas account|sala account|woba)\b/i.test(lower),
         hours: /\b(hours|open|opening|closing|time)\b/i.test(lower),
-        management: /\b(management|leadership|team|ceo|head of|director|who.*runs|senior.*team)\b/i.test(lower),
+        // Prefer explicit CEO detection so it can be answered concisely
+        ceo: /(\bceo\b|chief\s+executive(\s+officer)?)/i.test(lower),
+        management: /\b(management|leadership|team|head of|director|who.*runs|senior.*team)\b/i.test(lower),
         productsAndServices: /products?|services?|offerings?|what do you offer|list of services/i.test(lower),
         requirements: /(require|document|need|eligibil)/i.test(lower)
       } as const;
@@ -169,6 +171,8 @@ export class MockProvider implements LLMProvider {
 
       // Generic selection fallback
       const chosen =
+        // Specific CEO question should prefer the CEO entry if available
+        (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
         (intents.branch && pickByProduct('Branch')) ||
         (intents.contact && pickByProduct('Contact')) ||
         (intents.deposit && pickByProduct('Deposit')) ||
