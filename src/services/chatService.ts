@@ -80,11 +80,11 @@ export class ChatService {
     };
     session.history.push(assistantMsg);
 
-    const hint = escalationHint(userText);
-  // Add light-touch UX cues for security/advice as needed
+  const hint = escalationHint(userText);
+  // Add light-touch UX cues only when relevant, to keep replies natural
   const extra: string[] = [];
-  if (/invest|loan|mortgage|advice/i.test(userText)) extra.push(adviceDisclaimer);
-  extra.push(securityReminder);
+  if (/(invest|loan|mortgage|advice)/i.test(userText)) extra.push(adviceDisclaimer);
+  if (/(password|pin|otp|card|security|scam|fraud)/i.test(userText)) extra.push(securityReminder);
   if (hint) extra.push(hint);
   const reply = [processed.text, ...extra].join('\n\n');
 

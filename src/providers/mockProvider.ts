@@ -243,10 +243,10 @@ export class MockProvider implements LLMProvider {
         }
 
         if (chosen.product === 'Branch' && !/^branches:/i.test(chosen.answer)) {
-          text = `Branches: ${chosen.answer}`;
+          text = `Here are our branches: ${chosen.answer}`;
         }
         if (chosen.product === 'Contact' && !/^contact/i.test(chosen.answer)) {
-          text = `Contact details: ${chosen.answer}`;
+          text = `You can reach us here: ${chosen.answer}`;
         }
         return { text };
       }
