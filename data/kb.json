@@ -3,7 +3,13 @@
     "id": "branches",
     "product": "Branch",
     "patterns": ["branches?", "locations?", "nearest"],
-    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 20 205 5170\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: QQJG+P27, Kajaji East, Tatobatoi. Phone: +233 24 052 6372\n- **Kwame Danso**: P8JF+2C6, Kwame Danso. Phone: +233 20 205 5174\n- **Yeji**: 68GW+FHJ, Yeji. Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: QC32+V79, Kumasi-Techiman Road, Ahwiaa. Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market."
+    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 20 205 5170\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso**: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji**: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market."
+  },
+  {
+    "id": "nearest_branch_stub",
+    "product": "Nearest Branch",
+    "patterns": ["nearest|near me|closest|nearby"],
+    "answer": "Nearest branch: If you share your GPS (GhanaPost or phone location), I can suggest the closest branch and provide directions. For now, please tell me your area or ZIP/plus code."
   },
   {
     "id": "branch_location_amantin",
@@ -30,7 +36,7 @@
       "kajaji.*(address|location|gps|where|phone|number)",
       "(address|location|gps|phone|number).*kajaji"
     ],
-    "answer": "Kajaji: QQJG+P27, Kajaji East, Tatobatoi. Phone: +233 24 052 6372"
+  "answer": "Kajaji: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372"
   },
   {
     "id": "branch_location_kwame_danso",
@@ -39,7 +45,7 @@
   "kwame\\s*danso.*(address|location|gps|where|phone|number)",
   "(address|location|gps|phone|number).*kwame\\s*danso"
     ],
-    "answer": "Kwame Danso: P8JF+2C6, Kwame Danso. Phone: +233 20 205 5174"
+  "answer": "Kwame Danso: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174"
   },
   {
     "id": "branch_location_yeji",
@@ -48,7 +54,7 @@
       "yeji.*(address|location|gps|where|phone|number)",
       "(address|location|gps|phone|number).*yeji"
     ],
-    "answer": "Yeji: 68GW+FHJ, Yeji. Phone: +233 20 205 5175"
+  "answer": "Yeji: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175"
   },
   {
     "id": "branch_location_ahwiaa",
@@ -57,7 +63,7 @@
       "ahwiaa.*(address|location|gps|where|phone|number)",
       "(address|location|gps|phone|number).*ahwiaa"
     ],
-    "answer": "Ahwiaa: QC32+V79, Kumasi-Techiman Road, Ahwiaa. Phone: +233 20 209 9931"
+  "answer": "Ahwiaa: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931"
   },
   {
     "id": "branch_location_ejura",

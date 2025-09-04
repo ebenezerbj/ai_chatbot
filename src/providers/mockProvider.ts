@@ -95,7 +95,8 @@ export class MockProvider implements LLMProvider {
 
       const intents = {
         greeting: /^(hi|hello|hey|good morning|good afternoon|good evening)$/i.test(lower.trim()),
-        branch: /\b(branch|branches|location|locations|nearest)\b/i.test(lower),
+  branch: /\b(branch|branches|location|locations)\b/i.test(lower),
+  nearestBranch: /\b(nearest|near me|closest|nearby)\b/i.test(lower),
         contact: /\b(contact|phone|call|email|reach|address|gps)\b/i.test(lower),
         deposit: /\b(deposit|current account|salary account|susu|account|accounts)\b/i.test(lower),
   loan: /\b(loan|loans|laon|credit|agric|business loan|funeral loan|group loan|salary loan|susu loan|staff loan|inventory loan)\b/i.test(lower),
@@ -194,6 +195,8 @@ export class MockProvider implements LLMProvider {
       const chosen =
         // Specific CEO question should prefer the CEO entry if available
         (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
+        // Nearest branch stub should be preferred when asked
+        (intents.nearestBranch && (items.find(i => i.product === 'Nearest Branch') || pickByProduct('Branch'))) ||
         // Branch managers (explicit list or single)
         (intents.branchManagersList && pickBranchManagersList()) ||
         (intents.branchManager && pickBranchManagerSingle()) ||
