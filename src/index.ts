@@ -11,6 +11,7 @@ import { ChatService } from './services/chatService';
 import { loadKBFromFile } from './knowledge/kb';
 import { existsSync } from 'fs';
 import { ChatRequestSchema, NearestBranchSchema } from './core/validation';
+import { resolvePlusCode, findNearestBranch, mapsUrlFromLatLng } from './geo/branches';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -102,14 +103,31 @@ app.post('/api/nearest-branch', (req: Request, res: any) => {
   try {
     const parsed = NearestBranchSchema.safeParse(req.body ?? {});
     if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' });
-    const { lat, lng, plusCode } = parsed.data as any;
+    let { lat, lng, plusCode } = parsed.data as any;
+
+    // If we only have a plus code, try to resolve to coordinates
+    if ((lat === undefined || lng === undefined) && plusCode) {
+      const resolved = resolvePlusCode(plusCode);
+      if (resolved) {
+        lat = resolved.lat;
+        lng = resolved.lng;
+      }
+    }
+
     if (lat !== undefined && lng !== undefined) {
-      return res.json({ text: `Location received (lat: ${lat.toFixed(5)}, lng: ${lng.toFixed(5)}). I'll locate the closest branch and provide directions soon.` });
+      const { branch, distanceKm } = findNearestBranch(lat, lng);
+      const km = Math.max(0, distanceKm);
+      const url = mapsUrlFromLatLng(branch.lat, branch.lng);
+      const approx = km < 0.05 ? '' : ` (~${km.toFixed(1)} km)`;
+      const phone = branch.phone ? ` Phone: ${branch.phone}.` : '';
+      const text = `Closest branch: ${branch.name}${approx}. Directions: ${url}.${phone}`;
+      return res.json({ text });
     }
     if (plusCode) {
-      return res.json({ text: `Plus code received: ${plusCode}. I'll locate the closest branch and provide directions soon.` });
+      // Unknown plus code
+      return res.json({ text: `I couldn't recognize that plus code yet. Please share your phone location or try a nearby landmark.` });
     }
-    return res.json({ text: 'Location received. I\'ll locate the closest branch and provide directions soon.' });
+    return res.json({ text: 'Please share your phone location or a GhanaPost plus code (e.g., QQJG+P27) to find the nearest branch.' });
   } catch (e) {
     (req as any).log?.error({ err: e }, 'nearest-branch error');
     return res.status(500).json({ error: 'Internal error' });

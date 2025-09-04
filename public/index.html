@@ -649,7 +649,15 @@ How can I assist you today?`);
 
         const applyInline = (str) => {
           // Bold: **text**
-          return str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          // Auto-link plain URLs (http/https only)
+          out = out.replace(/\b(https?:\/\/[^\s<]+)\b/g, (m, url) => {
+            try {
+              const safe = escapeHtml(url);
+              return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+            } catch { return url; }
+          });
+          return out;
         };
 
         const src = escapeHtml(String(input));
