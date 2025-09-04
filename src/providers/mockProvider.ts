@@ -104,6 +104,9 @@ export class MockProvider implements LLMProvider {
         hours: /\b(hours|open|opening|closing|time)\b/i.test(lower),
         // Prefer explicit CEO detection so it can be answered concisely
         ceo: /(\bceo\b|chief\s+executive(\s+officer)?)/i.test(lower),
+  // Branch manager queries (list and single)
+  branchManagersList: /\b(branch\s*managers|managers\s*list|list\s*of\s*branch\s*managers)\b/i.test(lower),
+  branchManager: /\b(branch\s*manager|manageress|officer[-\s]?in[-\s]?charge)\b/i.test(lower),
   // Smart banking specific intents
   ussd: /(\*992#|ussd|short\s*code\s*992|code\s*992)/i.test(lower),
   ghanaPay: /(ghana\s*pay|\*707#|short\s*code\s*707|code\s*707)/i.test(lower),
@@ -184,11 +187,16 @@ export class MockProvider implements LLMProvider {
       // Generic selection fallback
       const pickUssd = () => items.find(i => /\*992#|\bussd\b/i.test(i.answer));
       const pickGhanaPay = () => items.find(i => /ghana\s*pay|\*707#/i.test(i.answer));
+      const pickBranchManagersList = () => items.find(i => i.product === 'Branch Managers');
+      const pickBranchManagerSingle = () => items.find(i => i.product === 'Branch Manager');
 
       const pickFullManagement = () => items.find(i => i.product === 'Management' && (/Senior Management.*Unit Heads/i.test(i.answer) || /\n- \*\*/.test(i.answer)));
       const chosen =
         // Specific CEO question should prefer the CEO entry if available
         (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
+        // Branch managers (explicit list or single)
+        (intents.branchManagersList && pickBranchManagersList()) ||
+        (intents.branchManager && pickBranchManagerSingle()) ||
         // Explicit full management team request should return the full list
         (intents.fullManagement && pickFullManagement()) ||
   // Role-specific heads
