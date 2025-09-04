@@ -18,6 +18,86 @@
     "answer": "Branch Managers by location:\n- Ejura — **AGNES QUAYE** (Branch Manageress)\n- Ahwiaa — **ABDUL-RAHMAN ABUBAKAR** (Branch Manager)\n- Kejetia — **ALI SONDONG IBRAHIM** (Officer-in-Charge)\n- Yeji — **BENJAMIN AYISI** (Branch Manager)\n- Kwame Danso — **OSEI-KISSI JOHN** (Branch Manager)\n- Amantin — **EMMANUEL OFORI-ATTA** (Branch Manager)\n- Atebubu — **OTENG ABRAHAM L** (Branch Manager)\n- Kajaji — **ROBERT SARFO** (Branch Manager)"
   },
   {
+    "id": "branch_manager_ejura",
+    "product": "Branch Manager",
+    "patterns": [
+      "ejura.*(branch.*)?manager(ess)?",
+      "(branch.*)?manager(ess)?.*ejura",
+      "who.*(manager|in.?charge).*ejura"
+    ],
+    "answer": "Ejura branch manager: **AGNES QUAYE** (Branch Manageress)."
+  },
+  {
+    "id": "branch_manager_ahwiaa",
+    "product": "Branch Manager",
+    "patterns": [
+      "ahwiaa.*(branch.*)?manager",
+      "(branch.*)?manager.*ahwiaa",
+      "who.*manager.*ahwiaa"
+    ],
+    "answer": "Ahwiaa branch manager: **ABDUL-RAHMAN ABUBAKAR** (Branch Manager)."
+  },
+  {
+    "id": "branch_manager_kejetia",
+    "product": "Branch Manager",
+    "patterns": [
+      "kejetia.*(officer.*in.*charge|manager)",
+      "(officer.*in.*charge|manager).*kejetia",
+      "who.*(officer|manager).*kejetia"
+    ],
+    "answer": "Kejetia officer-in-charge: **ALI SONDONG IBRAHIM** (Officer-in-Charge)."
+  },
+  {
+    "id": "branch_manager_yeji",
+    "product": "Branch Manager",
+    "patterns": [
+      "yeji.*(branch.*)?manager",
+      "(branch.*)?manager.*yeji",
+      "who.*manager.*yeji"
+    ],
+    "answer": "Yeji branch manager: **BENJAMIN AYISI** (Branch Manager)."
+  },
+  {
+    "id": "branch_manager_kwame_danso",
+    "product": "Branch Manager",
+    "patterns": [
+      "kwame\\s*danso.*(branch.*)?manager",
+      "(branch.*)?manager.*kwame\\s*danso",
+      "who.*manager.*kwame\\s*danso"
+    ],
+    "answer": "Kwame Danso branch manager: **OSEI-KISSI JOHN** (Branch Manager)."
+  },
+  {
+    "id": "branch_manager_amantin",
+    "product": "Branch Manager",
+    "patterns": [
+      "amantin.*(branch.*)?manager",
+      "(branch.*)?manager.*amantin",
+      "who.*manager.*amantin"
+    ],
+    "answer": "Amantin branch manager: **EMMANUEL OFORI-ATTA** (Branch Manager)."
+  },
+  {
+    "id": "branch_manager_atebubu",
+    "product": "Branch Manager",
+    "patterns": [
+      "atebubu.*(branch.*)?manager",
+      "(branch.*)?manager.*atebubu",
+      "who.*manager.*atebubu"
+    ],
+    "answer": "Atebubu branch manager: **OTENG ABRAHAM L** (Branch Manager)."
+  },
+  {
+    "id": "branch_manager_kajaji",
+    "product": "Branch Manager",
+    "patterns": [
+      "kajaji.*(branch.*)?manager",
+      "(branch.*)?manager.*kajaji",
+      "who.*manager.*kajaji"
+    ],
+    "answer": "Kajaji branch manager: **ROBERT SARFO** (Branch Manager)."
+  },
+  {
     "id": "contact",
     "product": "Contact",
     "patterns": ["contact", "phone", "call", "email", "reach", "address", "gps"],
