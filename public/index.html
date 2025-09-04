@@ -641,7 +641,7 @@ How can I assist you today?`);
       // Minimal, safe markdown renderer for assistant messages: **bold**, - bullets, numbered lists
       function renderMarkdownSafe(input) {
         const escapeHtml = (str) => str
-          .replace(/&/g, '&amp;')
+                .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
           .replace(/\"/g, '&quot;')
@@ -651,7 +651,7 @@ How can I assist you today?`);
           // Bold: **text**
           let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
           // Auto-link plain URLs (http/https only)
-          out = out.replace(/\b(https?:\/\/[^\s<]+)\b/g, (m, url) => {
+                  out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
             try {
               const safe = escapeHtml(url);
               return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
