@@ -647,7 +647,7 @@ How can I assist you today?`);
       if (typing) typing.remove();
     }
 
-    async function sendMessage(message) {
+  async function sendMessage(message) {
       const msgText = (message || input.value).trim();
       if (!msgText) return;
       
@@ -660,18 +660,25 @@ How can I assist you today?`);
 
       try {
         const sid = await ensureSession();
-        const resp = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: sid, message: msgText })
-        });
-
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        
-        const data = await resp.json();
+        const makeCall = async () => {
+          const resp = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: sid, message: msgText })
+          });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          return resp.json();
+        };
+        let data;
+        try {
+          data = await makeCall();
+        } catch (e1) {
+          // brief retry for transient issues
+          await new Promise(r => setTimeout(r, 300));
+          data = await makeCall();
+        }
         hideTyping();
-        
-        if (data.reply) {
+        if (data?.reply) {
           addMsg('assistant', data.reply);
         } else {
           addMsg('assistant', 'Sorry, I encountered an issue processing your request. Please try again.');

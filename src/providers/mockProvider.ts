@@ -98,7 +98,7 @@ export class MockProvider implements LLMProvider {
         branch: /\b(branch|branches|location|locations|nearest)\b/i.test(lower),
         contact: /\b(contact|phone|call|email|reach|address|gps)\b/i.test(lower),
         deposit: /\b(deposit|current account|salary account|susu|account|accounts)\b/i.test(lower),
-        loan: /\b(loan|loans|credit|agric|business loan|funeral loan|group loan|salary loan|susu loan|staff loan|inventory loan)\b/i.test(lower),
+  loan: /\b(loan|loans|laon|credit|agric|business loan|funeral loan|group loan|salary loan|susu loan|staff loan|inventory loan)\b/i.test(lower),
         smart: /\b(smart|atm|gh-?link|e\W?zwich|ezwich|apex|inter\s?bank|ach|interoperability)\b/i.test(lower),
         invest: /\b(invest|investment|fixed deposit|christmas account|sala account|woba)\b/i.test(lower),
         hours: /\b(hours|open|opening|closing|time)\b/i.test(lower),

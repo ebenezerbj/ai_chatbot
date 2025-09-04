@@ -57,7 +57,7 @@
     "id": "loan_requirements",
     "product": "Loan",
     "patterns": ["loan.*(require|document|need)", "(require|document|need).*loan"],
-    "answer": "Loan requirements vary, but you'll typically need a valid ID, application form, passport photo, and proof of income. Visit a branch for a specific checklist."
+  "answer": "Loan – general requirements (may vary by product)\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Two passport-size photos\n- Proof of income (payslips or bank statements) or business records\n- Guarantor(s) where applicable\n- Collateral where applicable\n- Recent utility bill or GhanaPost GPS (address)\n\nFinal approval is subject to assessment. Visit a branch for a tailored checklist."
   },
   {
     "id": "account_requirements",
