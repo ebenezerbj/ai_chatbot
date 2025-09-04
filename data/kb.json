@@ -66,6 +66,17 @@
     "answer": "To open an account, you generally need a valid ID, passport photos, and proof of address. Requirements may vary slightly by account type."
   },
   {
+    "id": "current_account_requirements",
+    "product": "Deposit",
+    "patterns": [
+      "current.*(open|opening|require|document|need)",
+      "(open|opening).*current",
+  "what.*need.*current\\s*account",
+  "requirements?.*current\\s*account"
+    ],
+    "answer": "Current Account – opening requirements\n- Valid Ghana Card (national ID)\n- Two passport-size photos\n- Proof of address (utility bill or GhanaPost GPS)\n- TIN (if available)\n- Two referees (existing current account holders)\n- Proof of employment/occupation (or business registration for businesses)\n- Initial deposit (minimum opening balance)"
+  },
+  {
     "id": "loan_rates",
     "product": "Loan Rates",
     "patterns": ["loan.*(rate|interest|%)", "rate.*loan"],
