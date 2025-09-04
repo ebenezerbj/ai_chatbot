@@ -613,7 +613,82 @@ How can I assist you today?`);
         }
       };
       const processed = role === 'assistant' ? normalize(text) : text;
-      content.textContent = processed;
+
+      // Minimal, safe markdown renderer for assistant messages: **bold**, - bullets, numbered lists
+      function renderMarkdownSafe(input) {
+        const escapeHtml = (str) => str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+
+        const applyInline = (str) => {
+          // Bold: **text**
+          return str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        };
+
+        const src = escapeHtml(String(input));
+        const lines = src.split('\n');
+        let out = '';
+        let listType = null; // 'ul' | 'ol' | null
+
+        const closeList = () => {
+          if (listType) {
+            out += listType === 'ul' ? '</ul>' : '</ol>';
+            listType = null;
+          }
+        };
+
+        for (let i = 0; i < lines.length; i++) {
+          const raw = lines[i];
+          const liBullet = raw.match(/^\s*[-*•]\s+(.+)$/);
+          const liNumber = raw.match(/^\s*(\d+)[\.).]\s+(.+)$/);
+
+          if (liBullet) {
+            const text = applyInline(liBullet[1]);
+            if (listType !== 'ul') {
+              closeList();
+              listType = 'ul';
+              out += '<ul>';
+            }
+            out += `<li>${text}</li>`;
+            continue;
+          }
+
+          if (liNumber) {
+            const text = applyInline(liNumber[2]);
+            if (listType !== 'ol') {
+              closeList();
+              listType = 'ol';
+              out += '<ol>';
+            }
+            out += `<li>${text}</li>`;
+            continue;
+          }
+
+          // Not a list item
+          closeList();
+          const text = applyInline(raw);
+          if (text.trim() === '') {
+            // paragraph break
+            out += '<br />';
+          } else {
+            out += `${text}`;
+            // Add line break if next line exists and isn't closing/opening a list
+            if (i < lines.length - 1) out += '<br />';
+          }
+        }
+
+        closeList();
+        return out;
+      }
+
+      if (role === 'assistant') {
+        content.innerHTML = renderMarkdownSafe(processed);
+      } else {
+        content.textContent = processed;
+      }
       
       div.appendChild(content);
       chatEl.appendChild(div);

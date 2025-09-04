@@ -115,7 +115,8 @@ export class MockProvider implements LLMProvider {
   headAdminHR: /(head.*admin(istration)?|head.*\bhr\b|admin(istration)?\s*&?\s*hr)/i.test(lower),
   headOps: /(head.*operations|operations\s+head)/i.test(lower),
   headMarketing: /(head.*marketing|marketing\s+head|unit\s+head.*marketing)/i.test(lower),
-        management: /\b(management|leadership|team|head of|director|who.*runs|senior.*team)\b/i.test(lower),
+  management: /\b(management|leadership|team|head of|director|who.*runs|senior.*team)\b/i.test(lower),
+  fullManagement: /\bfull\s+management\s+team\b/i.test(lower),
         productsAndServices: /products?|services?|offerings?|what do you offer|list of services/i.test(lower),
         requirements: /(require|document|need|eligibil)/i.test(lower)
       } as const;
@@ -184,9 +185,12 @@ export class MockProvider implements LLMProvider {
       const pickUssd = () => items.find(i => /\*992#|\bussd\b/i.test(i.answer));
       const pickGhanaPay = () => items.find(i => /ghana\s*pay|\*707#/i.test(i.answer));
 
+      const pickFullManagement = () => items.find(i => i.product === 'Management' && (/Senior Management.*Unit Heads/i.test(i.answer) || /\n- \*\*/.test(i.answer)));
       const chosen =
         // Specific CEO question should prefer the CEO entry if available
         (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
+        // Explicit full management team request should return the full list
+        (intents.fullManagement && pickFullManagement()) ||
   // Role-specific heads
   (intents.headAudit && pickByProduct('Head of Audit')) ||
   (intents.headCredit && pickByProduct('Head of Credit')) ||

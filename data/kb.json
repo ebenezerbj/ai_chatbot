@@ -54,10 +54,91 @@
     "answer": "We have Current, Salary, Savings, and Susu accounts. Ask about a specific account for more info."
   },
   {
+    "id": "savings_account_requirements",
+    "product": "Deposit",
+    "patterns": [
+      "savings?.*(open|opening|require|document|need)",
+      "(open|opening).*savings?",
+      "what.*need.*savings\\s*account",
+      "requirements?.*savings\\s*account"
+    ],
+    "answer": "Savings Account – opening requirements\n- Valid Ghana Card (national ID)\n- Two passport-size photos\n- Proof of address (utility bill or GhanaPost GPS)\n- Initial deposit (minimum opening balance)"
+  },
+  {
+    "id": "salary_account_requirements",
+    "product": "Deposit",
+    "patterns": [
+      "salary.*(open|opening|require|document|need)",
+      "(open|opening).*salary",
+      "what.*need.*salary\\s*account",
+      "requirements?.*salary\\s*account"
+    ],
+    "answer": "Salary Account – opening requirements\n- Valid Ghana Card (national ID)\n- Two passport-size photos\n- Proof of address (utility bill or GhanaPost GPS)\n- Employer introduction letter or recent payslips\n- Initial deposit (minimum opening balance)"
+  },
+  {
+    "id": "susu_account_requirements",
+    "product": "Deposit",
+    "patterns": [
+      "susu.*(open|opening|require|document|need)",
+      "(open|opening).*susu",
+      "what.*need.*susu\\s*account",
+      "requirements?.*susu\\s*account"
+    ],
+    "answer": "Susu Account – opening requirements\n- Valid Ghana Card (national ID)\n- Two passport-size photos\n- Proof of address (utility bill or GhanaPost GPS)\n- Initial deposit (minimum opening balance)"
+  },
+  {
     "id": "loan_requirements",
     "product": "Loan",
     "patterns": ["loan.*(require|document|need)", "(require|document|need).*loan"],
   "answer": "Loan – general requirements (may vary by product)\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Two passport-size photos\n- Proof of income (payslips or bank statements) or business records\n- Guarantor(s) where applicable\n- Collateral where applicable\n- Recent utility bill or GhanaPost GPS (address)\n\nFinal approval is subject to assessment. Visit a branch for a tailored checklist."
+  },
+  {
+    "id": "agric_loan_requirements",
+    "product": "Loan",
+    "patterns": ["agric.*(require|document|need)", "(require|document|need).*agric"],
+    "answer": "Agric Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Farm or agri-business records (e.g., production plan)\n- Proof of land use/tenure where applicable\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
+  },
+  {
+    "id": "business_loan_requirements",
+    "product": "Loan",
+    "patterns": ["business.*loan.*(require|document|need)", "(require|document|need).*business.*loan"],
+    "answer": "Business Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Business registration documents (where applicable)\n- Recent bank statements and/or sales records\n- Collateral and/or guarantor(s) as required\n- Tax Identification Number (if available)\n- Recent utility bill or GhanaPost GPS (address)"
+  },
+  {
+    "id": "funeral_loan_requirements",
+    "product": "Loan",
+    "patterns": ["funeral.*loan.*(require|document|need)", "(require|document|need).*funeral.*loan"],
+    "answer": "Funeral Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Proof of income or repayment capacity\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
+  },
+  {
+    "id": "group_loan_requirements",
+    "product": "Loan",
+    "patterns": ["group.*loan.*(require|document|need)", "(require|document|need).*group.*loan"],
+    "answer": "Group Loan – requirements\n- Valid Ghana Card (national ID) for each group member\n- Completed group loan application forms\n- Group constitution or agreement (if applicable)\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
+  },
+  {
+    "id": "salary_loan_requirements",
+    "product": "Loan",
+    "patterns": ["salary.*loan.*(require|document|need)", "(require|document|need).*salary.*loan"],
+    "answer": "Salary Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Employer introduction/undertaking letter\n- Recent payslips and account statements\n- Guarantor(s) as required\n- Recent utility bill or GhanaPost GPS (address)"
+  },
+  {
+    "id": "susu_loan_requirements",
+    "product": "Loan",
+    "patterns": ["susu.*loan.*(require|document|need)", "(require|document|need).*susu.*loan"],
+    "answer": "Susu Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Susu contribution history\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
+  },
+  {
+    "id": "staff_loan_requirements",
+    "product": "Loan",
+    "patterns": ["staff.*loan.*(require|document|need)", "(require|document|need).*staff.*loan"],
+    "answer": "Staff Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Employment verification\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
+  },
+  {
+    "id": "inventory_loan_requirements",
+    "product": "Loan",
+    "patterns": ["inventory.*loan.*(require|document|need)", "(require|document|need).*inventory.*loan"],
+    "answer": "Inventory Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Inventory list and purchase invoices/quotes\n- Collateral and/or guarantor(s) as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "account_requirements",
