@@ -206,7 +206,9 @@ export class MockProvider implements LLMProvider {
         (intents.invest && pickByProduct('Investment')) ||
         (intents.management && pickByProduct('Management')) ||
         (intents.productsAndServices && pickByProduct('Products & Services')) ||
-        (intents.hours && (pickByProduct('Hours') || pickByProduct('Support')));
+        (intents.hours && (pickByProduct('Hours') || pickByProduct('Support')))
+        // Final fallback: if KB items exist, return the first one (e.g., Checking fees)
+        || items[0];
 
       if (chosen) {
         console.log(`[DEBUG MOCK] Returning generic KB-based response for product: ${chosen.product}`);
