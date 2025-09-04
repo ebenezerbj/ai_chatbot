@@ -72,6 +72,48 @@
     "answer": "Our Chief Executive Officer is **MICHAEL WILBERFORCE OSAE**."
   },
   {
+    "id": "head_of_audit",
+    "product": "Head of Audit",
+    "patterns": ["head.*audit", "audit head"],
+    "answer": "**STEVE TAKYI SARPONG JUNIOR** is our Head of Audit."
+  },
+  {
+    "id": "head_of_credit",
+    "product": "Head of Credit",
+    "patterns": ["head.*credit", "credit head"],
+    "answer": "**MICHAEL DEBRAH BEMPONG** is our Head of Credit."
+  },
+  {
+    "id": "head_of_aml_risk_compliance",
+    "product": "Head of AML, Risk & Compliance",
+  "patterns": ["(anti-?money\\s?laundering|aml)", "head.*(risk|compliance)", "risk.*compliance"],
+    "answer": "**GEOFFERY OWUSU BOATENG** is our Head of Anti-Money Laundering, Risk and Compliance."
+  },
+  {
+    "id": "head_of_it",
+    "product": "Head of IT",
+  "patterns": ["head.*it", "it head", "head.*information\\s*technology"],
+    "answer": "**MARK ERNEST** is our Head of IT."
+  },
+  {
+    "id": "head_of_admin_hr",
+    "product": "Head of Administration & HR",
+  "patterns": ["head.*admin(istration)?", "head.*hr", "admin(istration)?\\s*&?\\s*hr"],
+    "answer": "**MR. SAMUEL ACHEAMPONG** is our Head of Administration & HR."
+  },
+  {
+    "id": "head_of_operations",
+    "product": "Head of Operations",
+    "patterns": ["head.*operations", "operations head"],
+    "answer": "**ERIC NANJOR JANJA** is our Head of Operations."
+  },
+  {
+    "id": "unit_head_marketing",
+    "product": "Unit Head (Marketing)",
+    "patterns": ["head.*marketing", "marketing head", "unit head.*marketing"],
+    "answer": "**DANIEL OPOKU** is our Unit Head (Marketing)."
+  },
+  {
     "id": "management_team",
     "product": "Management",
     "patterns": ["management", "leadership", "team", "who.*runs"],

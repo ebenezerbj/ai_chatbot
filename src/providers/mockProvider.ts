@@ -104,6 +104,14 @@ export class MockProvider implements LLMProvider {
         hours: /\b(hours|open|opening|closing|time)\b/i.test(lower),
         // Prefer explicit CEO detection so it can be answered concisely
         ceo: /(\bceo\b|chief\s+executive(\s+officer)?)/i.test(lower),
+  // Role-specific intents to prefer concise KB entries over generic management lists
+  headAudit: /(\bhead\s+of\s+audit\b|\baudit\s+head\b)/i.test(lower),
+  headCredit: /(\bhead\s+of\s+credit\b|\bcredit\s+head\b)/i.test(lower),
+  headCompliance: /(anti-?money\s?laundering|\baml\b|head.*(risk|compliance)|risk.*compliance)/i.test(lower),
+  headIT: /(head.*\bit\b|\bit\s+head\b|head.*information\s*technology)/i.test(lower),
+  headAdminHR: /(head.*admin(istration)?|head.*\bhr\b|admin(istration)?\s*&?\s*hr)/i.test(lower),
+  headOps: /(head.*operations|operations\s+head)/i.test(lower),
+  headMarketing: /(head.*marketing|marketing\s+head|unit\s+head.*marketing)/i.test(lower),
         management: /\b(management|leadership|team|head of|director|who.*runs|senior.*team)\b/i.test(lower),
         productsAndServices: /products?|services?|offerings?|what do you offer|list of services/i.test(lower),
         requirements: /(require|document|need|eligibil)/i.test(lower)
@@ -173,6 +181,14 @@ export class MockProvider implements LLMProvider {
       const chosen =
         // Specific CEO question should prefer the CEO entry if available
         (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
+  // Role-specific heads
+  (intents.headAudit && pickByProduct('Head of Audit')) ||
+  (intents.headCredit && pickByProduct('Head of Credit')) ||
+  (intents.headCompliance && pickByProduct('Head of AML, Risk & Compliance')) ||
+  (intents.headIT && pickByProduct('Head of IT')) ||
+  (intents.headAdminHR && pickByProduct('Head of Administration & HR')) ||
+  (intents.headOps && pickByProduct('Head of Operations')) ||
+  (intents.headMarketing && pickByProduct('Unit Head (Marketing)')) ||
         (intents.branch && pickByProduct('Branch')) ||
         (intents.contact && pickByProduct('Contact')) ||
         (intents.deposit && pickByProduct('Deposit')) ||
