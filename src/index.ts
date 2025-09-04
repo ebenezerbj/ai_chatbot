@@ -10,7 +10,7 @@ import { MockProvider } from './providers/mockProvider';
 import { ChatService } from './services/chatService';
 import { loadKBFromFile } from './knowledge/kb';
 import { existsSync } from 'fs';
-import { ChatRequestSchema } from './core/validation';
+import { ChatRequestSchema, NearestBranchSchema } from './core/validation';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -94,6 +94,25 @@ app.post('/api/chat', async (req: Request, res: any) => {
   } catch (err: any) {
     logger.error({ err }, 'chat error');
     res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// Nearest branch: accepts { lat, lng } or { plusCode }
+app.post('/api/nearest-branch', (req: Request, res: any) => {
+  try {
+    const parsed = NearestBranchSchema.safeParse(req.body ?? {});
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' });
+    const { lat, lng, plusCode } = parsed.data as any;
+    if (lat !== undefined && lng !== undefined) {
+      return res.json({ text: `Location received (lat: ${lat.toFixed(5)}, lng: ${lng.toFixed(5)}). I'll locate the closest branch and provide directions soon.` });
+    }
+    if (plusCode) {
+      return res.json({ text: `Plus code received: ${plusCode}. I'll locate the closest branch and provide directions soon.` });
+    }
+    return res.json({ text: 'Location received. I\'ll locate the closest branch and provide directions soon.' });
+  } catch (e) {
+    (req as any).log?.error({ err: e }, 'nearest-branch error');
+    return res.status(500).json({ error: 'Internal error' });
   }
 });
 

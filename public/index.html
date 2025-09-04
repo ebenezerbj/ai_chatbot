@@ -289,6 +289,22 @@
       box-shadow: none;
     }
 
+    .icon-button {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 0.6rem 0.8rem;
+      cursor: pointer;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-button:hover {
+      background: var(--gray-200);
+    }
+
     .sidebar {
       width: 300px;
       display: flex;
@@ -550,6 +566,12 @@
               rows="1"
               required
             ></textarea>
+            <button type="button" id="useLocationBtn" class="icon-button" title="Use my location" aria-label="Use my location">
+              <i class="fas fa-location-crosshairs"></i>
+            </button>
+            <button type="button" id="plusCodeBtn" class="icon-button" title="Enter Plus Code" aria-label="Enter Plus Code">
+              <i class="fas fa-map-pin"></i>
+            </button>
             <button type="submit" class="send-button">
               <i class="fas fa-paper-plane"></i>
               <span class="send-text">Send</span>
@@ -566,6 +588,8 @@
     const input = document.getElementById('input');
     const sendButton = form.querySelector('button[type="submit"]');
     const sendButtonText = sendButton.querySelector('.send-text');
+  const useLocationBtn = document.getElementById('useLocationBtn');
+  const plusCodeBtn = document.getElementById('plusCodeBtn');
 
     let sessionId = null;
 
@@ -789,6 +813,48 @@ How can I assist you today?`);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       await sendMessage();
+    });
+
+    async function callNearestBranch(payload) {
+      try {
+        const resp = await fetch('/api/nearest-branch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (data?.text) addMsg('assistant', data.text);
+        else addMsg('assistant', 'Location received. Nearest branch lookup will be available soon.');
+      } catch (e) {
+        console.error('nearest error', e);
+        addMsg('assistant', 'Sorry, I could not process the location right now. You can share a GhanaPost plus code (e.g., QQJG+P27).');
+      }
+    }
+
+    useLocationBtn.addEventListener('click', async () => {
+      if (!('geolocation' in navigator)) {
+        addMsg('assistant', 'Geolocation is not supported by your browser. Please enter a GhanaPost plus code instead.');
+        return;
+      }
+      addMsg('assistant', 'Requesting your location…');
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          await callNearestBranch({ lat: latitude, lng: longitude });
+        },
+        (err) => {
+          console.error('geo error', err);
+          addMsg('assistant', 'I could not access your location. You can enter a GhanaPost plus code instead.');
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+      );
+    });
+
+    plusCodeBtn.addEventListener('click', async () => {
+      const code = window.prompt('Enter your GhanaPost Plus Code (e.g., QQJG+P27):');
+      if (!code) return;
+      await callNearestBranch({ plusCode: code });
     });
 
     // Hide "Send" text on smaller screens
