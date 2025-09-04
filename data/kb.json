@@ -18,6 +18,18 @@
     "answer": "Our branches are open Monday to Friday, from 8:00 AM to 4:00 PM."
   },
   {
+    "id": "mobile_banking_ussd",
+    "product": "Smart Banking",
+    "patterns": ["mobile.*bank", "ussd", "\\*992#", "short.*992", "code.*992"],
+    "answer": "Mobile Banking USSD short code: *992#"
+  },
+  {
+    "id": "ghana_pay_app",
+    "product": "Smart Banking",
+    "patterns": ["ghana\\s*pay", "\\*707#", "short.*707", "code.*707", "ghana pay app"],
+    "answer": "Ghana Pay short code: *707#\\nDownload Ghana Pay on the Play Store (Android) and App Store (iOS).\\n\\nSelf-onboarding steps:\\n1. Select Bank\\n2. Input referral code\\n3. Input Ghana Card Number\\n4. Take Selfie\\n5. Validate\\n6. On success, some details auto-populate\\n7. Provide remaining details:\\n   - Bank branch\\n   - Email\\n   - Secret question and answer\\n   - Occupation\\n   - Annual income\\n   - Source of Funds\\n   - Next of Kin name and contact"
+  },
+  {
     "id": "smart_banking",
     "product": "Smart Banking",
     "patterns": ["smart", "atm", "gh-?link", "e-?zwich", "apex", "inter-?bank", "ach", "interoperability"],

@@ -104,6 +104,9 @@ export class MockProvider implements LLMProvider {
         hours: /\b(hours|open|opening|closing|time)\b/i.test(lower),
         // Prefer explicit CEO detection so it can be answered concisely
         ceo: /(\bceo\b|chief\s+executive(\s+officer)?)/i.test(lower),
+  // Smart banking specific intents
+  ussd: /(\*992#|ussd|short\s*code\s*992|code\s*992)/i.test(lower),
+  ghanaPay: /(ghana\s*pay|\*707#|short\s*code\s*707|code\s*707)/i.test(lower),
   // Role-specific intents to prefer concise KB entries over generic management lists
   headAudit: /(\bhead\s+of\s+audit\b|\baudit\s+head\b)/i.test(lower),
   headCredit: /(\bhead\s+of\s+credit\b|\bcredit\s+head\b)/i.test(lower),
@@ -178,6 +181,9 @@ export class MockProvider implements LLMProvider {
       }
 
       // Generic selection fallback
+      const pickUssd = () => items.find(i => /\*992#|\bussd\b/i.test(i.answer));
+      const pickGhanaPay = () => items.find(i => /ghana\s*pay|\*707#/i.test(i.answer));
+
       const chosen =
         // Specific CEO question should prefer the CEO entry if available
         (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
@@ -193,7 +199,10 @@ export class MockProvider implements LLMProvider {
         (intents.contact && pickByProduct('Contact')) ||
         (intents.deposit && pickByProduct('Deposit')) ||
         (intents.loan && pickByProduct('Loan')) ||
-        (intents.smart && pickByProduct('Smart Banking')) ||
+  // Smart banking priority: specific entries first
+        (intents.ussd && pickUssd()) ||
+        (intents.ghanaPay && pickGhanaPay()) ||
+  (intents.smart && pickByProduct('Smart Banking')) ||
         (intents.invest && pickByProduct('Investment')) ||
         (intents.management && pickByProduct('Management')) ||
         (intents.productsAndServices && pickByProduct('Products & Services')) ||
