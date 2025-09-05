@@ -18,7 +18,9 @@ export type KBEntry = {
     | 'Smart Banking'
     | 'Investment'
     | 'Branch'
-    | 'Contact';
+  | 'Contact'
+  | 'History'
+  | 'Board Chairman';
   questionPatterns: RegExp[];
   answer: string;
 };
@@ -29,6 +31,33 @@ let currentKB: KBEntry[] = [
     questionPatterns: [/checking.*fee/i, /monthly.*fee/i, /account.*fee/i],
     answer:
       'Our Standard Checking has a $10 monthly service fee, waived with direct deposits totaling $500+/month or a $1,500+ daily balance. ATM withdrawals at our network are free; non-network ATMs may charge fees set by the operator.'
+  },
+  {
+    id: 'bank-history',
+    product: 'History',
+    questionPatterns: [
+  /\b(history|background|origin)\b/i,
+  /when\s+(was\s+)?(founded|established)/i,
+  /\b(founded|established)\b/i,
+  /(our\s+story|bank\s+story|company\s+story)/i
+    ],
+    answer:
+      'Amantin and Kasei Community Bank Ltd. was founded in 1996 (some sources cite 1997) and began as a "center for wealth creation" in Kasei (Ashanti Region). The Bank later relocated its headquarters to Amantin (Bono East Region) and adopted its current name to reflect service to both communities.\n\n' +
+      '**Founding and early years**\n' +
+      '- 1996: Founded (alt. reports mention 1997).\n' +
+      '- Purpose: Started as a center for wealth creation in Kasei.\n' +
+      '- Relocation: Headquarters later moved to Amantin to serve both Amantin and Kasei.\n\n' +
+      '**Growth and expansion**\n' +
+      '- 2020: Opened the 8th branch at Kejetia market (Kumasi) after a needs assessment showed many customers transacted there; other branches included Ahwiaa, Ejura, Atebubu, Kwame-Danso, Yeji, and Kajaji.\n' +
+      '- 2023: Strong performance with ~75% profit growth; total advances rose ~46.85% and total deposits ~17.47%.\n' +
+      '- 2024: No dividends for FY2023 per Bank of Ghana directives; launched a five-year strategic plan (base year 2024) to drive efficiency, growth, and resilience. CSR highlights include supporting a water project in Kasei and providing furniture for Atebubu Government Hospital.'
+  },
+  {
+    id: 'board-chairman',
+    product: 'Board Chairman',
+    questionPatterns: [/board\s*(chair|chairman)|chairman.*board|who.*board.*chair/i],
+    answer:
+      'Board Chairman: As of the 19th Annual General Meeting (2023), Richard Owusu Afriyie served as Chairman of the Board.'
   },
   {
     id: 'savings-apr',

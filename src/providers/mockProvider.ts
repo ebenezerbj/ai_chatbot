@@ -106,6 +106,9 @@ export class MockProvider implements LLMProvider {
         hours: /\b(hours|open|opening|closing|time)\b/i.test(lower),
         // Prefer explicit CEO detection so it can be answered concisely
         ceo: /(\bceo\b|chief\s+executive(\s+officer)?)/i.test(lower),
+  // Bank history and governance
+  history: /(\bhistory\b|\bbackground\b|\borigin\b|when\s+(was\s+)?(founded|established)|\bfounded\b|\bestablished\b|(our\s+story|bank\s+story|company\s+story))/i.test(lower),
+  boardChairman: /(board\s*(chair|chairman)|chairman.*board|who.*board.*chair)/i.test(lower),
   // Branch manager queries (list and single)
   branchManagersList: /\b(branch\s*managers|managers\s*list|list\s*of\s*branch\s*managers)\b/i.test(lower) && !/\b(ejura|ahwiaa|kejetia|yeji|kwame\s*danso|amantin|atebubu|kajaji)\b/i.test(lower),
   branchManager: /\b(branch\s*manager|manageress|officer[-\s]?in[-\s]?charge)\b/i.test(lower),
@@ -279,6 +282,9 @@ export class MockProvider implements LLMProvider {
       const chosen =
         // Specific CEO question should prefer the CEO entry if available
         (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
+  // Bank history and board chairman
+  (intents.history && pickByProduct('History')) ||
+  (intents.boardChairman && pickByProduct('Board Chairman')) ||
         // Nearest branch stub should be preferred when asked
         (intents.nearestBranch && (items.find(i => i.product === 'Nearest Branch') || pickByProduct('Branch'))) ||
         // Branch managers (explicit list or single)
