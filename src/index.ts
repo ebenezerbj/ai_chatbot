@@ -99,6 +99,8 @@ app.post('/api/chat', async (req: Request, res: any) => {
 });
 
 // Nearest branch: accepts { lat, lng } or { plusCode }
+// Note: Frontend map-pin (plus code entry) is hidden, but backend plus-code support is intentionally kept
+// for future use and programmatic clients. When provided, we resolve known GhanaPost Plus Codes to lat/lng.
 app.post('/api/nearest-branch', (req: Request, res: any) => {
   try {
     const parsed = NearestBranchSchema.safeParse(req.body ?? {});
