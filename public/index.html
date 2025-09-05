@@ -410,6 +410,32 @@
       line-height: 1.6;
     }
 
+    /* Action buttons row (e.g., Call / WhatsApp) appended to assistant messages */
+    .msg-actions {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .msg-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid var(--gray-200);
+      background: var(--gray-100);
+      color: var(--gray-800);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .msg-action-btn i { font-size: 0.9rem; }
+
+    .msg-action-btn.call { border-color: #10b98133; background: #10b98111; }
+    .msg-action-btn.whatsapp { border-color: #25D36633; background: #25D36611; }
+
     @media (max-width: 1024px) {
       .main-content {
         flex-direction: column;
@@ -719,6 +745,10 @@
 
       if (role === 'assistant') {
         content.innerHTML = renderMarkdownSafe(processed);
+        // After rendering, append mobile-only call/WhatsApp actions if a phone number is present
+        try {
+          addMobileContactActionsIfAny(content, processed);
+        } catch (e) { /* non-fatal */ }
       } else {
         content.textContent = processed;
       }
@@ -726,6 +756,74 @@
       div.appendChild(content);
       chatEl.appendChild(div);
       chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    // Detect mobile devices (simple UA check)
+    function isMobileDevice() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+    }
+
+    // Extract the first Ghana-style phone number from text and build tel/whatsapp links
+    function parsePhoneLinks(raw) {
+      if (!raw) return null;
+      // Match +233 XX XXX XXXX or 0XX XXX XXXX, as well as compact variants (e.g., 0202055171)
+      const re = /(\+233[\s\-]?(?:\d[\s\-]?){9,10}|\b0\d{2}[\s\-]?\d{3}[\s\-]?\d{4}\b|\b0\d{9}\b)/;
+      const m = raw.match(re);
+      if (!m) return null;
+      let display = (m[0] || '').trim().replace(/[\.,]+$/, '');
+      // Normalize
+      const digitsPlus = display.replace(/[^\d+]/g, '');
+      let tel = digitsPlus;
+      let wa = '';
+      if (/^\+233/.test(digitsPlus)) {
+        wa = digitsPlus.replace(/^\+/, '');
+      } else if (/^0\d{9}$/.test(digitsPlus)) {
+        // Convert local (0XXXXXXXXX) to E.164 for WA
+        wa = '233' + digitsPlus.slice(1);
+        // tel can keep local format (better compatibility in GH)
+        tel = digitsPlus;
+      } else if (/^233\d{9}$/.test(digitsPlus)) {
+        // Already international without +
+        tel = '+' + digitsPlus;
+        wa = digitsPlus;
+      } else if (/^\+\d{6,}$/.test(digitsPlus)) {
+        // Fallback: generic international
+        tel = digitsPlus;
+        wa = digitsPlus.replace(/^\+/, '');
+      } else {
+        // Couldn’t confidently parse
+        return null;
+      }
+      return {
+        display,
+        telHref: `tel:${tel}`,
+        waHref: `https://wa.me/${wa}`
+      };
+    }
+
+    // Append Call / WhatsApp buttons below assistant messages when applicable and on mobile
+    function addMobileContactActionsIfAny(containerEl, messageText) {
+      if (!isMobileDevice()) return; // Only on mobile per requirement
+      const info = parsePhoneLinks(messageText);
+      if (!info) return;
+      const row = document.createElement('div');
+      row.className = 'msg-actions';
+      const call = document.createElement('a');
+      call.className = 'msg-action-btn call';
+      call.href = info.telHref;
+      call.setAttribute('aria-label', `Call ${info.display}`);
+      call.innerHTML = `<i class="fas fa-phone" aria-hidden="true"></i><span>Call</span>`;
+      const wa = document.createElement('a');
+      wa.className = 'msg-action-btn whatsapp';
+      wa.href = info.waHref;
+      wa.target = '_blank';
+      wa.rel = 'noopener noreferrer';
+      wa.setAttribute('aria-label', `WhatsApp ${info.display}`);
+      wa.innerHTML = `<i class="fab fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>`;
+      row.appendChild(call);
+      row.appendChild(wa);
+      containerEl.appendChild(row);
     }
 
     function showTyping() {
