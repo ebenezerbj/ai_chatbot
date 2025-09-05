@@ -311,9 +311,8 @@ export class MockProvider implements LLMProvider {
             }
         }
 
-        if (chosen.product === 'Branch' && !/^branches:/i.test(chosen.answer)) {
-          text = `Here are our branches: ${chosen.answer}`;
-        }
+  // For Branch answers, return the KB text as-is (no generic wrapper),
+  // to keep single-branch queries concise, e.g., Kejetia/Ahwiaa location.
         if (chosen.product === 'Contact' && !/^contact/i.test(chosen.answer)) {
           text = `You can reach us here: ${chosen.answer}`;
         }
