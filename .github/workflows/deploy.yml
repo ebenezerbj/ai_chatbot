@@ -35,10 +35,18 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
     
     steps:
+    - name: Validate deploy hook URL
+      run: |
+        if [ -z "${RENDER_DEPLOY_HOOK_URL}" ]; then
+          echo "Missing RENDER_DEPLOY_HOOK_URL secret" >&2
+          exit 1
+        fi
     - name: Deploy to Render
       uses: fjogeleit/http-request-action@v1
       with:
-        url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        url: ${{ env.RENDER_DEPLOY_HOOK_URL }}
         method: 'POST'
