@@ -106,7 +106,7 @@ export class MockProvider implements LLMProvider {
         // Prefer explicit CEO detection so it can be answered concisely
         ceo: /(\bceo\b|chief\s+executive(\s+officer)?)/i.test(lower),
   // Branch manager queries (list and single)
-  branchManagersList: /\b(branch\s*managers|managers\s*list|list\s*of\s*branch\s*managers)\b/i.test(lower),
+  branchManagersList: /\b(branch\s*managers|managers\s*list|list\s*of\s*branch\s*managers)\b/i.test(lower) && !/\b(ejura|ahwiaa|kejetia|yeji|kwame\s*danso|amantin|atebubu|kajaji)\b/i.test(lower),
   branchManager: /\b(branch\s*manager|manageress|officer[-\s]?in[-\s]?charge)\b/i.test(lower),
   // Smart banking specific intents
   ussd: /(\*992#|ussd|short\s*code\s*992|code\s*992)/i.test(lower),
