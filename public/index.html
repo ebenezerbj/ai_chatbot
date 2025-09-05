@@ -614,6 +614,8 @@
   <script>
     // Configure the chatbot's human-friendly name here
     const assistantName = 'Ama';
+  // Show Call/WhatsApp action buttons on desktop too? (default: false = mobile-only)
+  const showContactActionsOnDesktop = false;
     const chatEl = document.getElementById('chat');
     const form = document.getElementById('composer');
     const input = document.getElementById('input');
@@ -802,9 +804,10 @@
       };
     }
 
-    // Append Call / WhatsApp buttons below assistant messages when applicable and on mobile
+    // Append Call / WhatsApp buttons below assistant messages when applicable
     function addMobileContactActionsIfAny(containerEl, messageText) {
-      if (!isMobileDevice()) return; // Only on mobile per requirement
+      // Respect desktop override; otherwise only show on mobile devices
+      if (!showContactActionsOnDesktop && !isMobileDevice()) return;
       const info = parsePhoneLinks(messageText);
       if (!info) return;
       const row = document.createElement('div');
