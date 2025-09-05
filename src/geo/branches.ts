@@ -18,7 +18,7 @@ export const BRANCHES: Branch[] = [
   { id: 'yeji', name: 'Yeji', region: 'Bono East', lat: 8.154, lng: -0.106, phone: '+233 20 205 5175' },
   { id: 'ahwiaa', name: 'Ahwiaa (Kumasi)', region: 'Ashanti', lat: 6.736, lng: -1.616, phone: '+233 20 209 9931' },
   { id: 'ejura', name: 'Ejura', region: 'Ashanti', lat: 7.383, lng: -1.364, phone: '+233 20 205 5172' },
-  { id: 'kejetia', name: 'Kumasi (Kejetia market)', region: 'Ashanti', lat: 6.6999130, lng: -1.6206450 },
+  { id: 'kejetia', name: 'Kumasi (Kejetia market)', region: 'Ashanti', lat: 6.6999130, lng: -1.6206450, phone: '0248698267' },
 ];
 
 // Known GhanaPost Plus Codes mapped to approximate coordinates (when provided in KB)
