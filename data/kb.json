@@ -3,7 +3,7 @@
     "id": "branches",
     "product": "Branch",
     "patterns": ["branches?", "locations?", "nearest"],
-    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 20 205 5170\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso**: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji**: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market."
+  "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 20 205 5170\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso**: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji**: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "nearest_branch_stub",
@@ -107,7 +107,7 @@
   "find.*kejetia.*branch",
   "kejetia.*branch"
     ],
-    "answer": "Kumasi (Kejetia market): Mobilization center located at the Kejetia market."
+  "answer": "Kumasi (Kejetia market): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "branch_managers_list",
@@ -430,6 +430,25 @@
     "product": "Products & Services",
     "patterns": ["products?", "services?", "offerings?"],
     "answer": "We offer a range of services including Deposit Accounts, Loans, Smart Banking, and Investments. Ask about a specific product for more details."
+  },
+  {
+    "id": "history",
+    "product": "History",
+    "patterns": [
+      "when.*founded",
+      "what.*year.*(start|begin|founded)",
+      "history|background|origins"
+    ],
+    "answer": "Amantin and Kasei Community Bank Ltd. began in the mid-1990s in Kasei, with operations commencing around 1996/1997. The Head Office later moved to Amantin. Over the years the bank expanded across Bono East and Ashanti regions, including opening a Kejetia mobilization centre in Kumasi in 2020. By 2023 the bank had grown its customer base and deposits significantly, and in 2024 focused on capital strengthening with a five-year plan while sustaining community support (CSR)."
+  },
+  {
+    "id": "board_chairman",
+    "product": "Board Chairman",
+    "patterns": [
+  "who.*board\\s*chair(man)?",
+  "board\\s*chairman"
+    ],
+    "answer": "Our Board Chairman is Richard Owusu Afriyie (as noted at the 2023 AGM)."
   },
   {
     "id": "concise_generic",
