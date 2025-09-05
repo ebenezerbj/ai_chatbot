@@ -19,4 +19,13 @@ describe('ChatService', () => {
     // Should not include the aggregate list header
     expect(result.reply).not.toMatch(/Branch Managers by location:/i);
   });
+
+  it('returns precise coordinates and map link for Kejetia location queries', async () => {
+    const service = new ChatService(new MockProvider());
+    const s = service.createSession();
+    const result = await service.sendMessage(s.id, 'Where can I locate Kejetia branch?');
+    expect(result.reply).toMatch(/Kejetia/i);
+    expect(result.reply).toMatch(/Directions: https:\/\/www\.google\.com\/maps\?q=/i);
+    expect(result.reply).toMatch(/6\.699913|6\.6999130/);
+  });
 });

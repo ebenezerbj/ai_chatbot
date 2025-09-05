@@ -1,4 +1,5 @@
 import { LLMProvider, LLMResponse } from '../core/types';
+import { BRANCHES, mapsUrlFromLatLng } from '../geo/branches';
 
 export class MockProvider implements LLMProvider {
   name = 'mock';
@@ -93,7 +94,7 @@ export class MockProvider implements LLMProvider {
         answer: m[3]
       }));
 
-      const intents = {
+  const intents = {
         greeting: /^(hi|hello|hey|good morning|good afternoon|good evening)$/i.test(lower.trim()),
   branch: /\b(branch|branches|location|locations)\b/i.test(lower),
   nearestBranch: /\b(nearest|near me|closest|nearby)\b/i.test(lower),
@@ -132,6 +133,25 @@ export class MockProvider implements LLMProvider {
         branchManagersList: intents.branchManagersList,
         branchManager: intents.branchManager
       });
+
+      // If the user asked about a specific branch location, prefer returning precise coordinates and a Maps link.
+      const resolveBranchFromQuery = (): { name: string; lat: number; lng: number; phone?: string } | null => {
+        const candidates: Array<{ re: RegExp; id: string }> = [
+          { re: /\bejura\b/i, id: 'ejura' },
+          { re: /\bahwiaa\b/i, id: 'ahwiaa' },
+          { re: /\bkejetia\b/i, id: 'kejetia' },
+          { re: /\byeji\b/i, id: 'yeji' },
+          { re: /kwame\s*danso/i, id: 'kwame_danso' },
+          { re: /\bamantin\b/i, id: 'amantin' },
+          { re: /\batebubu\b/i, id: 'atebubu' },
+          { re: /\bkajaji\b/i, id: 'kajaji' }
+        ];
+        const hit = candidates.find(c => c.re.test(lower));
+        if (!hit) return null;
+        const b = BRANCHES.find(x => x.id === hit.id);
+        if (!b) return null;
+        return { name: b.name, lat: b.lat, lng: b.lng, phone: b.phone };
+      };
 
       // Handle greetings
       if (intents.greeting) {
@@ -244,6 +264,18 @@ export class MockProvider implements LLMProvider {
       };
 
       const pickFullManagement = () => items.find(i => i.product === 'Management' && (/Senior Management.*Unit Heads/i.test(i.answer) || /\n- \*\*/.test(i.answer)));
+  // Geo-first for specific branch location queries only (avoid manager/other intents)
+  const isLocationStyle = /(where|locate|find|address|location|gps|map|directions)/i.test(lower);
+  const geoBranch = isLocationStyle && !intents.branchManager && !intents.branchManagersList && resolveBranchFromQuery();
+      if (geoBranch) {
+        const { name, lat, lng, phone } = geoBranch;
+        const url = mapsUrlFromLatLng(lat, lng);
+        const ll = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const phoneTxt = phone ? ` Phone: ${phone}.` : '';
+        const followUp = ' Need directions from your location?';
+        return { text: `${name}: ${ll}. Directions: ${url}.${phoneTxt}${followUp}` };
+      }
+
       const chosen =
         // Specific CEO question should prefer the CEO entry if available
         (intents.ceo && (pickByProduct('CEO') || pickByProduct('Management'))) ||
