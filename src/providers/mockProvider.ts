@@ -220,6 +220,23 @@ export class MockProvider implements LLMProvider {
               branchRegex.test(i.answer)
             );
             if (mentionEntry) return mentionEntry;
+
+            // As a robust fallback, extract the branch line from the aggregate list if present
+            const aggregate = items.find(i => i.product === 'Branch Manager' && isAggregateList(i.answer));
+            if (aggregate) {
+              const lines = aggregate.answer.split('\n');
+              const match = lines.find(l => branchRegex.test(l));
+              if (match) {
+                // Normalize and return a concise single-branch statement
+                // Example line: "- Yeji — **BENJAMIN AYISI** (Branch Manager)"
+                const cleaned = match.replace(/^[-\s]*\s*/, '').replace(/\*\*/g, '').trim();
+                // If the line already contains the branch name and title, return it as-is; otherwise prefix
+                const text = /branch\s*manager|officer[-\s]?in[-\s]?charge|manageress/i.test(cleaned)
+                  ? cleaned
+                  : `${cleaned}`;
+                return { idx: -1, product: 'Branch Manager', answer: text } as any;
+              }
+            }
           }
         }
         // Fallbacks: if no branch specified or no specific found, return the aggregate single entry

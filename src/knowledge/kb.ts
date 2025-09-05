@@ -13,6 +13,8 @@ export type KBEntry = {
   | 'Hours'
     | 'Deposit'
     | 'Loan'
+  | 'Branch Manager'
+  | 'Branch Managers'
     | 'Smart Banking'
     | 'Investment'
     | 'Branch'
