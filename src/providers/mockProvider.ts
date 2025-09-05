@@ -125,6 +125,14 @@ export class MockProvider implements LLMProvider {
         requirements: /(require|document|need|eligibil)/i.test(lower)
       } as const;
 
+      console.log('[DEBUG MOCK] Intents:', {
+        greeting: intents.greeting,
+        branch: intents.branch,
+        nearestBranch: intents.nearestBranch,
+        branchManagersList: intents.branchManagersList,
+        branchManager: intents.branchManager
+      });
+
       // Handle greetings
       if (intents.greeting) {
         console.log(`[DEBUG MOCK] Returning greeting response`);
@@ -190,19 +198,31 @@ export class MockProvider implements LLMProvider {
       const pickGhanaPay = () => items.find(i => /ghana\s*pay|\*707#/i.test(i.answer));
       const pickBranchManagersList = () => items.find(i => i.product === 'Branch Managers');
       const pickBranchManagerSingle = () => {
+        // Prefer a branch-specific single entry over the aggregate list.
+        const isAggregateList = (ans: string) => /^\s*Branch Managers by location:/i.test(ans);
         // Check if a specific branch is mentioned, prioritize specific manager entries
         const branchNames = ['ejura', 'ahwiaa', 'kejetia', 'yeji', 'kwame\\s*danso', 'amantin', 'atebubu', 'kajaji'];
         for (const branch of branchNames) {
           const branchRegex = new RegExp(`\\b${branch}\\b`, 'i');
           if (branchRegex.test(lower)) {
+            // First, try to match a dedicated single-branch answer (e.g., "Yeji branch manager: ...")
+            const dedicatedRegex = new RegExp(`(^|\n)\s*${branch}.*(branch.*manager|manageress|officer[-\s]?in[-\s]?charge)`, 'i');
             const specificEntry = items.find(i => 
-              i.product === 'Branch Manager' && 
-              branchRegex.test(i.answer)
+              i.product === 'Branch Manager' &&
+              !isAggregateList(i.answer) &&
+              dedicatedRegex.test(i.answer)
             );
             if (specificEntry) return specificEntry;
+            // As a secondary attempt, match any Branch Manager entry that mentions the branch but still avoid the aggregate list
+            const mentionEntry = items.find(i => 
+              i.product === 'Branch Manager' &&
+              !isAggregateList(i.answer) &&
+              branchRegex.test(i.answer)
+            );
+            if (mentionEntry) return mentionEntry;
           }
         }
-        // Fallback to general branch manager list
+        // Fallbacks: if no branch specified or no specific found, return the aggregate single entry
         return items.find(i => i.product === 'Branch Manager');
       };
 
@@ -214,7 +234,7 @@ export class MockProvider implements LLMProvider {
         (intents.nearestBranch && (items.find(i => i.product === 'Nearest Branch') || pickByProduct('Branch'))) ||
         // Branch managers (explicit list or single)
         (intents.branchManagersList && pickBranchManagersList()) ||
-        (intents.branchManager && pickBranchManagerSingle()) ||
+        (intents.branchManager && (console.log('[DEBUG MOCK] Trying single branch manager selection'), pickBranchManagerSingle())) ||
         // Explicit full management team request should return the full list
         (intents.fullManagement && pickFullManagement()) ||
   // Role-specific heads
