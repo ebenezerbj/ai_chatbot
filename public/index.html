@@ -586,6 +586,8 @@
   </div>
 
   <script>
+    // Configure the chatbot's human-friendly name here
+    const assistantName = 'Ama';
     const chatEl = document.getElementById('chat');
     const form = document.getElementById('composer');
     const input = document.getElementById('input');
@@ -597,7 +599,11 @@
 
     // Initialize with welcome message
     window.addEventListener('DOMContentLoaded', () => {
-      addMsg('assistant', `I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you?`);
+      // Set the chat title to the assistant's name
+      const titleEl = document.querySelector('.chat-title');
+      if (titleEl) titleEl.textContent = assistantName;
+
+      addMsg('assistant', `Hi, I'm ${assistantName}. I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you?`);
     });
 
     async function ensureSession() {
