@@ -15,8 +15,11 @@
     "id": "branch_location_amantin",
     "product": "Branch",
     "patterns": [
-      "amantin.*(address|location|gps|where|phone|number)",
-      "(address|location|gps|phone|number).*amantin"
+  "amantin.*(address|location|gps|where|phone|number)",
+  "(address|location|gps|phone|number).*amantin",
+  "where.*amantin.*branch",
+  "locate.*amantin",
+  "find.*amantin.*branch"
     ],
     "answer": "Amantin (Head Office): Amantin High Street. Phone: +233 20 205 5170"
   },
@@ -24,8 +27,11 @@
     "id": "branch_location_atebubu",
     "product": "Branch",
     "patterns": [
-      "atebubu.*(address|location|gps|where|phone|number)",
-      "(address|location|gps|phone|number).*atebubu"
+  "atebubu.*(address|location|gps|where|phone|number)",
+  "(address|location|gps|phone|number).*atebubu",
+  "where.*atebubu.*branch",
+  "locate.*atebubu",
+  "find.*atebubu.*branch"
     ],
     "answer": "Atebubu: Phone: +233 20 205 5173"
   },
@@ -33,8 +39,11 @@
     "id": "branch_location_kajaji",
     "product": "Branch",
     "patterns": [
-      "kajaji.*(address|location|gps|where|phone|number)",
-      "(address|location|gps|phone|number).*kajaji"
+  "kajaji.*(address|location|gps|where|phone|number)",
+  "(address|location|gps|phone|number).*kajaji",
+  "where.*kajaji.*branch",
+  "locate.*kajaji",
+  "find.*kajaji.*branch"
     ],
   "answer": "Kajaji: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372"
   },
@@ -43,7 +52,10 @@
     "product": "Branch",
     "patterns": [
   "kwame\\s*danso.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*kwame\\s*danso"
+  "(address|location|gps|phone|number).*kwame\\s*danso",
+  "where.*kwame\\s*danso.*branch",
+  "locate.*kwame\\s*danso",
+  "find.*kwame\\s*danso.*branch"
     ],
   "answer": "Kwame Danso: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174"
   },
@@ -51,8 +63,11 @@
     "id": "branch_location_yeji",
     "product": "Branch",
     "patterns": [
-      "yeji.*(address|location|gps|where|phone|number)",
-      "(address|location|gps|phone|number).*yeji"
+  "yeji.*(address|location|gps|where|phone|number)",
+  "(address|location|gps|phone|number).*yeji",
+  "where.*yeji.*branch",
+  "locate.*yeji",
+  "find.*yeji.*branch"
     ],
   "answer": "Yeji: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175"
   },
@@ -60,8 +75,11 @@
     "id": "branch_location_ahwiaa",
     "product": "Branch",
     "patterns": [
-      "ahwiaa.*(address|location|gps|where|phone|number)",
-      "(address|location|gps|phone|number).*ahwiaa"
+  "ahwiaa.*(address|location|gps|where|phone|number)",
+  "(address|location|gps|phone|number).*ahwiaa",
+  "where.*ahwiaa.*branch",
+  "locate.*ahwiaa",
+  "find.*ahwiaa.*branch"
     ],
   "answer": "Ahwiaa: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931"
   },
@@ -69,8 +87,11 @@
     "id": "branch_location_ejura",
     "product": "Branch",
     "patterns": [
-      "ejura.*(address|location|gps|where|phone|number)",
-      "(address|location|gps|phone|number).*ejura"
+  "ejura.*(address|location|gps|where|phone|number)",
+  "(address|location|gps|phone|number).*ejura",
+  "where.*ejura.*branch",
+  "locate.*ejura",
+  "find.*ejura.*branch"
     ],
     "answer": "Ejura: Ejura. Phone: +233 20 205 5172"
   },
@@ -78,8 +99,13 @@
     "id": "branch_location_kejetia",
     "product": "Branch",
     "patterns": [
-      "kejetia.*(address|location|gps|where|phone|number)",
-      "(address|location|gps|phone|number).*kejetia"
+  "kejetia.*(address|location|gps|where|phone|number)",
+  "(address|location|gps|phone|number).*kejetia",
+  "where.*kejetia.*branch",
+  "where.*kejetia",
+  "locate.*kejetia",
+  "find.*kejetia.*branch",
+  "kejetia.*branch"
     ],
     "answer": "Kumasi (Kejetia market): Mobilization center located at the Kejetia market."
   },
