@@ -189,7 +189,22 @@ export class MockProvider implements LLMProvider {
       const pickUssd = () => items.find(i => /\*992#|\bussd\b/i.test(i.answer));
       const pickGhanaPay = () => items.find(i => /ghana\s*pay|\*707#/i.test(i.answer));
       const pickBranchManagersList = () => items.find(i => i.product === 'Branch Managers');
-      const pickBranchManagerSingle = () => items.find(i => i.product === 'Branch Manager');
+      const pickBranchManagerSingle = () => {
+        // Check if a specific branch is mentioned, prioritize specific manager entries
+        const branchNames = ['ejura', 'ahwiaa', 'kejetia', 'yeji', 'kwame\\s*danso', 'amantin', 'atebubu', 'kajaji'];
+        for (const branch of branchNames) {
+          const branchRegex = new RegExp(`\\b${branch}\\b`, 'i');
+          if (branchRegex.test(lower)) {
+            const specificEntry = items.find(i => 
+              i.product === 'Branch Manager' && 
+              branchRegex.test(i.answer)
+            );
+            if (specificEntry) return specificEntry;
+          }
+        }
+        // Fallback to general branch manager list
+        return items.find(i => i.product === 'Branch Manager');
+      };
 
       const pickFullManagement = () => items.find(i => i.product === 'Management' && (/Senior Management.*Unit Heads/i.test(i.answer) || /\n- \*\*/.test(i.answer)));
       const chosen =
