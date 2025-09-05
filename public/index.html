@@ -597,14 +597,7 @@
 
     // Initialize with welcome message
     window.addEventListener('DOMContentLoaded', () => {
-      addMsg('assistant', `👋 Hello! I'm your digital banking assistant. I can help you with:
-
-• Account information and requirements  
-• Loan products and documentation
-• Branch locations and hours
-• Banking services and features
-
-How can I assist you today?`);
+      addMsg('assistant', `I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you?`);
     });
 
     async function ensureSession() {
@@ -759,6 +752,44 @@ How can I assist you today?`);
   async function sendMessage(message) {
       const msgText = (message || input.value).trim();
       if (!msgText) return;
+
+      // If user replies "yes" after a directions prompt, auto-request geolocation
+      try {
+        const getLastAssistantText = () => {
+          const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+          if (!nodes.length) return '';
+          return nodes[nodes.length - 1].textContent || '';
+        };
+        const lastAssistant = (getLastAssistantText() || '');
+        const askedForDirections = /need directions from your location\?/i.test(lastAssistant);
+        const affirmative = /^\s*(yes|yeah|yep|sure|ok|okay)\s*\.?$/i.test(msgText);
+        if (askedForDirections && affirmative) {
+          // Clear input and echo user's confirmation
+          input.value = '';
+          input.style.height = 'auto';
+          addMsg('user', msgText);
+
+          if (!('geolocation' in navigator)) {
+            addMsg('assistant', 'Geolocation is not supported by your browser. Please enter a GhanaPost plus code instead.');
+            return;
+          }
+          addMsg('assistant', 'Requesting your location…');
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              const { latitude, longitude } = pos.coords;
+              await callNearestBranch({ lat: latitude, lng: longitude });
+            },
+            (err) => {
+              console.error('geo error', err);
+              addMsg('assistant', 'I could not access your location. You can enter a GhanaPost plus code instead.');
+            },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+          );
+          return; // Do not forward this to the chat backend
+        }
+      } catch (e) {
+        // Non-fatal
+      }
       
       input.value = '';
       input.style.height = 'auto'; // Reset height
