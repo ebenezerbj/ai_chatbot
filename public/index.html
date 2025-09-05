@@ -574,9 +574,6 @@
             <button type="button" id="useLocationBtn" class="icon-button" title="Use my location" aria-label="Use my location">
               <i class="fas fa-location-crosshairs"></i>
             </button>
-            <button type="button" id="plusCodeBtn" class="icon-button" title="Enter Plus Code" aria-label="Enter Plus Code">
-              <i class="fas fa-map-pin"></i>
-            </button>
             <button type="submit" class="send-button">
               <i class="fas fa-paper-plane"></i>
               <span class="send-text">Send</span>
@@ -594,7 +591,6 @@
     const sendButton = form.querySelector('button[type="submit"]');
     const sendButtonText = sendButton.querySelector('.send-text');
   const useLocationBtn = document.getElementById('useLocationBtn');
-  const plusCodeBtn = document.getElementById('plusCodeBtn');
 
     let sessionId = null;
 
@@ -866,11 +862,7 @@ How can I assist you today?`);
       );
     });
 
-    plusCodeBtn.addEventListener('click', async () => {
-      const code = window.prompt('Enter your GhanaPost Plus Code (e.g., QQJG+P27):');
-      if (!code) return;
-      await callNearestBranch({ plusCode: code });
-    });
+  // Removed Plus Code map pin button per request
 
     // Hide "Send" text on smaller screens
     function adjustSendButton() {
