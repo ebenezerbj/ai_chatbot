@@ -759,6 +759,41 @@
       const msgText = (message || input.value).trim();
       if (!msgText) return;
 
+      // If user asks for the nearest branch, auto-request geolocation and handle locally
+      try {
+        const isNearestBranchQuery = (s) => {
+          const t = s.toLowerCase();
+          return (
+            /\b(where\s+(is|'s)\s+(the\s+)?)?(nearest|closest)\s+(branch|bank)(\s+(to\s+me|near\s+me))?\b/i.test(t) ||
+            /\b(find|show|get)\s+(me\s+)?(the\s+)?(nearest|closest)\s+(branch|bank)\b/i.test(t) ||
+            /\bnearest\s+(branch|bank)\b/i.test(t)
+          );
+        };
+        if (isNearestBranchQuery(msgText)) {
+          // Echo user message and request location
+          input.value = '';
+          input.style.height = 'auto';
+          addMsg('user', msgText);
+          if (!('geolocation' in navigator)) {
+            addMsg('assistant', 'Geolocation is not supported by your browser. Please use the crosshair button or enter a GhanaPost plus code (e.g., QQJG+P27).');
+            return;
+          }
+          addMsg('assistant', 'Requesting your location…');
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              const { latitude, longitude } = pos.coords;
+              await callNearestBranch({ lat: latitude, lng: longitude });
+            },
+            (err) => {
+              console.error('geo error', err);
+              addMsg('assistant', 'I could not access your location. Please allow location access, use the crosshair button, or share a GhanaPost plus code.');
+            },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+          );
+          return; // handled locally
+        }
+      } catch (e) { /* non-fatal */ }
+
       // If user replies "yes" after a directions prompt, auto-request geolocation
       try {
         const getLastAssistantText = () => {
