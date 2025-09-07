@@ -120,6 +120,39 @@ app.get('/api/health', (_req: Request, res: any) => {
   res.json({ status: 'ok', provider: provider.name });
 });
 
+// Lightweight diagnostics endpoint to test notifications
+// If ADMIN_TOKEN is set, require header x-admin-token to match
+app.all('/api/notify-test', async (req: any, res: any) => {
+  try {
+    const adminToken = process.env.ADMIN_TOKEN || '';
+    if (adminToken) {
+      const token = req.headers['x-admin-token'];
+      if (!token || token !== adminToken) {
+        return res.status(401).json({ error: 'unauthorized' });
+      }
+    }
+
+    const type = (req.method === 'POST' ? req.body?.type : req.query?.type) || 'handover';
+    if (String(type).toLowerCase() === 'escalation') {
+      const sessionId = (req.method === 'POST' ? req.body?.sessionId : req.query?.sessionId) || `test-session-${Date.now()}`;
+      const lastUserMessage = (req.method === 'POST' ? req.body?.message : req.query?.message) || 'Testing escalation notification';
+      await notifyEscalation({ sessionId, lastUserMessage });
+      return res.json({ ok: true, kind: 'escalation', sessionId });
+    } else {
+      const sessionId = (req.method === 'POST' ? req.body?.sessionId : req.query?.sessionId) || `test-session-${Date.now()}`;
+      const name = (req.method === 'POST' ? req.body?.name : req.query?.name) || 'Test User';
+      const phone = (req.method === 'POST' ? req.body?.phone : req.query?.phone) || '0240000000';
+      const message = (req.method === 'POST' ? req.body?.message : req.query?.message) || 'Testing handover notification';
+      const ticketId = uuidv4();
+      await notifyHandover({ ticketId, sessionId, name, phone, message });
+      return res.json({ ok: true, kind: 'handover', ticketId, sessionId });
+    }
+  } catch (e: any) {
+    (req as any).log?.error({ err: e }, 'notify-test error');
+    return res.status(500).json({ error: 'notify-test error' });
+  }
+});
+
 // Silence favicon 404s; if public/favicon.ico exists, express.static will serve it instead
 app.get('/favicon.ico', (_req: Request, res: any) => {
   res.status(204).end();
