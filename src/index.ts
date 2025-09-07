@@ -156,11 +156,12 @@ app.post('/api/tts', async (req: Request, res: any) => {
 
     const AZURE_KEY = process.env.AZURE_SPEECH_KEY || '';
     const AZURE_REGION = process.env.AZURE_SPEECH_REGION || '';
-    const AZURE_VOICE = reqVoice || process.env.AZURE_SPEECH_VOICE || '';
+  const AZURE_VOICE = reqVoice || process.env.AZURE_SPEECH_VOICE || '';
+  const AZURE_ENDPOINT = process.env.AZURE_SPEECH_ENDPOINT || '';
 
     // Prefer Azure if configured
-    if (AZURE_KEY && AZURE_REGION) {
-      const endpoint = `https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
+    if (AZURE_KEY && (AZURE_REGION || AZURE_ENDPOINT)) {
+      const endpoint = AZURE_ENDPOINT || `https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
       const voiceName = AZURE_VOICE || 'en-GH-AkuaNeural'; // configurable; ensure to set a valid Twi/Akan voice if available
       const ssml = `<?xml version="1.0" encoding="utf-8"?>\n<speak version="1.0" xml:lang="en-US"><voice name="${voiceName}">${escapeForSSML(text)}</voice></speak>`;
       const r = await fetch(endpoint, {

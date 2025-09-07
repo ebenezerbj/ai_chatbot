@@ -875,7 +875,7 @@
       const clean = String(text).replace(/\s+/g, ' ').trim();
       // If user selected Twi and no Twi voice exists, call server TTS
       const voices = getVoicesSafe();
-      const needServer = ttsLangPref === 'twi' && !voices.some(v => isTwiVoice(v));
+  const needServer = ttsLangPref === 'twi' && !voices.some(v => isTwiVoice(v));
     if (needServer) {
         try {
           stopSpeaking();
@@ -1079,7 +1079,7 @@
       const anyTwi = voices.some(v => isTwiVoice(v));
       const showWarn = ttsLangPref === 'twi' && !anyTwi;
       if (showWarn) {
-        ttsNote.textContent = 'No Twi/Akan voice found on this device. Install a Twi voice or select another language.';
+  ttsNote.textContent = 'No Twi/Akan voice found on this device. I\'ll use server TTS (Azure/eSpeak) instead.';
         ttsNote.style.display = 'inline';
       } else {
         ttsNote.textContent = '';
