@@ -86,12 +86,16 @@ export class ChatService {
       uncertainRe.test(processed.text) ||
       (!trivialRe.test(userText.trim()) && snippets.length === 0)
     );
+    console.log(`[DEBUG] Checking unresolved: generic=${genericRe.test(processed.text)}, uncertain=${uncertainRe.test(processed.text)}, noKB=${!trivialRe.test(userText.trim()) && snippets.length === 0}, result=${looksUnresolved}`);
     if (looksUnresolved) {
       session.unresolvedStreak = (session.unresolvedStreak || 0) + 1;
+      console.log(`[DEBUG] Unresolved turn detected. Streak now: ${session.unresolvedStreak}`);
     } else {
       session.unresolvedStreak = 0;
+      console.log(`[DEBUG] Resolved turn. Streak reset to 0`);
     }
     const suggestHandover = session.unresolvedStreak >= 2 || /human agent|talk to (a )?(human|person)/i.test(userText);
+    console.log(`[DEBUG] Suggest handover: ${suggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)})`);
 
     const assistantMsg: Message = {
       id: uuidv4(),
