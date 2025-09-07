@@ -157,8 +157,18 @@
     }
     .header-action-btn:hover { background: var(--gray-100); }
     .header-action-btn .label { display: inline; }
+    .header-action-select {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+      max-width: 220px;
+    }
     @media (max-width: 768px) {
       .header-action-btn .label { display: none; }
+      .header-action-select { max-width: 120px; }
     }
 
     @keyframes pulse {
@@ -606,6 +616,7 @@
           <div class="chat-title">Digital Assistant</div>
           <div class="chat-subtitle">Online</div>
           <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
+            <select id="ttsVoiceSelect" class="header-action-select" title="Choose voice" aria-label="Choose voice" style="display:none"></select>
             <button id="ttsToggle" class="header-action-btn" title="Toggle voice (text-to-speech)" aria-pressed="false" aria-label="Enable voice">
               <i class="fa fa-volume-high" aria-hidden="true"></i>
               <span class="label">Voice</span>
@@ -655,6 +666,7 @@
   let ttsVoiceName = localStorage.getItem('ttsVoiceName') || '';
   const ttsToggleBtn = document.getElementById('ttsToggle');
   const ttsStopBtn = document.getElementById('ttsStop');
+  const ttsVoiceSelect = document.getElementById('ttsVoiceSelect');
     const chatEl = document.getElementById('chat');
     const form = document.getElementById('composer');
     const input = document.getElementById('input');
@@ -830,9 +842,11 @@
         const v = voices.find(v => v.name === ttsVoiceName);
         if (v) return v;
       }
-      // Prefer English voices if present
-      const en = voices.find(v => /en[-_]/i.test(v.lang));
-      return en || voices[0];
+  // Prefer Ghanaian English first, then any English, otherwise first available
+  const enGh = voices.find(v => /en-?GH/i.test(v.lang) || /Ghana/i.test(v.name));
+  if (enGh) return enGh;
+  const en = voices.find(v => /en[-_]/i.test(v.lang));
+  return en || voices[0];
     }
 
     function speak(text) {
@@ -884,8 +898,11 @@
       if (!supported) {
         ttsToggleBtn.style.display = 'none';
         ttsStopBtn.style.display = 'none';
+        if (ttsVoiceSelect) ttsVoiceSelect.style.display = 'none';
         return;
       }
+      // Voice select visibility
+      refreshVoiceOptions();
       // Toggle button icon/state
       const icon = ttsToggleBtn.querySelector('i');
       ttsToggleBtn.setAttribute('aria-pressed', String(!!ttsEnabled));
@@ -899,7 +916,7 @@
       updateTTSButtons();
       // Some browsers load voices asynchronously
       if (isTTSSupported()) {
-        try { window.speechSynthesis.onvoiceschanged = () => updateTTSButtons(); } catch { /* ignore */ }
+        try { window.speechSynthesis.onvoiceschanged = () => { refreshVoiceOptions(); updateTTSButtons(); }; } catch { /* ignore */ }
       }
       // Wire header buttons
       ttsToggleBtn?.addEventListener('click', () => {
@@ -919,6 +936,49 @@
         }
       });
       ttsStopBtn?.addEventListener('click', stopSpeaking);
+    }
+
+    function refreshVoiceOptions() {
+      if (!ttsVoiceSelect) return;
+      if (!isTTSSupported()) { ttsVoiceSelect.style.display = 'none'; return; }
+      const voices = getVoicesSafe();
+      if (!voices.length) { ttsVoiceSelect.style.display = 'none'; return; }
+      // Build options only if list changed in size or not populated
+      const currentCount = ttsVoiceSelect.options.length;
+      if (currentCount !== voices.length) {
+        ttsVoiceSelect.innerHTML = '';
+        // Sort with en-GH first, then en-*, then rest
+        const sorted = voices.slice().sort((a,b) => {
+          const score = (v) => ( /en-?GH/i.test(v.lang) || /Ghana/i.test(v.name) ? 2 : /en[-_]/i.test(v.lang) ? 1 : 0 );
+          return score(b) - score(a) || a.name.localeCompare(b.name);
+        });
+        for (const v of sorted) {
+          const opt = document.createElement('option');
+          opt.value = v.name;
+          opt.textContent = `${v.name} (${v.lang})`;
+          ttsVoiceSelect.appendChild(opt);
+        }
+      }
+      // Select preferred or picked voice
+      const preferred = pickVoice();
+      const nameToSelect = ttsVoiceName || preferred?.name;
+      if (nameToSelect) ttsVoiceSelect.value = nameToSelect;
+      ttsVoiceSelect.style.display = 'inline-block';
+      // Change handler
+      if (!ttsVoiceSelect._wired) {
+        ttsVoiceSelect.addEventListener('change', () => {
+          ttsVoiceName = ttsVoiceSelect.value || '';
+          localStorage.setItem('ttsVoiceName', ttsVoiceName);
+          // If speaking, restart with new voice
+          if (currentUtterance) {
+            const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+            const last = nodes[nodes.length - 1];
+            const txt = last?.textContent || '';
+            if (txt.trim()) speak(txt);
+          }
+        });
+        ttsVoiceSelect._wired = true;
+      }
     }
     // Detect mobile devices (simple UA check)
     function isMobileDevice() {
