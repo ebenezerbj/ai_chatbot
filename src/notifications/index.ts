@@ -47,7 +47,14 @@ function toSmsOnlineGhNumber(msisdn: string): string | null {
 
 export async function sendWebhook(url: string, payload: any): Promise<void> {
   if (!url) return;
-  await httpPostJson(url, payload).catch(() => {});
+  try {
+    const resp = await httpPostJson(url, payload);
+    if (!resp.ok) {
+      console.warn('[notify] webhook post failed', { url, status: resp.status });
+    }
+  } catch (e) {
+    console.warn('[notify] webhook post error', { url, err: (e as any)?.message || e });
+  }
 }
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
@@ -99,16 +106,22 @@ export async function sendSmsOnlineGhBulk(destinations: string[], text: string):
     sender,
     destinations: cleaned
   } as any;
-  const { ok, json } = await httpPostJson(apiUrl, body, {
+  console.log('[notify] SMSOnlineGH bulk send attempt', { count: cleaned.length, sender });
+  const resp = await httpPostJson(apiUrl, body, {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': `key ${key}`
     }
   });
-  if (!ok) return false;
-  const data: any = json;
-  return data?.handshake?.id === 0 || data === undefined; // treat missing JSON as success
+  if (!resp.ok) {
+    console.warn('[notify] SMSOnlineGH post failed', { status: resp.status, text: resp.text });
+    return false;
+  }
+  const data: any = resp.json;
+  const success = data?.handshake?.id === 0 || data === undefined; // treat missing JSON as success
+  console.log('[notify] SMSOnlineGH response', { success, handshake: data?.handshake });
+  return success;
 }
 
 // Collect branch phone numbers (may contain spaces or +233); filter falsy
@@ -176,6 +189,7 @@ export async function notifyEscalation(opts: { sessionId: string; lastUserMessag
     await sendEmail(emailTo, `[Chatbot] Escalation suggested for session ${opts.sessionId}`, html);
   }
   const numbers: string[] = getMergedRecipients('ESCALATION_SMS_TO');
+  console.log('[notify] escalation: sms recipients', { count: numbers.length });
   if (numbers.length) {
     const text = `Chatbot escalation suggested. Session ${opts.sessionId}.`;
     // Prefer bulk via SMSOnlineGH when available
@@ -207,11 +221,16 @@ export async function notifyHandover(opts: { ticketId: string; sessionId: string
     await sendEmail(emailTo, `[Chatbot] Handover request ${opts.ticketId}`, html);
   }
   const numbers: string[] = getMergedRecipients('HANDOVER_SMS_TO');
+  console.log('[notify] handover: sms recipients', { count: numbers.length });
   if (numbers.length) {
     const preview = (opts.message || '').slice(0, 120).replace(/\s+/g, ' ');
     const text = `Handover ${opts.ticketId} from ${opts.name || 'N/A'} ${opts.phone || ''}. Msg: ${preview}`;
     if ((process.env.SMSONLINEGH_KEY || '') && (process.env.SMSONLINEGH_SENDER || '')) {
-      await sendSmsOnlineGhBulk(numbers, text).catch(() => {});
+      const ok = await sendSmsOnlineGhBulk(numbers, text).catch((e) => {
+        console.warn('[notify] handover sms bulk error', { err: (e as any)?.message || e });
+        return false;
+      });
+      if (!ok) console.warn('[notify] handover sms bulk not sent');
     } else {
       await Promise.all(numbers.map((n: string) => sendSMS(n, text)));
     }
@@ -266,7 +285,10 @@ async function httpPostJson(urlStr: string, payload: any, opts: PostOpts = {}): 
         resolve({ ok: res.statusCode! >= 200 && res.statusCode! < 300, status: res.statusCode || 0, text, json });
       });
     });
-    req.on('error', () => resolve({ ok: false, status: 0 }));
+    req.on('error', (e) => {
+      console.warn('[notify] httpPostJson request error', { host: reqOptions.hostname, path: reqOptions.path, err: (e as any)?.message || e });
+      resolve({ ok: false, status: 0 });
+    });
     req.write(data);
     req.end();
   });
