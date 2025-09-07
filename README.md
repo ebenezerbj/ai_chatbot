@@ -8,6 +8,7 @@ A professional, safe-by-default chatbot for a financial institution.
 - Safety filters: redact sensitive inputs, guardrails, rate limiting, Helmet
 - Clean architecture with pluggable LLM providers (OpenAI or mock)
 - Minimal web UI for quick testing
+- Human handover with escalation heuristics, rate limiting, and optional notifications
 
 ## Quick Start
 
@@ -85,6 +86,46 @@ git push origin main
 # Or use PowerShell script
 powershell -ExecutionPolicy Bypass -File deploy.ps1 -CommitMessage "your message"
 ```
+
+## Human Handover
+
+When the bot cannot resolve an issue (based on an unresolved streak or when the user asks to speak to a person), it shows a “Talk to a person” button and an inline form. Submissions are sent to `/api/handover`.
+
+### Frontend validation
+
+- Basic Ghana phone check: accepts `0XXXXXXXXX` or `+233XXXXXXXXX` (spaces/dashes ignored).
+
+### Backend protections
+
+- Global rate limit plus per-endpoint limiter for `/api/handover` (default 5/min per IP). Configure via `HANDOVER_RATE_MAX` in `.env`.
+
+### Notifications (optional)
+
+Enable one or more notification channels via environment variables:
+
+- Webhook: `HANDOVER_WEBHOOK_URL` (receives JSON payload per request)
+- Ticketing webhook (generic): `TICKETING_WEBHOOK_URL`
+- Email via SMTP: set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `HANDOVER_EMAIL_TO`
+
+Example `.env` excerpt:
+
+```env
+HANDOVER_RATE_MAX=5
+
+# Webhooks
+HANDOVER_WEBHOOK_URL=https://hooks.example.com/handover
+TICKETING_WEBHOOK_URL=https://tickets.example.com/create
+
+# Email via SMTP
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=apikey
+SMTP_PASS=secret
+SMTP_FROM=chatbot@example.com
+HANDOVER_EMAIL_TO=support@example.com
+```
+
+If none are configured, the server logs each request with a `ticketId` and returns `{ ok: true, status: 'queued' }`.
 
 ## Project Structure
 

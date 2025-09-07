@@ -1340,6 +1340,27 @@
   const phone = phoneEl ? (phoneEl.value || '') : '';
   const msg = msgEl ? (msgEl.value || '') : '';
       const statusEl = document.getElementById('handoverStatus');
+      // Basic phone validation (Ghana): allow +233XXXXXXXXX or 0XXXXXXXXX; ignore spaces/dashes
+      const phoneRaw = (phone || '').replace(/[^\d+]/g, '');
+      if (phoneRaw) {
+        let ok = false;
+        if (phoneRaw.startsWith('+233')) {
+          const digits = phoneRaw.replace(/\D/g, '');
+          ok = digits.length === 12; // 233 + 9 digits
+        } else if (phoneRaw.startsWith('233')) {
+          ok = phoneRaw.replace(/\D/g, '').length === 12;
+        } else if (phoneRaw.startsWith('0')) {
+          const digits = phoneRaw.replace(/\D/g, '');
+          ok = digits.length === 10; // 0 + 9 digits
+        }
+        if (!ok) {
+          if (statusEl) {
+            statusEl.style.color = 'var(--danger, #c62828)';
+            statusEl.textContent = 'Please enter a valid Ghana phone (e.g., 024XXXXXXX or +23324XXXXXXX).';
+          }
+          return;
+        }
+      }
       try {
         const sid = await ensureSession();
   if (statusEl) statusEl.textContent = 'Submitting…';
@@ -1349,7 +1370,13 @@
           if (statusEl) statusEl.textContent = `Request received. Ticket: ${data.ticketId}. An agent will contact you soon.`;
           return;
         }
-        if (statusEl) statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+        if (statusEl) {
+          if (resp.status === 429) {
+            statusEl.textContent = 'Too many requests. Please try again later.';
+          } else {
+            statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+          }
+        }
       } catch (e) {
         if (statusEl) statusEl.textContent = 'Network error submitting request.';
       }

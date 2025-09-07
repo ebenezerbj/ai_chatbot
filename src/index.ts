@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import nodemailer from 'nodemailer';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { OpenAIProvider } from './providers/openaiProvider';
@@ -46,6 +47,15 @@ const limiter = rateLimit({
   max: 60
 });
 app.use(limiter);
+
+// Per-endpoint limiter for handover submissions
+const handoverLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: Number(process.env.HANDOVER_RATE_MAX || 5),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: any, res: any) => res.status(429).json({ error: 'Too many handover requests. Please try again later.' })
+});
 
 // Choose provider
 let provider;
@@ -223,7 +233,7 @@ app.post('/api/tts', async (req: Request, res: any) => {
 
 // Human handover: accept a request to connect with a human agent
 // Body: { sessionId: string, name?: string, phone?: string, message?: string }
-app.post('/api/handover', async (req: Request, res: any) => {
+app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
   try {
     const body: any = (req as any).body || {};
     const sessionId = String(body.sessionId || '').trim();
@@ -233,6 +243,22 @@ app.post('/api/handover', async (req: Request, res: any) => {
     if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
     const s = chat.getSession(sessionId);
     if (!s) return res.status(404).json({ error: 'session not found' });
+
+    // Server-side basic phone validation (optional)
+    const phoneRaw = (phone || '').replace(/[^\d+]/g, '');
+    if (phoneRaw) {
+      let ok = false;
+      if (phoneRaw.startsWith('+233')) {
+        const digits = phoneRaw.replace(/\D/g, '');
+        ok = digits.length === 12; // 233 + 9 digits
+      } else if (phoneRaw.startsWith('233')) {
+        ok = phoneRaw.replace(/\D/g, '').length === 12;
+      } else if (phoneRaw.startsWith('0')) {
+        const digits = phoneRaw.replace(/\D/g, '');
+        ok = digits.length === 10; // 0 + 9 digits
+      }
+      if (!ok) return res.status(400).json({ error: 'Invalid phone format' });
+    }
 
     const ticketId = uuidv4();
     // Basic structured log; in a real setup, forward to a ticketing system/email/webhook
@@ -244,6 +270,69 @@ app.post('/api/handover', async (req: Request, res: any) => {
       message,
       recentHistory: s.history.slice(-6)
     }, 'handover:request');
+
+    // Optional: webhook notification
+    try {
+      const hook = process.env.HANDOVER_WEBHOOK_URL || '';
+      if (hook) {
+        await fetch(hook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'handover', ticketId, sessionId, name, phone, message, at: new Date().toISOString() })
+        } as any);
+      }
+    } catch (e) {
+      (req as any).log?.warn({ err: e }, 'handover webhook failed');
+    }
+
+    // Optional: email notification via SMTP
+    try {
+      const to = process.env.HANDOVER_EMAIL_TO || '';
+      const host = process.env.SMTP_HOST || '';
+      const port = Number(process.env.SMTP_PORT || 587);
+      const user = process.env.SMTP_USER || '';
+      const pass = process.env.SMTP_PASS || '';
+      if (to && host && user && pass) {
+        const transporter = nodemailer.createTransport({
+          host,
+          port,
+          secure: port === 465,
+          auth: { user, pass }
+        });
+        const html = `
+          <p>New human handover request</p>
+          <ul>
+            <li><b>Ticket:</b> ${ticketId}</li>
+            <li><b>Session:</b> ${sessionId}</li>
+            <li><b>Name:</b> ${name || '(n/a)'}</li>
+            <li><b>Phone:</b> ${phone || '(n/a)'}</li>
+            <li><b>Message:</b> ${message || '(n/a)'}</li>
+          </ul>
+        `;
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || user,
+          to,
+          subject: `[Chatbot] Handover request ${ticketId}`,
+          html
+        });
+      }
+    } catch (e) {
+      (req as any).log?.warn({ err: e }, 'handover email failed');
+    }
+
+    // Optional: ticketing webhook (generic)
+    try {
+      const ticketHook = process.env.TICKETING_WEBHOOK_URL || '';
+      if (ticketHook) {
+        await fetch(ticketHook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticketId, sessionId, name, phone, message })
+        } as any);
+      }
+    } catch (e) {
+      (req as any).log?.warn({ err: e }, 'ticketing webhook failed');
+    }
 
     return res.json({ ok: true, ticketId, status: 'queued' });
   } catch (err: any) {
