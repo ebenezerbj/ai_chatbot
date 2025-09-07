@@ -107,6 +107,7 @@ Enable one or more notification channels via environment variables:
 - Ticketing webhook (generic): `TICKETING_WEBHOOK_URL`
 - Email via SMTP: set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `HANDOVER_EMAIL_TO`
 - SMS via Twilio: set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, and recipient lists `HANDOVER_SMS_TO` or `ESCALATION_SMS_TO`
+- SMS via SMSOnlineGH (preferred local): set `SMSONLINEGH_KEY`, `SMSONLINEGH_SENDER` (optional `SMSONLINEGH_URL`); takes precedence over Twilio when configured
 
 Example `.env` excerpt:
 
@@ -131,6 +132,12 @@ TWILIO_AUTH_TOKEN=xxxxxxxx
 TWILIO_FROM=+1234567890
 HANDOVER_SMS_TO=+23324XXXXXXX,+23320YYYYYYY
 ESCALATION_SMS_TO=+23324ZZZZZZZ
+
+# SMS via SMSOnlineGH (preferred local)
+SMSONLINEGH_KEY=your_api_key
+SMSONLINEGH_SENDER=YOUR_SENDER_NAME
+# Optional override (defaults to v5 endpoint shown below)
+# SMSONLINEGH_URL=https://api.smsonlinegh.com/v5/message/sms/send
 
 # Escalation notifications
 NOTIFY_ON_ESCALATION=true
