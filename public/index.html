@@ -1273,7 +1273,12 @@
         hideTyping();
         if (data?.reply) {
           addMsg('assistant', data.reply);
-          try { if (data.suggestHandover) renderHandoverCTA(); } catch {}
+          try {
+            if (data.suggestHandover) {
+              addMsg('assistant', 'Would you like me to connect you to a human agent?');
+              renderHandoverCTA();
+            }
+          } catch {}
         } else {
           addMsg('assistant', 'Sorry, I encountered an issue processing your request. Please try again.');
         }
