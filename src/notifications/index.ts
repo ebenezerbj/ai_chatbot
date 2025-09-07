@@ -257,6 +257,22 @@ export function getEscalationRecipientCount(): number {
   }
 }
 
+export function getSmsProvider(): 'smsonlinegh' | 'twilio' | 'none' {
+  const hasGh = !!(process.env.SMSONLINEGH_KEY && process.env.SMSONLINEGH_SENDER);
+  if (hasGh) return 'smsonlinegh';
+  const hasTwilio = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM);
+  if (hasTwilio) return 'twilio';
+  return 'none';
+}
+
+export function previewHandoverRecipients(): string[] {
+  try {
+    return getMergedRecipients('HANDOVER_SMS_TO');
+  } catch {
+    return [];
+  }
+}
+
 function getCustomCA(): string | undefined {
   try {
     const caFile = (process.env.CACERT_FILE || process.env.NODE_EXTRA_CA_CERTS || join(process.cwd(), 'cacert.pem')) as string;

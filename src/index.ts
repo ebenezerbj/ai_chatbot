@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import nodemailer from 'nodemailer';
-import { notifyEscalation, notifyHandover, getHandoverRecipientCount } from './notifications';
+import { notifyEscalation, notifyHandover, getHandoverRecipientCount, getSmsProvider, previewHandoverRecipients } from './notifications';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { OpenAIProvider } from './providers/openaiProvider';
@@ -346,9 +346,12 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
   // Unified notifications (webhook/email/SMS) if configured
   try { await notifyHandover({ ticketId, sessionId, name, phone, message }); } catch {}
 
-  // Include a small diagnostic: how many SMS recipients are configured for handover
+  // Include diagnostics: count, provider, and a limited preview when admin header present
   const recipientCount = getHandoverRecipientCount();
-  return res.json({ ok: true, ticketId, status: 'queued', recipientCount });
+  const provider = getSmsProvider();
+  const isAdmin = ((req as any).headers?.['x-admin-token'] || '') === (process.env.ADMIN_TOKEN || '');
+  const preview = isAdmin ? (previewHandoverRecipients().slice(0, 5)) : undefined;
+  return res.json({ ok: true, ticketId, status: 'queued', recipientCount, provider, preview });
   } catch (err: any) {
     (req as any).log?.error({ err }, 'handover error');
     return res.status(500).json({ error: 'handover error' });
