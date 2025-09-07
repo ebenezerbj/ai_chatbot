@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
 import { BRANCHES } from '../geo/branches';
+import * as https from 'https';
+import * as http from 'http';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 type EscalationPayload = {
   kind: 'escalation';
@@ -43,11 +47,7 @@ function toSmsOnlineGhNumber(msisdn: string): string | null {
 
 export async function sendWebhook(url: string, payload: any): Promise<void> {
   if (!url) return;
-  await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  } as any).catch(() => {});
+  await httpPostJson(url, payload).catch(() => {});
 }
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
@@ -99,23 +99,16 @@ export async function sendSmsOnlineGhBulk(destinations: string[], text: string):
     sender,
     destinations: cleaned
   } as any;
-  const resp = await fetch(apiUrl, {
-    method: 'POST',
+  const { ok, json } = await httpPostJson(apiUrl, body, {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': `key ${key}`
-    },
-    body: JSON.stringify(body)
-  } as any);
-  if (!resp.ok) return false;
-  try {
-    const data = await resp.json();
-    // Expect handshake.id === 0 and label === 'HSHK_OK'
-    return data?.handshake?.id === 0;
-  } catch {
-    return true; // assume success if cannot parse
-  }
+    }
+  });
+  if (!ok) return false;
+  const data: any = json;
+  return data?.handshake?.id === 0 || data === undefined; // treat missing JSON as success
 }
 
 // Collect branch phone numbers (may contain spaces or +233); filter falsy
@@ -223,4 +216,58 @@ export async function notifyHandover(opts: { ticketId: string; sessionId: string
       await Promise.all(numbers.map((n: string) => sendSMS(n, text)));
     }
   }
+}
+
+// --- Internal: HTTP(S) helper with custom CA support ---
+type PostOpts = { headers?: Record<string, string>; timeoutMs?: number };
+
+function getCustomCA(): string | undefined {
+  try {
+    const caFile = (process.env.CACERT_FILE || process.env.NODE_EXTRA_CA_CERTS || join(process.cwd(), 'cacert.pem')) as string;
+    if (caFile && existsSync(caFile)) {
+      return readFileSync(caFile, 'utf-8');
+    }
+  } catch {}
+  return undefined;
+}
+
+async function httpPostJson(urlStr: string, payload: any, opts: PostOpts = {}): Promise<{ ok: boolean; status: number; text?: string; json?: any }> {
+  const u = new URL(urlStr);
+  const data = Buffer.from(JSON.stringify(payload));
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Content-Length': String(data.length),
+    ...opts.headers,
+  };
+  const ca = getCustomCA();
+  const isHttps = u.protocol === 'https:';
+  const requestFn = isHttps ? https.request : http.request;
+  const agent = isHttps ? new https.Agent({ ca, rejectUnauthorized: true }) : undefined;
+
+  const reqOptions: https.RequestOptions = {
+    protocol: u.protocol,
+    hostname: u.hostname,
+    port: u.port ? Number(u.port) : (isHttps ? 443 : 80),
+    path: `${u.pathname}${u.search}`,
+    method: 'POST',
+    headers,
+    agent,
+    timeout: opts.timeoutMs ?? 15000,
+  };
+
+  return await new Promise((resolve) => {
+    const req = requestFn(reqOptions, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (c) => chunks.push(c));
+      res.on('end', () => {
+        const text = Buffer.concat(chunks).toString('utf-8');
+        let json: any;
+        try { json = text ? JSON.parse(text) : undefined; } catch {}
+        resolve({ ok: res.statusCode! >= 200 && res.statusCode! < 300, status: res.statusCode || 0, text, json });
+      });
+    });
+    req.on('error', () => resolve({ ok: false, status: 0 }));
+    req.write(data);
+    req.end();
+  });
 }

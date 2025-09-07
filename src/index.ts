@@ -13,15 +13,46 @@ import OpenAI from 'openai';
 import { MockProvider } from './providers/mockProvider';
 import { ChatService } from './services/chatService';
 import { loadKBFromFile } from './knowledge/kb';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { execFile } from 'child_process';
 import { mkdtemp, readFile as fsReadFile, unlink } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import * as https from 'https';
 import { ChatRequestSchema, NearestBranchSchema } from './core/validation';
 import { resolvePlusCode, findNearestBranch, mapsUrlFromLatLng } from './geo/branches';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+
+// Optional: apply custom CA for outbound HTTPS (e.g., SMS provider behind corporate proxy)
+// Looks for CACERT_FILE, NODE_EXTRA_CA_CERTS, or ./cacert.pem in project root
+try {
+  const caFile = (process.env.CACERT_FILE || process.env.NODE_EXTRA_CA_CERTS || join(process.cwd(), 'cacert.pem')) as string;
+  if (caFile && existsSync(caFile)) {
+    const ca = readFileSync(caFile, 'utf-8');
+    // Apply to undici (global fetch in Node 18+)
+    (async () => {
+      try {
+        const { setGlobalDispatcher, Agent } = await import('undici');
+        // Undici Agent accepts TLS options directly under connect
+        // See: https://undici.nodejs.org/#/docs/api/Agent?id=parameter-connect
+        setGlobalDispatcher(new Agent({ connect: { ca } as any }));
+        logger.info({ caFile }, 'Applied custom CA to fetch (undici)');
+      } catch (e: any) {
+        logger.warn({ err: e?.message || e }, 'Failed to apply custom CA to undici');
+      }
+    })();
+    // Apply to Node https global agent (used by some SDKs like Twilio, nodemailer)
+    try {
+      (https as any).globalAgent.options.ca = ca;
+      logger.info({ caFile }, 'Applied custom CA to https.globalAgent');
+    } catch (e: any) {
+      logger.warn({ err: e?.message || e }, 'Failed to apply custom CA to https.globalAgent');
+    }
+  }
+} catch (e: any) {
+  logger.warn({ err: e?.message || e }, 'Custom CA setup skipped');
+}
 
 const app = express();
 app.use(express.json());
