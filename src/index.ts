@@ -225,26 +225,48 @@ function escapeForSSML(s: string): string {
 
 // Try local keyless TTS with espeak-ng / espeak (WAV output)
 async function tryEspeakTTS(text: string, langHint?: string): Promise<Buffer | null> {
-  // Prefer Akan/Twi code if requested
-  const voice = langHint?.toLowerCase() === 'twi' ? 'ak' : (langHint?.toLowerCase().startsWith('en') ? 'en' : 'en');
-  const binCandidates = ['espeak-ng', 'espeak'];
+  const hint = (langHint || '').toLowerCase();
+  // Build a list of likely voices based on hint, with safe fallbacks
+  // eSpeak NG Windows builds often lack 'ak' (Akan/Twi), so we include English fallbacks.
+  const voiceCandidates: string[] = (() => {
+    if (hint === 'twi' || hint.startsWith('ak') || hint.startsWith('tw')) {
+      return ['ak', 'twi', 'aka', 'en-gb', 'en'];
+    }
+    if (hint.startsWith('en')) {
+      return ['en-gb', 'en'];
+    }
+    return ['en-gb', 'en'];
+  })();
+
+  // Candidate binaries; include common Windows install paths
+  const binCandidates: string[] = ['espeak-ng', 'espeak'];
+  if (process.platform === 'win32') {
+    binCandidates.unshift(
+      'C\\\\Program Files\\\\eSpeak NG\\\\espeak-ng.exe',
+      'C:\\Program Files\\eSpeak NG\\espeak-ng.exe',
+      'C:\\Program Files (x86)\\eSpeak NG\\espeak-ng.exe',
+      'C:\\Program Files\\eSpeak\\command_line\\espeak.exe'
+    );
+  }
+
   const tmp = await mkdtemp(join(tmpdir(), 'tts-'));
   const wavPath = join(tmp, 'out.wav');
-  const args = ['-v', voice, '-s', '175', '-w', wavPath, text];
+
   for (const bin of binCandidates) {
-    try {
-      await new Promise<void>((resolve, reject) => {
-        execFile(bin, args, { windowsHide: true }, (err) => err ? reject(err) : resolve());
-      });
-      const buf = await fsReadFile(wavPath);
-      // cleanup
-      try { await unlink(wavPath); } catch {}
-      return buf;
-    } catch (e) {
-      // try next binary
+    for (const voice of voiceCandidates) {
+      const args = ['-v', voice, '-s', '175', '-w', wavPath, text];
+      try {
+        await new Promise<void>((resolve, reject) => {
+          execFile(bin, args, { windowsHide: true }, (err) => (err ? reject(err) : resolve()));
+        });
+        const buf = await fsReadFile(wavPath);
+        try { await unlink(wavPath); } catch {}
+        return buf;
+      } catch (_e) {
+        // try next voice or binary
+      }
     }
   }
-  // cleanup if file exists
   try { await unlink(wavPath); } catch {}
   return null;
 }
