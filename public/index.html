@@ -616,6 +616,7 @@
           <div class="chat-title">Digital Assistant</div>
           <div class="chat-subtitle">Online</div>
           <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
+            <select id="ttsLangSelect" class="header-action-select" title="Choose language" aria-label="Choose language" style="display:none"></select>
             <select id="ttsVoiceSelect" class="header-action-select" title="Choose voice" aria-label="Choose voice" style="display:none"></select>
             <button id="ttsToggle" class="header-action-btn" title="Toggle voice (text-to-speech)" aria-pressed="false" aria-label="Enable voice">
               <i class="fa fa-volume-high" aria-hidden="true"></i>
@@ -664,9 +665,11 @@
   let ttsEnabled = JSON.parse(localStorage.getItem('ttsEnabled') || 'true');
   let currentUtterance = null;
   let ttsVoiceName = localStorage.getItem('ttsVoiceName') || '';
+  let ttsLangPref = localStorage.getItem('ttsLangPref') || 'auto'; // 'auto' | 'en' | 'twi'
   const ttsToggleBtn = document.getElementById('ttsToggle');
   const ttsStopBtn = document.getElementById('ttsStop');
   const ttsVoiceSelect = document.getElementById('ttsVoiceSelect');
+  const ttsLangSelect = document.getElementById('ttsLangSelect');
     const chatEl = document.getElementById('chat');
     const form = document.getElementById('composer');
     const input = document.getElementById('input');
@@ -835,6 +838,14 @@
       try { return window.speechSynthesis.getVoices() || []; } catch { return []; }
     }
 
+    function isTwiVoice(v) {
+      try {
+        const ln = (v.lang || '').toLowerCase();
+        const nm = (v.name || '').toLowerCase();
+        return /^(ak|tw)(-|_|$)/.test(ln) || /ak-?gh/.test(ln) || /twi|akan/.test(nm);
+      } catch { return false; }
+    }
+
     function pickVoice() {
       const voices = getVoicesSafe();
       if (!voices.length) return null;
@@ -842,11 +853,18 @@
         const v = voices.find(v => v.name === ttsVoiceName);
         if (v) return v;
       }
-  // Prefer Ghanaian English first, then any English, otherwise first available
-  const enGh = voices.find(v => /en-?GH/i.test(v.lang) || /Ghana/i.test(v.name));
-  if (enGh) return enGh;
-  const en = voices.find(v => /en[-_]/i.test(v.lang));
-  return en || voices[0];
+      // Language preference ordering
+      if (ttsLangPref === 'twi') {
+        const tw = voices.find(v => isTwiVoice(v));
+        if (tw) return tw;
+      }
+      if (ttsLangPref === 'en' || ttsLangPref === 'auto') {
+        const enGh = voices.find(v => /en-?gh/i.test((v.lang||'')) || /ghana/i.test((v.name||'')));
+        if (enGh) return enGh;
+        const en = voices.find(v => /en[-_]/i.test(v.lang));
+        if (en) return en;
+      }
+      return voices[0];
     }
 
     function speak(text) {
@@ -855,6 +873,16 @@
       const utter = new SpeechSynthesisUtterance(String(text).replace(/\s+/g, ' ').trim());
       const v = pickVoice();
       if (v) utter.voice = v;
+      // Set desired language hint
+      try {
+        if (v?.lang) {
+          utter.lang = v.lang;
+        } else if (ttsLangPref === 'twi') {
+          utter.lang = 'ak-GH';
+        } else if (ttsLangPref === 'en') {
+          utter.lang = 'en-GH';
+        }
+      } catch { /* ignore */ }
       utter.rate = 1.0; // normal speed
       utter.pitch = 1.0;
       utter.onstart = () => { currentUtterance = utter; updateTTSButtons(); };
@@ -899,9 +927,11 @@
         ttsToggleBtn.style.display = 'none';
         ttsStopBtn.style.display = 'none';
         if (ttsVoiceSelect) ttsVoiceSelect.style.display = 'none';
+        if (ttsLangSelect) ttsLangSelect.style.display = 'none';
         return;
       }
-      // Voice select visibility
+      // Language & Voice select visibility
+      refreshLangOptions();
       refreshVoiceOptions();
       // Toggle button icon/state
       const icon = ttsToggleBtn.querySelector('i');
@@ -947,9 +977,14 @@
       const currentCount = ttsVoiceSelect.options.length;
       if (currentCount !== voices.length) {
         ttsVoiceSelect.innerHTML = '';
-        // Sort with en-GH first, then en-*, then rest
+        // Sort with Twi first (if selected), then en-GH, then en-*, then rest
         const sorted = voices.slice().sort((a,b) => {
-          const score = (v) => ( /en-?GH/i.test(v.lang) || /Ghana/i.test(v.name) ? 2 : /en[-_]/i.test(v.lang) ? 1 : 0 );
+          const score = (v) => (
+            isTwiVoice(v) && ttsLangPref === 'twi' ? 3 :
+            (/en-?GH/i.test(v.lang) || /Ghana/i.test(v.name)) && ttsLangPref !== 'twi' ? 2 :
+            /en[-_]/i.test(v.lang) && ttsLangPref !== 'twi' ? 1 :
+            0
+          );
           return score(b) - score(a) || a.name.localeCompare(b.name);
         });
         for (const v of sorted) {
@@ -978,6 +1013,46 @@
           }
         });
         ttsVoiceSelect._wired = true;
+      }
+    }
+
+    function refreshLangOptions() {
+      if (!ttsLangSelect) return;
+      if (!isTTSSupported()) { ttsLangSelect.style.display = 'none'; return; }
+      if (!ttsLangSelect.options.length) {
+        const opts = [
+          { v: 'auto', label: 'Auto' },
+          { v: 'en', label: 'English' },
+          { v: 'twi', label: 'Twi (ak-GH)' }
+        ];
+        for (const o of opts) {
+          const el = document.createElement('option');
+          el.value = o.v; el.textContent = o.label; ttsLangSelect.appendChild(el);
+        }
+      }
+      ttsLangSelect.value = ttsLangPref;
+      ttsLangSelect.style.display = 'inline-block';
+      if (!ttsLangSelect._wired) {
+        ttsLangSelect.addEventListener('change', () => {
+          ttsLangPref = ttsLangSelect.value;
+          localStorage.setItem('ttsLangPref', ttsLangPref);
+          // Re-evaluate voice list and selection when language changes
+          refreshVoiceOptions();
+          updateTTSButtons();
+          // Warn if Twi selected but no Twi voice found
+          if (ttsLangPref === 'twi') {
+            const voices = getVoicesSafe();
+            const anyTwi = voices.some(v => isTwiVoice(v));
+            if (!anyTwi) {
+              ttsVoiceSelect.title = 'No Twi/Akan voice was found in your browser. Install a Twi voice or choose a different voice.';
+            } else {
+              ttsVoiceSelect.title = '';
+            }
+          } else {
+            ttsVoiceSelect.title = '';
+          }
+        });
+        ttsLangSelect._wired = true;
       }
     }
     // Detect mobile devices (simple UA check)
