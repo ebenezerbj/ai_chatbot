@@ -70,13 +70,22 @@ export class ChatService {
   this.metrics.totalTurns += 1;
   this.metrics.lastLatencyMs = t1 - t0;
 
-    const processed = postProcessAssistant(response);
+  const processed = postProcessAssistant(response);
 
     // Simple unresolved detection: if response is the generic fallback or contains "I couldn't"/"not sure",
     // increment unresolved streak; else reset it. After 2 unresolved turns, suggest handover.
     const genericRe = /I can help with questions about our products, services, branch locations, and hours/i;
     const uncertainRe = /(i\s+(am\s+)?not\s+sure|i\s+couldn'?t|can\'?t\s+help|don'?t\s+have\s+that\s+info)/i;
-    const looksUnresolved = genericRe.test(processed.text) || uncertainRe.test(processed.text);
+    const trivialRe = /^(hi|hello|hey|thanks|thank you|ok|okay)$/i;
+    // Consider it unresolved if:
+    // - Generic fallback text, or
+    // - Uncertain language, or
+    // - No KB snippets matched for this user input (excluding trivial greetings/thanks)
+    const looksUnresolved = (
+      genericRe.test(processed.text) ||
+      uncertainRe.test(processed.text) ||
+      (!trivialRe.test(userText.trim()) && snippets.length === 0)
+    );
     if (looksUnresolved) {
       session.unresolvedStreak = (session.unresolvedStreak || 0) + 1;
     } else {
