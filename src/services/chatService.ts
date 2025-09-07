@@ -29,7 +29,7 @@ export class ChatService {
     return this.sessions.get(id);
   }
 
-  async sendMessage(sessionId: string, userText: string): Promise<{ reply: string; session: Session }>{
+  async sendMessage(sessionId: string, userText: string): Promise<{ reply: string; session: Session; suggestHandover?: boolean }>{
     const session = this.sessions.get(sessionId);
     if (!session) throw new Error('Session not found');
 
@@ -72,6 +72,18 @@ export class ChatService {
 
     const processed = postProcessAssistant(response);
 
+    // Simple unresolved detection: if response is the generic fallback or contains "I couldn't"/"not sure",
+    // increment unresolved streak; else reset it. After 2 unresolved turns, suggest handover.
+    const genericRe = /I can help with questions about our products, services, branch locations, and hours/i;
+    const uncertainRe = /(i\s+(am\s+)?not\s+sure|i\s+couldn'?t|can\'?t\s+help|don'?t\s+have\s+that\s+info)/i;
+    const looksUnresolved = genericRe.test(processed.text) || uncertainRe.test(processed.text);
+    if (looksUnresolved) {
+      session.unresolvedStreak = (session.unresolvedStreak || 0) + 1;
+    } else {
+      session.unresolvedStreak = 0;
+    }
+    const suggestHandover = session.unresolvedStreak >= 2 || /human agent|talk to (a )?(human|person)/i.test(userText);
+
     const assistantMsg: Message = {
       id: uuidv4(),
       role: 'assistant',
@@ -88,7 +100,7 @@ export class ChatService {
   if (hint) extra.push(hint);
   const reply = [processed.text, ...extra].join('\n\n');
 
-    return { reply, session };
+  return { reply, session, suggestHandover };
   }
 
   getMetrics() {

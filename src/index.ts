@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { OpenAIProvider } from './providers/openaiProvider';
+import { v4 as uuidv4 } from 'uuid';
 import OpenAI from 'openai';
 import { MockProvider } from './providers/mockProvider';
 import { ChatService } from './services/chatService';
@@ -97,8 +98,8 @@ app.post('/api/chat', async (req: Request, res: any) => {
   // Basic structured logging
   try { (req as any).log?.info({ sessionId, msgLen: message.length }, 'chat:request'); } catch {}
     const result = await chat.sendMessage(sessionId, message);
-  try { (req as any).log?.info({ sessionId, replyLen: result.reply.length }, 'chat:response'); } catch {}
-  res.json({ reply: result.reply });
+  try { (req as any).log?.info({ sessionId, replyLen: result.reply.length, suggestHandover: !!result.suggestHandover }, 'chat:response'); } catch {}
+  res.json({ reply: result.reply, suggestHandover: !!result.suggestHandover });
   } catch (err: any) {
     logger.error({ err }, 'chat error');
     res.status(500).json({ error: 'Internal error' });
@@ -217,6 +218,37 @@ app.post('/api/tts', async (req: Request, res: any) => {
   } catch (err: any) {
     (req as any).log?.error({ err }, 'tts error');
     return res.status(500).json({ error: 'TTS error' });
+  }
+});
+
+// Human handover: accept a request to connect with a human agent
+// Body: { sessionId: string, name?: string, phone?: string, message?: string }
+app.post('/api/handover', async (req: Request, res: any) => {
+  try {
+    const body: any = (req as any).body || {};
+    const sessionId = String(body.sessionId || '').trim();
+    const name = (body.name ? String(body.name) : '').trim();
+    const phone = (body.phone ? String(body.phone) : '').trim();
+    const message = (body.message ? String(body.message) : '').trim();
+    if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
+    const s = chat.getSession(sessionId);
+    if (!s) return res.status(404).json({ error: 'session not found' });
+
+    const ticketId = uuidv4();
+    // Basic structured log; in a real setup, forward to a ticketing system/email/webhook
+    (req as any).log?.info({
+      ticketId,
+      sessionId,
+      name,
+      phone,
+      message,
+      recentHistory: s.history.slice(-6)
+    }, 'handover:request');
+
+    return res.json({ ok: true, ticketId, status: 'queued' });
+  } catch (err: any) {
+    (req as any).log?.error({ err }, 'handover error');
+    return res.status(500).json({ error: 'handover error' });
   }
 });
 

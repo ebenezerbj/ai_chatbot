@@ -1273,6 +1273,7 @@
         hideTyping();
         if (data?.reply) {
           addMsg('assistant', data.reply);
+          try { if (data.suggestHandover) renderHandoverCTA(); } catch {}
         } else {
           addMsg('assistant', 'Sorry, I encountered an issue processing your request. Please try again.');
         }
@@ -1283,6 +1284,74 @@
       } finally {
         sendButton.disabled = false;
         input.focus();
+      }
+    }
+
+    function renderHandoverCTA() {
+      // Append a compact CTA to the last assistant message
+      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (last.querySelector('.handover-cta')) return; // avoid duplicates
+      const row = last.querySelector('.msg-actions') || (() => {
+        const r = document.createElement('div'); r.className = 'msg-actions'; last.appendChild(r); return r;
+      })();
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'msg-action-btn handover-cta';
+      btn.innerHTML = `<i class="fa fa-user-headset" aria-hidden="true"></i><span>Talk to a person</span>`;
+      btn.addEventListener('click', openHandoverForm);
+      row.appendChild(btn);
+    }
+
+    function openHandoverForm() {
+      // Create a simple inline form under the last assistant message
+      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (last.querySelector('.handover-form')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'handover-form';
+      wrap.style.marginTop = '0.5rem';
+      wrap.style.padding = '0.5rem';
+      wrap.style.border = '1px solid var(--gray-200)';
+      wrap.style.borderRadius = '8px';
+      wrap.innerHTML = `
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center">
+          <input type="text" id="handoverName" placeholder="Your name (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="handoverPhone" placeholder="Phone (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+        </div>
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+          <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <button id="handoverSend" class="header-action-btn" style="white-space:nowrap"><i class="fa fa-paper-plane"></i><span class="label">Request callback</span></button>
+        </div>
+        <div id="handoverStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--gray-600);"></div>
+      `;
+      last.appendChild(wrap);
+      const sendBtn = wrap.querySelector('#handoverSend');
+      sendBtn?.addEventListener('click', submitHandoverRequest);
+    }
+
+    async function submitHandoverRequest() {
+      const nameEl = document.getElementById('handoverName');
+      const phoneEl = document.getElementById('handoverPhone');
+      const msgEl = document.getElementById('handoverMsg');
+  const name = nameEl ? (nameEl.value || '') : '';
+  const phone = phoneEl ? (phoneEl.value || '') : '';
+  const msg = msgEl ? (msgEl.value || '') : '';
+      const statusEl = document.getElementById('handoverStatus');
+      try {
+        const sid = await ensureSession();
+  if (statusEl) statusEl.textContent = 'Submitting…';
+        const resp = await fetch('/api/handover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: sid, name, phone, message: msg }) });
+        const data = await resp.json();
+        if (resp.ok && data?.ok) {
+          if (statusEl) statusEl.textContent = `Request received. Ticket: ${data.ticketId}. An agent will contact you soon.`;
+          return;
+        }
+        if (statusEl) statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+      } catch (e) {
+        if (statusEl) statusEl.textContent = 'Network error submitting request.';
       }
     }
 

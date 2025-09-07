@@ -19,7 +19,9 @@ export const SessionSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.number().int().positive(),
   persona: z.string().default('financial_care_pro'),
-  history: z.array(MessageSchema).default([])
+  history: z.array(MessageSchema).default([]),
+  // Lightweight session metadata for UX/handover
+  unresolvedStreak: z.number().int().nonnegative().default(0)
 });
 
 export interface Session {
@@ -27,6 +29,7 @@ export interface Session {
   createdAt: number;
   persona: string;
   history: Message[];
+  unresolvedStreak: number;
 }
 
 export type LLMResponse = {
