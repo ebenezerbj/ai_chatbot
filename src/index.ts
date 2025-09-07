@@ -140,42 +140,75 @@ app.post('/api/nearest-branch', (req: Request, res: any) => {
 });
 
 // Text-to-Speech endpoint
-// Body: { text: string, lang?: string }
+// Body: { text: string, lang?: string, voice?: string }
 // Returns: audio/mpeg (MP3)
 app.post('/api/tts', async (req: Request, res: any) => {
   try {
     const text = String((req as any).body?.text || '').trim();
     const lang = String((req as any).body?.lang || '').trim();
+    const reqVoice = String((req as any).body?.voice || '').trim();
     if (!text) return res.status(400).json({ error: 'text required' });
     if (text.length > 4000) return res.status(413).json({ error: 'text too long' });
 
-    if (!openaiClient) {
-      return res.status(503).json({ error: 'TTS provider unavailable' });
+    const AZURE_KEY = process.env.AZURE_SPEECH_KEY || '';
+    const AZURE_REGION = process.env.AZURE_SPEECH_REGION || '';
+    const AZURE_VOICE = reqVoice || process.env.AZURE_SPEECH_VOICE || '';
+
+    // Prefer Azure if configured
+    if (AZURE_KEY && AZURE_REGION) {
+      const endpoint = `https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
+      const voiceName = AZURE_VOICE || 'en-GH-AkuaNeural'; // configurable; ensure to set a valid Twi/Akan voice if available
+      const ssml = `<?xml version="1.0" encoding="utf-8"?>\n<speak version="1.0" xml:lang="en-US"><voice name="${voiceName}">${escapeForSSML(text)}</voice></speak>`;
+      const r = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Ocp-Apim-Subscription-Key': AZURE_KEY,
+          'Content-Type': 'application/ssml+xml',
+          'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+          'User-Agent': 'ai-chatbot'
+        },
+        body: ssml
+      } as any);
+      if (!r.ok) {
+        (req as any).log?.warn({ status: r.status }, 'azure tts http error');
+      } else {
+        const arrayBuffer = await r.arrayBuffer();
+        const buf = Buffer.from(arrayBuffer);
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Content-Length', String(buf.length));
+        res.setHeader('Cache-Control', 'no-store');
+        return res.send(buf);
+      }
+      // If Azure failed, fall back to OpenAI if available
     }
 
-    // Basic mapping: we currently use a single voice; the engine will attempt to read the text.
-    const voice = 'alloy';
-    // Use OpenAI TTS (gpt-4o-mini-tts)
-    const result = await openaiClient.audio.speech.create({
-      model: 'gpt-4o-mini-tts',
-      voice,
-      input: text,
-      format: 'mp3'
-    } as any);
+    if (openaiClient) {
+      const voice = 'alloy';
+      const result = await openaiClient.audio.speech.create({
+        model: 'gpt-4o-mini-tts',
+        voice,
+        input: text,
+        format: 'mp3'
+      } as any);
+      const arrayBuffer = await (result as any).arrayBuffer?.() ?? await (result as any).data?.arrayBuffer?.();
+      if (!arrayBuffer) return res.status(500).json({ error: 'TTS failed' });
+      const buf = Buffer.from(arrayBuffer);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', String(buf.length));
+      res.setHeader('Cache-Control', 'no-store');
+      return res.send(buf);
+    }
 
-    // Convert to Buffer and stream
-    const arrayBuffer = await (result as any).arrayBuffer?.() ?? await (result as any).data?.arrayBuffer?.();
-    if (!arrayBuffer) return res.status(500).json({ error: 'TTS failed' });
-    const buf = Buffer.from(arrayBuffer);
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Content-Length', String(buf.length));
-    res.setHeader('Cache-Control', 'no-store');
-    return res.send(buf);
+    return res.status(503).json({ error: 'TTS provider unavailable' });
   } catch (err: any) {
     (req as any).log?.error({ err }, 'tts error');
     return res.status(500).json({ error: 'TTS error' });
   }
 });
+
+function escapeForSSML(s: string): string {
+  return s.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' } as any)[ch]);
+}
 
 // Metrics endpoint
 app.get('/api/metrics', (_req: Request, res: any) => {

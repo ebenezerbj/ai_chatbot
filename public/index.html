@@ -876,10 +876,12 @@
       // If user selected Twi and no Twi voice exists, call server TTS
       const voices = getVoicesSafe();
       const needServer = ttsLangPref === 'twi' && !voices.some(v => isTwiVoice(v));
-      if (needServer) {
+    if (needServer) {
         try {
           stopSpeaking();
-          const resp = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: clean, lang: 'twi' }) });
+      // Optionally include a preferred voice id readable by server (e.g., Azure voice)
+      const preferredVoice = (ttsVoiceSelect && ttsVoiceSelect.value) ? ttsVoiceSelect.value : '';
+      const resp = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: clean, lang: 'twi', voice: preferredVoice }) });
           if (!resp.ok) throw new Error('TTS HTTP ' + resp.status);
           const blob = await resp.blob();
           const url = URL.createObjectURL(blob);
