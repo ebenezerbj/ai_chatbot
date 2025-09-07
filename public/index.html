@@ -617,8 +617,7 @@
           <div class="chat-title">Digital Assistant</div>
           <div class="chat-subtitle">Online</div>
           <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
-            <select id="ttsLangSelect" class="header-action-select" title="Choose language" aria-label="Choose language" style="display:none"></select>
-            <select id="ttsVoiceSelect" class="header-action-select" title="Choose voice" aria-label="Choose voice" style="display:none"></select>
+            <select id="ttsSelect" class="header-action-select" title="Voice & language" aria-label="Voice and language" style="display:none"></select>
             <span id="ttsNote" class="tts-note" style="display:none"></span>
             <button id="ttsToggle" class="header-action-btn" title="Toggle voice (text-to-speech)" aria-pressed="false" aria-label="Enable voice">
               <i class="fa fa-volume-high" aria-hidden="true"></i>
@@ -668,10 +667,10 @@
   let currentUtterance = null;
   let ttsVoiceName = localStorage.getItem('ttsVoiceName') || '';
   let ttsLangPref = localStorage.getItem('ttsLangPref') || 'auto'; // 'auto' | 'en' | 'twi'
+  let ttsForceServer = JSON.parse(localStorage.getItem('ttsForceServer') || 'false');
   const ttsToggleBtn = document.getElementById('ttsToggle');
   const ttsStopBtn = document.getElementById('ttsStop');
-  const ttsVoiceSelect = document.getElementById('ttsVoiceSelect');
-  const ttsLangSelect = document.getElementById('ttsLangSelect');
+  const ttsSelect = document.getElementById('ttsSelect');
   const ttsNote = document.getElementById('ttsNote');
     const chatEl = document.getElementById('chat');
     const form = document.getElementById('composer');
@@ -874,14 +873,13 @@
       if (!isTTSSupported()) return;
       const clean = String(text).replace(/\s+/g, ' ').trim();
       // If user selected Twi and no Twi voice exists, call server TTS
-      const voices = getVoicesSafe();
-  const needServer = ttsLangPref === 'twi' && !voices.some(v => isTwiVoice(v));
+    const voices = getVoicesSafe();
+  const needServer = ttsLangPref === 'twi' && (ttsForceServer || !voices.some(v => isTwiVoice(v)));
     if (needServer) {
         try {
           stopSpeaking();
-      // Optionally include a preferred voice id readable by server (e.g., Azure voice)
-      const preferredVoice = (ttsVoiceSelect && ttsVoiceSelect.value) ? ttsVoiceSelect.value : '';
-      const resp = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: clean, lang: 'twi', voice: preferredVoice }) });
+    // For server Twi, server decides the voice (Azure/OpenAI/eSpeak)
+    const resp = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: clean, lang: 'twi', voice: '' }) });
           if (!resp.ok) throw new Error('TTS HTTP ' + resp.status);
           const blob = await resp.blob();
           const url = URL.createObjectURL(blob);
@@ -951,14 +949,12 @@
       if (!supported) {
         ttsToggleBtn.style.display = 'none';
         ttsStopBtn.style.display = 'none';
-        if (ttsVoiceSelect) ttsVoiceSelect.style.display = 'none';
-        if (ttsLangSelect) ttsLangSelect.style.display = 'none';
-  if (ttsNote) ttsNote.style.display = 'none';
+        if (ttsSelect) ttsSelect.style.display = 'none';
+        if (ttsNote) ttsNote.style.display = 'none';
         return;
       }
-      // Language & Voice select visibility
-      refreshLangOptions();
-      refreshVoiceOptions();
+  // Combined TTS selector visibility
+  refreshCombinedTTSOptions();
       // Toggle button icon/state
       const icon = ttsToggleBtn.querySelector('i');
       ttsToggleBtn.setAttribute('aria-pressed', String(!!ttsEnabled));
@@ -974,7 +970,7 @@
       updateTTSButtons();
       // Some browsers load voices asynchronously
       if (isTTSSupported()) {
-        try { window.speechSynthesis.onvoiceschanged = () => { refreshVoiceOptions(); updateTTSButtons(); }; } catch { /* ignore */ }
+        try { window.speechSynthesis.onvoiceschanged = () => { refreshCombinedTTSOptions(); updateTTSButtons(); }; } catch { /* ignore */ }
       }
       // Wire header buttons
       ttsToggleBtn?.addEventListener('click', () => {
@@ -996,43 +992,61 @@
       ttsStopBtn?.addEventListener('click', stopSpeaking);
     }
 
-    function refreshVoiceOptions() {
-      if (!ttsVoiceSelect) return;
-      if (!isTTSSupported()) { ttsVoiceSelect.style.display = 'none'; return; }
+    function refreshCombinedTTSOptions() {
+      if (!ttsSelect) return;
+      if (!isTTSSupported()) { ttsSelect.style.display = 'none'; return; }
       const voices = getVoicesSafe();
-      if (!voices.length) { ttsVoiceSelect.style.display = 'none'; return; }
-      // Build options only if list changed in size or not populated
-      const currentCount = ttsVoiceSelect.options.length;
-      if (currentCount !== voices.length) {
-        ttsVoiceSelect.innerHTML = '';
-        // Sort with Twi first (if selected), then en-GH, then en-*, then rest
-        const sorted = voices.slice().sort((a,b) => {
-          const score = (v) => (
-            isTwiVoice(v) && ttsLangPref === 'twi' ? 3 :
-            (/en-?GH/i.test(v.lang) || /Ghana/i.test(v.name)) && ttsLangPref !== 'twi' ? 2 :
-            /en[-_]/i.test(v.lang) && ttsLangPref !== 'twi' ? 1 :
-            0
-          );
-          return score(b) - score(a) || a.name.localeCompare(b.name);
-        });
-        for (const v of sorted) {
-          const opt = document.createElement('option');
-          opt.value = v.name;
-          opt.textContent = `${v.name} (${v.lang})`;
-          ttsVoiceSelect.appendChild(opt);
+      const shouldBuild = !ttsSelect.options.length || (ttsSelect._lastCount !== voices.length);
+      if (shouldBuild) {
+        ttsSelect.innerHTML = '';
+        const core = [
+          { v: 'auto', label: 'Auto' },
+          { v: 'en', label: 'English' },
+          { v: 'twi-server', label: 'Twi (server)' }
+        ];
+        for (const o of core) {
+          const el = document.createElement('option');
+          el.value = o.v; el.textContent = o.label; ttsSelect.appendChild(el);
         }
+        const twiVoices = voices.filter(v => isTwiVoice(v));
+        for (const v of twiVoices) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `Twi — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        const others = voices.filter(v => !isTwiVoice(v)).sort((a,b)=>a.name.localeCompare(b.name));
+        for (const v of others) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `Device — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        ttsSelect._lastCount = voices.length;
       }
-      // Select preferred or picked voice
-      const preferred = pickVoice();
-      const nameToSelect = ttsVoiceName || preferred?.name;
-      if (nameToSelect) ttsVoiceSelect.value = nameToSelect;
-      ttsVoiceSelect.style.display = 'inline-block';
-      // Change handler
-      if (!ttsVoiceSelect._wired) {
-        ttsVoiceSelect.addEventListener('change', () => {
-          ttsVoiceName = ttsVoiceSelect.value || '';
+      let val = 'auto';
+      if (ttsLangPref === 'twi' && ttsForceServer) val = 'twi-server';
+      else if (ttsLangPref === 'en') val = 'en';
+      else if (ttsVoiceName) val = `voice::${ttsVoiceName}`;
+      ttsSelect.value = val;
+      ttsSelect.style.display = 'inline-block';
+      if (!ttsSelect._wired) {
+        ttsSelect.addEventListener('change', () => {
+          const value = ttsSelect.value || 'auto';
+          if (value === 'auto') {
+            ttsLangPref = 'auto'; ttsVoiceName = ''; ttsForceServer = false;
+          } else if (value === 'en') {
+            ttsLangPref = 'en'; ttsVoiceName = ''; ttsForceServer = false;
+          } else if (value === 'twi-server') {
+            ttsLangPref = 'twi'; ttsVoiceName = ''; ttsForceServer = true;
+          } else if (value.startsWith('voice::')) {
+            ttsVoiceName = value.slice('voice::'.length);
+            ttsLangPref = 'auto'; ttsForceServer = false;
+          }
+          localStorage.setItem('ttsLangPref', ttsLangPref);
           localStorage.setItem('ttsVoiceName', ttsVoiceName);
-          // If speaking, restart with new voice
+          localStorage.setItem('ttsForceServer', JSON.stringify(!!ttsForceServer));
+          updateTTSNote();
           if (currentUtterance) {
             const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
             const last = nodes[nodes.length - 1];
@@ -1040,44 +1054,15 @@
             if (txt.trim()) speak(txt);
           }
         });
-        ttsVoiceSelect._wired = true;
-      }
-    }
-
-    function refreshLangOptions() {
-      if (!ttsLangSelect) return;
-      if (!isTTSSupported()) { ttsLangSelect.style.display = 'none'; return; }
-      if (!ttsLangSelect.options.length) {
-        const opts = [
-          { v: 'auto', label: 'Auto' },
-          { v: 'en', label: 'English' },
-          { v: 'twi', label: 'Twi (ak-GH)' }
-        ];
-        for (const o of opts) {
-          const el = document.createElement('option');
-          el.value = o.v; el.textContent = o.label; ttsLangSelect.appendChild(el);
-        }
-      }
-      ttsLangSelect.value = ttsLangPref;
-      ttsLangSelect.style.display = 'inline-block';
-      if (!ttsLangSelect._wired) {
-        ttsLangSelect.addEventListener('change', () => {
-          ttsLangPref = ttsLangSelect.value;
-          localStorage.setItem('ttsLangPref', ttsLangPref);
-          // Re-evaluate voice list and selection when language changes
-          refreshVoiceOptions();
-          updateTTSButtons();
-          updateTTSNote();
-        });
-        ttsLangSelect._wired = true;
+        ttsSelect._wired = true;
       }
     }
 
     function updateTTSNote() {
       if (!ttsNote) return;
-      const voices = getVoicesSafe();
-      const anyTwi = voices.some(v => isTwiVoice(v));
-      const showWarn = ttsLangPref === 'twi' && !anyTwi;
+  const voices = getVoicesSafe();
+  const anyTwi = voices.some(v => isTwiVoice(v));
+  const showWarn = ttsLangPref === 'twi' && (ttsForceServer || !anyTwi);
       if (showWarn) {
   ttsNote.textContent = 'No Twi/Akan voice found on this device. I\'ll use server TTS (Azure/eSpeak) instead.';
         ttsNote.style.display = 'inline';
