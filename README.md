@@ -42,27 +42,27 @@ There are two ways to get audio replies:
 
 1. Azure Speech (recommended, higher quality)
 
-- Copy `.env.example` to `.env` and set:
-	- `AZURE_SPEECH_KEY`
-	- `AZURE_SPEECH_REGION` (or `AZURE_SPEECH_ENDPOINT`)
-	- `AZURE_SPEECH_VOICE` (e.g., `en-GH-AkuaNeural` or `en-GH-AmaNeural`)
-- Start the server and in the web UI enable Voice, set Language = Twi
+	 - Copy `.env.example` to `.env` and set:
+		 - `AZURE_SPEECH_KEY`
+		 - `AZURE_SPEECH_REGION` (or `AZURE_SPEECH_ENDPOINT`)
+		 - `AZURE_SPEECH_VOICE` (e.g., `en-GH-AkuaNeural` or `en-GH-AmaNeural`)
+	 - Start the server and in the web UI enable Voice, set Language = Twi
 
 2. Keyless fallback (Windows): eSpeak NG
 
-- Install via Chocolatey: `choco install espeak-ng -y`
-- The backend auto-uses eSpeak NG if no cloud keys are set
-- Some Windows builds don’t include a Twi/Akan voice; in that case, it will fall back to Ghanaian English (en‑GB/en)
+	- Install via Chocolatey: `choco install espeak-ng -y`
+	- The backend auto-uses eSpeak NG if no cloud keys are set
+	- Some Windows builds don’t include a Twi/Akan voice; in that case, it will fall back to Ghanaian English (en‑GB/en)
 
 Verify locally (PowerShell):
 
 ```powershell
 # With server running on :3000
 $body = @{ text = 'Akwaaba! Welcome to the bank.'; lang = 'twi' } | ConvertTo-Json
-Invoke-RestMethod -Uri http://localhost:3000/api/tts -Method POST -ContentType 'application/json' -Body $body -OutFile .\tts_resp.wav
+Invoke-RestMethod -Uri http://localhost:3000/api/tts -Method POST -ContentType 'application/json' -Body $body -OutFile .\tts_resp.mp3
 ```
 
-Open `tts_resp.wav` to confirm audio output.
+Open `tts_resp.mp3` to confirm audio output.
 
 ## Deployment
 
