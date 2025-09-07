@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import nodemailer from 'nodemailer';
-import { notifyEscalation, notifyHandover } from './notifications';
+import { notifyEscalation, notifyHandover, getHandoverRecipientCount } from './notifications';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { OpenAIProvider } from './providers/openaiProvider';
@@ -346,7 +346,9 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
   // Unified notifications (webhook/email/SMS) if configured
   try { await notifyHandover({ ticketId, sessionId, name, phone, message }); } catch {}
 
-    return res.json({ ok: true, ticketId, status: 'queued' });
+  // Include a small diagnostic: how many SMS recipients are configured for handover
+  const recipientCount = getHandoverRecipientCount();
+  return res.json({ ok: true, ticketId, status: 'queued', recipientCount });
   } catch (err: any) {
     (req as any).log?.error({ err }, 'handover error');
     return res.status(500).json({ error: 'handover error' });

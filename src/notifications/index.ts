@@ -240,6 +240,23 @@ export async function notifyHandover(opts: { ticketId: string; sessionId: string
 // --- Internal: HTTP(S) helper with custom CA support ---
 type PostOpts = { headers?: Record<string, string>; timeoutMs?: number };
 
+// Lightweight helpers to introspect recipient configuration without exposing numbers
+export function getHandoverRecipientCount(): number {
+  try {
+    return getMergedRecipients('HANDOVER_SMS_TO').length;
+  } catch {
+    return 0;
+  }
+}
+
+export function getEscalationRecipientCount(): number {
+  try {
+    return getMergedRecipients('ESCALATION_SMS_TO').length;
+  } catch {
+    return 0;
+  }
+}
+
 function getCustomCA(): string | undefined {
   try {
     const caFile = (process.env.CACERT_FILE || process.env.NODE_EXTRA_CA_CERTS || join(process.cwd(), 'cacert.pem')) as string;
