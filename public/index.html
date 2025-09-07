@@ -1369,8 +1369,14 @@
       try {
         const sid = await ensureSession();
   if (statusEl) statusEl.textContent = 'Submitting…';
-        const resp = await fetch('/api/handover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: sid, name, phone, message: msg }) });
-        const data = await resp.json();
+        let resp = await fetch('/api/handover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: sid, name, phone, message: msg }) });
+        let data = await resp.json();
+        // If session expired (e.g., server restart), create a fresh session and retry once
+        if (resp.status === 404 && (data?.error || '').toLowerCase().includes('session not found')) {
+          const newSid = await ensureSession();
+          resp = await fetch('/api/handover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: newSid, name, phone, message: msg }) });
+          try { data = await resp.json(); } catch { data = undefined; }
+        }
         if (resp.ok && data?.ok) {
           if (statusEl) statusEl.textContent = `Request received. Ticket: ${data.ticketId}. An agent will contact you soon.`;
           return;
