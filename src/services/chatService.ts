@@ -107,7 +107,10 @@ export class ChatService {
   if (/(invest|loan|mortgage|advice)/i.test(userText)) extra.push(adviceDisclaimer);
   if (/(password|pin|otp|card|security|scam|fraud)/i.test(userText)) extra.push(securityReminder);
   if (hint) extra.push(hint);
-  const reply = [processed.text, ...extra].join('\n\n');
+  let reply = [processed.text, ...extra].join('\n\n');
+  if (suggestHandover) {
+    reply += `\n\nWould you like me to connect you to a human agent?`;
+  }
 
   return { reply, session, suggestHandover };
   }
