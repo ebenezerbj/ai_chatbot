@@ -870,13 +870,35 @@
       return voices[0];
     }
 
-    function speak(text) {
+    async function speak(text) {
       if (!isTTSSupported()) return;
+      const clean = String(text).replace(/\s+/g, ' ').trim();
+      // If user selected Twi and no Twi voice exists, call server TTS
+      const voices = getVoicesSafe();
+      const needServer = ttsLangPref === 'twi' && !voices.some(v => isTwiVoice(v));
+      if (needServer) {
+        try {
+          stopSpeaking();
+          const resp = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: clean, lang: 'twi' }) });
+          if (!resp.ok) throw new Error('TTS HTTP ' + resp.status);
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          audio.onerror = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          currentUtterance = { kind: 'audio', audio };
+          updateTTSButtons();
+          await audio.play();
+          return;
+        } catch (e) {
+          // Fallback to browser TTS
+        }
+      }
+      // Browser TTS path
       stopSpeaking();
-      const utter = new SpeechSynthesisUtterance(String(text).replace(/\s+/g, ' ').trim());
+      const utter = new SpeechSynthesisUtterance(clean);
       const v = pickVoice();
       if (v) utter.voice = v;
-      // Set desired language hint
       try {
         if (v?.lang) {
           utter.lang = v.lang;
@@ -885,20 +907,18 @@
         } else if (ttsLangPref === 'en') {
           utter.lang = 'en-GH';
         }
-      } catch { /* ignore */ }
-      utter.rate = 1.0; // normal speed
-      utter.pitch = 1.0;
+      } catch {}
+      utter.rate = 1.0; utter.pitch = 1.0;
       utter.onstart = () => { currentUtterance = utter; updateTTSButtons(); };
       utter.onend = () => { currentUtterance = null; updateTTSButtons(); };
       utter.onerror = () => { currentUtterance = null; updateTTSButtons(); };
-      try { window.speechSynthesis.speak(utter); } catch { /* ignore */ }
+      try { window.speechSynthesis.speak(utter); } catch {}
     }
 
-    function stopSpeaking() {
+  function stopSpeaking() {
       try {
-        if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) {
-          window.speechSynthesis.cancel();
-        }
+    if (currentUtterance && currentUtterance.kind === 'audio' && currentUtterance.audio) { try { currentUtterance.audio.pause(); } catch {} }
+    if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) { window.speechSynthesis.cancel(); }
       } finally {
         currentUtterance = null;
         updateTTSButtons();

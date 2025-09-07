@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { OpenAIProvider } from './providers/openaiProvider';
+import OpenAI from 'openai';
 import { MockProvider } from './providers/mockProvider';
 import { ChatService } from './services/chatService';
 import { loadKBFromFile } from './knowledge/kb';
@@ -23,7 +24,7 @@ app.use(helmet({
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
       "script-src": ["'self'", "'unsafe-inline'"],
-      "media-src": ["'self'", "data:"],
+  "media-src": ["'self'", "data:", "blob:"],
       "img-src": ["'self'", "data:", "blob:"],
     },
   },
@@ -52,6 +53,8 @@ if (process.env.OPENAI_API_KEY) {
 }
 
 const chat = new ChatService(provider);
+// Optional TTS client (OpenAI)
+const openaiClient = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
 // Optional: load KB from JSON at startup if provided
 (async () => {
@@ -133,6 +136,44 @@ app.post('/api/nearest-branch', (req: Request, res: any) => {
   } catch (e) {
     (req as any).log?.error({ err: e }, 'nearest-branch error');
     return res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// Text-to-Speech endpoint
+// Body: { text: string, lang?: string }
+// Returns: audio/mpeg (MP3)
+app.post('/api/tts', async (req: Request, res: any) => {
+  try {
+    const text = String((req as any).body?.text || '').trim();
+    const lang = String((req as any).body?.lang || '').trim();
+    if (!text) return res.status(400).json({ error: 'text required' });
+    if (text.length > 4000) return res.status(413).json({ error: 'text too long' });
+
+    if (!openaiClient) {
+      return res.status(503).json({ error: 'TTS provider unavailable' });
+    }
+
+    // Basic mapping: we currently use a single voice; the engine will attempt to read the text.
+    const voice = 'alloy';
+    // Use OpenAI TTS (gpt-4o-mini-tts)
+    const result = await openaiClient.audio.speech.create({
+      model: 'gpt-4o-mini-tts',
+      voice,
+      input: text,
+      format: 'mp3'
+    } as any);
+
+    // Convert to Buffer and stream
+    const arrayBuffer = await (result as any).arrayBuffer?.() ?? await (result as any).data?.arrayBuffer?.();
+    if (!arrayBuffer) return res.status(500).json({ error: 'TTS failed' });
+    const buf = Buffer.from(arrayBuffer);
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Length', String(buf.length));
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(buf);
+  } catch (err: any) {
+    (req as any).log?.error({ err }, 'tts error');
+    return res.status(500).json({ error: 'TTS error' });
   }
 });
 
