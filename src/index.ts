@@ -11,6 +11,10 @@ import { MockProvider } from './providers/mockProvider';
 import { ChatService } from './services/chatService';
 import { loadKBFromFile } from './knowledge/kb';
 import { existsSync } from 'fs';
+import { execFile } from 'child_process';
+import { mkdtemp, readFile as fsReadFile, unlink } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { ChatRequestSchema, NearestBranchSchema } from './core/validation';
 import { resolvePlusCode, findNearestBranch, mapsUrlFromLatLng } from './geo/branches';
 
@@ -199,6 +203,15 @@ app.post('/api/tts', async (req: Request, res: any) => {
       return res.send(buf);
     }
 
+    // Try local keyless TTS fallback (espeak-ng)
+    const wav = await tryEspeakTTS(text, lang || undefined);
+    if (wav) {
+      res.setHeader('Content-Type', 'audio/wav');
+      res.setHeader('Content-Length', String(wav.length));
+      res.setHeader('Cache-Control', 'no-store');
+      return res.send(wav);
+    }
+
     return res.status(503).json({ error: 'TTS provider unavailable' });
   } catch (err: any) {
     (req as any).log?.error({ err }, 'tts error');
@@ -208,6 +221,32 @@ app.post('/api/tts', async (req: Request, res: any) => {
 
 function escapeForSSML(s: string): string {
   return s.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' } as any)[ch]);
+}
+
+// Try local keyless TTS with espeak-ng / espeak (WAV output)
+async function tryEspeakTTS(text: string, langHint?: string): Promise<Buffer | null> {
+  // Prefer Akan/Twi code if requested
+  const voice = langHint?.toLowerCase() === 'twi' ? 'ak' : (langHint?.toLowerCase().startsWith('en') ? 'en' : 'en');
+  const binCandidates = ['espeak-ng', 'espeak'];
+  const tmp = await mkdtemp(join(tmpdir(), 'tts-'));
+  const wavPath = join(tmp, 'out.wav');
+  const args = ['-v', voice, '-s', '175', '-w', wavPath, text];
+  for (const bin of binCandidates) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        execFile(bin, args, { windowsHide: true }, (err) => err ? reject(err) : resolve());
+      });
+      const buf = await fsReadFile(wavPath);
+      // cleanup
+      try { await unlink(wavPath); } catch {}
+      return buf;
+    } catch (e) {
+      // try next binary
+    }
+  }
+  // cleanup if file exists
+  try { await unlink(wavPath); } catch {}
+  return null;
 }
 
 // Metrics endpoint
