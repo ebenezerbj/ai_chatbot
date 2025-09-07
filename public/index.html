@@ -699,6 +699,7 @@
         if (!resp.ok) throw new Error('Failed to create session');
         const data = await resp.json();
         sessionId = data.sessionId;
+        console.log('[DEBUG] Created new session:', sessionId);
         return sessionId;
       } catch (error) {
         console.error('Session creation failed:', error);
@@ -1373,6 +1374,7 @@
         let data = await resp.json();
         // If session expired (e.g., server restart), create a fresh session and retry once
         if (resp.status === 404 && (data?.error || '').toLowerCase().includes('session not found')) {
+          sessionId = null; // Clear the stale session ID
           const newSid = await ensureSession();
           resp = await fetch('/api/handover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: newSid, name, phone, message: msg }) });
           try { data = await resp.json(); } catch { data = undefined; }
