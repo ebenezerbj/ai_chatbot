@@ -106,6 +106,7 @@ Enable one or more notification channels via environment variables:
 - Webhook: `HANDOVER_WEBHOOK_URL` (receives JSON payload per request)
 - Ticketing webhook (generic): `TICKETING_WEBHOOK_URL`
 - Email via SMTP: set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `HANDOVER_EMAIL_TO`
+- SMS via Twilio: set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, and recipient lists `HANDOVER_SMS_TO` or `ESCALATION_SMS_TO`
 
 Example `.env` excerpt:
 
@@ -123,6 +124,17 @@ SMTP_USER=apikey
 SMTP_PASS=secret
 SMTP_FROM=chatbot@example.com
 HANDOVER_EMAIL_TO=support@example.com
+
+# SMS via Twilio
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxx
+TWILIO_FROM=+1234567890
+HANDOVER_SMS_TO=+23324XXXXXXX,+23320YYYYYYY
+ESCALATION_SMS_TO=+23324ZZZZZZZ
+
+# Escalation notifications
+NOTIFY_ON_ESCALATION=true
+ESCALATION_WEBHOOK_URL=https://hooks.example.com/escalation
 ```
 
 If none are configured, the server logs each request with a `ticketId` and returns `{ ok: true, status: 'queued' }`.

@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import nodemailer from 'nodemailer';
+import { notifyEscalation, notifyHandover } from './notifications';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { OpenAIProvider } from './providers/openaiProvider';
@@ -110,6 +111,13 @@ app.post('/api/chat', async (req: Request, res: any) => {
     const result = await chat.sendMessage(sessionId, message);
   try { (req as any).log?.info({ sessionId, replyLen: result.reply.length, suggestHandover: !!result.suggestHandover }, 'chat:response'); } catch {}
   res.json({ reply: result.reply, suggestHandover: !!result.suggestHandover });
+  // Fire-and-forget escalation notification if enabled
+  try {
+    if (result.suggestHandover) {
+      const lastUser = chat.getSession(sessionId)?.history.filter(m => m.role === 'user').slice(-1)[0]?.content;
+      notifyEscalation({ sessionId, lastUserMessage: lastUser });
+    }
+  } catch {}
   } catch (err: any) {
     logger.error({ err }, 'chat error');
     res.status(500).json({ error: 'Internal error' });
@@ -271,68 +279,8 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
       recentHistory: s.history.slice(-6)
     }, 'handover:request');
 
-    // Optional: webhook notification
-    try {
-      const hook = process.env.HANDOVER_WEBHOOK_URL || '';
-      if (hook) {
-        await fetch(hook, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'handover', ticketId, sessionId, name, phone, message, at: new Date().toISOString() })
-        } as any);
-      }
-    } catch (e) {
-      (req as any).log?.warn({ err: e }, 'handover webhook failed');
-    }
-
-    // Optional: email notification via SMTP
-    try {
-      const to = process.env.HANDOVER_EMAIL_TO || '';
-      const host = process.env.SMTP_HOST || '';
-      const port = Number(process.env.SMTP_PORT || 587);
-      const user = process.env.SMTP_USER || '';
-      const pass = process.env.SMTP_PASS || '';
-      if (to && host && user && pass) {
-        const transporter = nodemailer.createTransport({
-          host,
-          port,
-          secure: port === 465,
-          auth: { user, pass }
-        });
-        const html = `
-          <p>New human handover request</p>
-          <ul>
-            <li><b>Ticket:</b> ${ticketId}</li>
-            <li><b>Session:</b> ${sessionId}</li>
-            <li><b>Name:</b> ${name || '(n/a)'}</li>
-            <li><b>Phone:</b> ${phone || '(n/a)'}</li>
-            <li><b>Message:</b> ${message || '(n/a)'}</li>
-          </ul>
-        `;
-        await transporter.sendMail({
-          from: process.env.SMTP_FROM || user,
-          to,
-          subject: `[Chatbot] Handover request ${ticketId}`,
-          html
-        });
-      }
-    } catch (e) {
-      (req as any).log?.warn({ err: e }, 'handover email failed');
-    }
-
-    // Optional: ticketing webhook (generic)
-    try {
-      const ticketHook = process.env.TICKETING_WEBHOOK_URL || '';
-      if (ticketHook) {
-        await fetch(ticketHook, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ticketId, sessionId, name, phone, message })
-        } as any);
-      }
-    } catch (e) {
-      (req as any).log?.warn({ err: e }, 'ticketing webhook failed');
-    }
+  // Unified notifications (webhook/email/SMS) if configured
+  try { await notifyHandover({ ticketId, sessionId, name, phone, message }); } catch {}
 
     return res.json({ ok: true, ticketId, status: 'queued' });
   } catch (err: any) {
