@@ -137,6 +137,29 @@
       border-radius: 50%;
       animation: pulse 2s infinite;
     }
+    .header-actions {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-action-btn {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 0.35rem 0.55rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+    .header-action-btn:hover { background: var(--gray-100); }
+    .header-action-btn .label { display: inline; }
+    @media (max-width: 768px) {
+      .header-action-btn .label { display: none; }
+    }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -582,6 +605,16 @@
           <div class="status-indicator"></div>
           <div class="chat-title">Digital Assistant</div>
           <div class="chat-subtitle">Online</div>
+          <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
+            <button id="ttsToggle" class="header-action-btn" title="Toggle voice (text-to-speech)" aria-pressed="false" aria-label="Enable voice">
+              <i class="fa fa-volume-high" aria-hidden="true"></i>
+              <span class="label">Voice</span>
+            </button>
+            <button id="ttsStop" class="header-action-btn" title="Stop voice" aria-label="Stop voice" style="display:none">
+              <i class="fa fa-stop" aria-hidden="true"></i>
+              <span class="label">Stop</span>
+            </button>
+          </div>
         </div>
 
         <div id="chat" class="chat-messages">
@@ -616,6 +649,12 @@
   const assistantName = 'Ama';
   // Show Call/WhatsApp action buttons on desktop too? (true = all devices)
   const showContactActionsOnDesktop = true;
+  // Text-to-Speech (TTS) configuration
+  let ttsEnabled = JSON.parse(localStorage.getItem('ttsEnabled') || 'true');
+  let currentUtterance = null;
+  let ttsVoiceName = localStorage.getItem('ttsVoiceName') || '';
+  const ttsToggleBtn = document.getElementById('ttsToggle');
+  const ttsStopBtn = document.getElementById('ttsStop');
     const chatEl = document.getElementById('chat');
     const form = document.getElementById('composer');
     const input = document.getElementById('input');
@@ -631,7 +670,9 @@
       const titleEl = document.querySelector('.chat-title');
       if (titleEl) titleEl.textContent = assistantName;
 
-      addMsg('assistant', `Hi, I'm ${assistantName}. I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you?`);
+  addMsg('assistant', `Hi, I'm ${assistantName}. I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you?`);
+  // Init TTS UI state
+  initTTS();
     });
 
     async function ensureSession() {
@@ -751,6 +792,13 @@
         try {
           addMobileContactActionsIfAny(content, processed);
         } catch (e) { /* non-fatal */ }
+        // Append Listen button and optionally auto-speak
+        try {
+          addSpeakAction(content, processed);
+          if (ttsEnabled && isTTSSupported() && hasUserInteracted()) {
+            speak(processed);
+          }
+        } catch (e) { /* non-fatal */ }
       } else {
         content.textContent = processed;
       }
@@ -760,6 +808,118 @@
       chatEl.scrollTop = chatEl.scrollHeight;
     }
 
+    // Simple user-interaction gate for autoplay policies (especially iOS Safari)
+    let _userInteracted = false;
+    ['click','keydown','touchstart'].forEach(evt => {
+      window.addEventListener(evt, () => { _userInteracted = true; }, { once: true });
+    });
+    function hasUserInteracted() { return _userInteracted; }
+
+    function isTTSSupported() {
+      return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+    }
+
+    function getVoicesSafe() {
+      try { return window.speechSynthesis.getVoices() || []; } catch { return []; }
+    }
+
+    function pickVoice() {
+      const voices = getVoicesSafe();
+      if (!voices.length) return null;
+      if (ttsVoiceName) {
+        const v = voices.find(v => v.name === ttsVoiceName);
+        if (v) return v;
+      }
+      // Prefer English voices if present
+      const en = voices.find(v => /en[-_]/i.test(v.lang));
+      return en || voices[0];
+    }
+
+    function speak(text) {
+      if (!isTTSSupported()) return;
+      stopSpeaking();
+      const utter = new SpeechSynthesisUtterance(String(text).replace(/\s+/g, ' ').trim());
+      const v = pickVoice();
+      if (v) utter.voice = v;
+      utter.rate = 1.0; // normal speed
+      utter.pitch = 1.0;
+      utter.onstart = () => { currentUtterance = utter; updateTTSButtons(); };
+      utter.onend = () => { currentUtterance = null; updateTTSButtons(); };
+      utter.onerror = () => { currentUtterance = null; updateTTSButtons(); };
+      try { window.speechSynthesis.speak(utter); } catch { /* ignore */ }
+    }
+
+    function stopSpeaking() {
+      try {
+        if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) {
+          window.speechSynthesis.cancel();
+        }
+      } finally {
+        currentUtterance = null;
+        updateTTSButtons();
+      }
+    }
+
+    function addSpeakAction(containerEl, text) {
+      if (!isTTSSupported()) return;
+      // Find or create action row
+      let row = containerEl.querySelector('.msg-actions');
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'msg-actions';
+        containerEl.appendChild(row);
+      }
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'msg-action-btn';
+      btn.setAttribute('aria-label', 'Listen to message');
+      btn.innerHTML = `<i class="fa fa-play" aria-hidden="true"></i><span>Listen</span>`;
+      btn.addEventListener('click', () => speak(text));
+      row.prepend(btn);
+    }
+
+    function updateTTSButtons() {
+      if (!ttsToggleBtn || !ttsStopBtn) return;
+      const supported = isTTSSupported();
+      if (!supported) {
+        ttsToggleBtn.style.display = 'none';
+        ttsStopBtn.style.display = 'none';
+        return;
+      }
+      // Toggle button icon/state
+      const icon = ttsToggleBtn.querySelector('i');
+      ttsToggleBtn.setAttribute('aria-pressed', String(!!ttsEnabled));
+      ttsToggleBtn.setAttribute('aria-label', ttsEnabled ? 'Disable voice' : 'Enable voice');
+      if (icon) icon.className = ttsEnabled ? 'fa fa-volume-high' : 'fa fa-volume-xmark';
+      // Stop button visibility
+      ttsStopBtn.style.display = currentUtterance ? 'inline-flex' : 'none';
+    }
+
+    function initTTS() {
+      updateTTSButtons();
+      // Some browsers load voices asynchronously
+      if (isTTSSupported()) {
+        try { window.speechSynthesis.onvoiceschanged = () => updateTTSButtons(); } catch { /* ignore */ }
+      }
+      // Wire header buttons
+      ttsToggleBtn?.addEventListener('click', () => {
+        ttsEnabled = !ttsEnabled;
+        localStorage.setItem('ttsEnabled', JSON.stringify(!!ttsEnabled));
+        updateTTSButtons();
+        // If enabling and last message is assistant, optionally speak it
+        if (ttsEnabled) {
+          const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+          if (nodes.length) {
+            const last = nodes[nodes.length - 1];
+            const txt = last.textContent || '';
+            if (txt.trim()) speak(txt);
+          }
+        } else {
+          stopSpeaking();
+        }
+      });
+      ttsStopBtn?.addEventListener('click', stopSpeaking);
+    }
     // Detect mobile devices (simple UA check)
     function isMobileDevice() {
       const ua = navigator.userAgent || navigator.vendor || window.opera || '';
