@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { BRANCHES } from '../geo/branches';
 
 type EscalationPayload = {
   kind: 'escalation';
@@ -117,6 +118,54 @@ export async function sendSmsOnlineGhBulk(destinations: string[], text: string):
   }
 }
 
+// Collect branch phone numbers (may contain spaces or +233); filter falsy
+function getBranchPhones(): string[] {
+  return BRANCHES.map(b => (b.phone || '').trim()).filter(Boolean);
+}
+
+// Normalize for deduplication to a canonical "233XXXXXXXXX" form when possible
+function canonicalizeForDedup(msisdn: string): string | null {
+  const raw = (msisdn || '').trim();
+  if (!raw) return null;
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return null;
+  // If starts with 233 and length >= 12, take first 12
+  if (digits.startsWith('233')) {
+    const core = digits.slice(0, 12);
+    return core.length === 12 ? core : null;
+  }
+  // If local 0XXXXXXXXX, convert to 233XXXXXXXXX
+  if (digits.length === 10 && digits.startsWith('0')) {
+    return '233' + digits.slice(1);
+  }
+  // If looks like international without plus but different spacing
+  if (digits.length === 12) return digits;
+  return null;
+}
+
+// Merge recipients from an env var (comma-separated), optional EXTRA_SMS_RECIPIENTS, and all branch phones; dedupe
+function getMergedRecipients(envVar: string): string[] {
+  const fromEnv = (process.env[envVar as keyof NodeJS.ProcessEnv] || '') as string;
+  const extra = process.env.EXTRA_SMS_RECIPIENTS || '';
+  const split = (s: string) => s.split(',').map(x => x.trim()).filter(Boolean);
+  const candidates = [
+    ...split(fromEnv),
+    ...split(extra),
+    ...getBranchPhones()
+  ];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const c of candidates) {
+    const canon = canonicalizeForDedup(c);
+    if (!canon) continue;
+    if (seen.has(canon)) continue;
+    seen.add(canon);
+    // Prefer passing along in 233XXXXXXXXX format; SMSOnlineGH accepts this
+    out.push(canon);
+  }
+  return out;
+}
+
 export async function notifyEscalation(opts: { sessionId: string; lastUserMessage?: string }): Promise<void> {
   const enable = String(process.env.NOTIFY_ON_ESCALATION || '').toLowerCase() === 'true';
   if (!enable) return;
@@ -133,14 +182,14 @@ export async function notifyEscalation(opts: { sessionId: string; lastUserMessag
     `;
     await sendEmail(emailTo, `[Chatbot] Escalation suggested for session ${opts.sessionId}`, html);
   }
-  const smsTo = process.env.ESCALATION_SMS_TO || '';
-  if (smsTo) {
-    const numbers: string[] = smsTo.split(',').map((s: string) => s.trim()).filter(Boolean) as string[];
+  const numbers: string[] = getMergedRecipients('ESCALATION_SMS_TO');
+  if (numbers.length) {
+    const text = `Chatbot escalation suggested. Session ${opts.sessionId}.`;
     // Prefer bulk via SMSOnlineGH when available
     if ((process.env.SMSONLINEGH_KEY || '') && (process.env.SMSONLINEGH_SENDER || '')) {
-      await sendSmsOnlineGhBulk(numbers, `Chatbot escalation suggested. Session ${opts.sessionId}.`).catch(() => {});
+      await sendSmsOnlineGhBulk(numbers, text).catch(() => {});
     } else {
-      await Promise.all(numbers.map((n: string) => sendSMS(n, `Chatbot escalation suggested. Session ${opts.sessionId}.`)));
+      await Promise.all(numbers.map((n: string) => sendSMS(n, text)));
     }
   }
 }
@@ -164,9 +213,8 @@ export async function notifyHandover(opts: { ticketId: string; sessionId: string
     `;
     await sendEmail(emailTo, `[Chatbot] Handover request ${opts.ticketId}`, html);
   }
-  const smsTo = process.env.HANDOVER_SMS_TO || '';
-  if (smsTo) {
-    const numbers: string[] = smsTo.split(',').map((s: string) => s.trim()).filter(Boolean) as string[];
+  const numbers: string[] = getMergedRecipients('HANDOVER_SMS_TO');
+  if (numbers.length) {
     const preview = (opts.message || '').slice(0, 120).replace(/\s+/g, ' ');
     const text = `Handover ${opts.ticketId} from ${opts.name || 'N/A'} ${opts.phone || ''}. Msg: ${preview}`;
     if ((process.env.SMSONLINEGH_KEY || '') && (process.env.SMSONLINEGH_SENDER || '')) {

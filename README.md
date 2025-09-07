@@ -108,6 +108,7 @@ Enable one or more notification channels via environment variables:
 - Email via SMTP: set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `HANDOVER_EMAIL_TO`
 - SMS via Twilio: set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, and recipient lists `HANDOVER_SMS_TO` or `ESCALATION_SMS_TO`
 - SMS via SMSOnlineGH (preferred local): set `SMSONLINEGH_KEY`, `SMSONLINEGH_SENDER` (optional `SMSONLINEGH_URL`); takes precedence over Twilio when configured
+	- Recipients are automatically merged as: all branch phone numbers + `HANDOVER_SMS_TO`/`ESCALATION_SMS_TO` + `EXTRA_SMS_RECIPIENTS` (deduplicated)
 
 Example `.env` excerpt:
 
@@ -132,6 +133,9 @@ TWILIO_AUTH_TOKEN=xxxxxxxx
 TWILIO_FROM=+1234567890
 HANDOVER_SMS_TO=+23324XXXXXXX,+23320YYYYYYY
 ESCALATION_SMS_TO=+23324ZZZZZZZ
+
+# Extra recipients merged into all SMS (comma-separated). Branch phone numbers are included automatically
+EXTRA_SMS_RECIPIENTS=0243082750,0248862932,0246892797,0242312059
 
 # SMS via SMSOnlineGH (preferred local)
 SMSONLINEGH_KEY=your_api_key
