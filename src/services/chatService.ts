@@ -96,14 +96,18 @@ export class ChatService {
     const genericRe = /I can help with questions about our products, services, branch locations, and hours/i;
     const uncertainRe = /(i\s+(am\s+)?not\s+sure|i\s+couldn'?t|can\'?t\s+help|don'?t\s+have\s+that\s+info)/i;
     const trivialRe = /^(hi|hello|hey|thanks|thank you|ok|okay)$/i;
+    const handoverQuestionRe = /Would you like me to connect you to a human agent\?/i;
+    
     // Consider it unresolved if:
     // - Generic fallback text, or
     // - Uncertain language, or
     // - No KB snippets matched for this user input (excluding trivial greetings/thanks)
+    // BUT NOT if the response contains a handover question (to prevent loops)
     const looksUnresolved = (
-      genericRe.test(processed.text) ||
+      (genericRe.test(processed.text) ||
       uncertainRe.test(processed.text) ||
-      (!trivialRe.test(userText.trim()) && snippets.length === 0)
+      (!trivialRe.test(userText.trim()) && snippets.length === 0)) &&
+      !handoverQuestionRe.test(processed.text)
     );
     console.log(`[DEBUG] Checking unresolved: generic=${genericRe.test(processed.text)}, uncertain=${uncertainRe.test(processed.text)}, noKB=${!trivialRe.test(userText.trim()) && snippets.length === 0}, result=${looksUnresolved}`);
     if (looksUnresolved) {
@@ -121,9 +125,15 @@ export class ChatService {
       /Would you like me to connect you to a human agent\?/i.test(lastAssistantMsg.content) &&
       /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(userText.trim());
     
+    // Check if we've already asked the handover question recently to prevent loops
+    const recentMessages = session.history.slice(-4); // Check last 4 messages
+    const alreadyAskedHandover = recentMessages.some(m => 
+      m.role === 'assistant' && /Would you like me to connect you to a human agent\?/i.test(m.content)
+    );
+    
     const finalSuggestHandover = suggestHandover || isRespondingYesToHandover;
     
-    console.log(`[DEBUG] Suggest handover: ${finalSuggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)}, yesToHandover: ${!!isRespondingYesToHandover})`);
+    console.log(`[DEBUG] Suggest handover: ${finalSuggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)}, yesToHandover: ${!!isRespondingYesToHandover}, alreadyAsked: ${alreadyAskedHandover})`);
 
     const assistantMsg: Message = {
       id: uuidv4(),
@@ -140,8 +150,8 @@ export class ChatService {
   if (/(password|pin|otp|card|security|scam|fraud)/i.test(userText)) extra.push(securityReminder);
   if (hint) extra.push(hint);
   let reply = [processed.text, ...extra].join('\n\n');
-  if (finalSuggestHandover) {
-    // If user is responding "yes" to handover, don't ask again - they've already confirmed
+  if (finalSuggestHandover && !alreadyAskedHandover) {
+    // Only ask handover question if we haven't already asked recently and user isn't responding "yes"
     if (!isRespondingYesToHandover) {
       reply += `\n\nWould you like me to connect you to a human agent?`;
     }
