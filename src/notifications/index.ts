@@ -191,19 +191,11 @@ export async function notifyEscalation(opts: { sessionId: string; lastUserMessag
 }
 
 export async function notifyHandover(opts: { ticketId: string; sessionId: string; name?: string; phone?: string; message?: string }): Promise<void> {
-  console.log('[NOTIFY DEBUG] notifyHandover called with:', opts);
-  
   const payload: HandoverPayload = { kind: 'handover', ticketId: opts.ticketId, sessionId: opts.sessionId, name: opts.name, phone: opts.phone, message: opts.message, at: new Date().toISOString() };
-  
-  console.log('[NOTIFY DEBUG] Sending webhook to:', process.env.HANDOVER_WEBHOOK_URL || '(not configured)');
   await sendWebhook(process.env.HANDOVER_WEBHOOK_URL || '', payload);
-  
   // Ticketing webhook (generic)
-  console.log('[NOTIFY DEBUG] Sending ticketing webhook to:', process.env.TICKETING_WEBHOOK_URL || '(not configured)');
   await sendWebhook(process.env.TICKETING_WEBHOOK_URL || '', { ticketId: opts.ticketId, sessionId: opts.sessionId, name: opts.name, phone: opts.phone, message: opts.message });
-  
   const emailTo = process.env.HANDOVER_EMAIL_TO || '';
-  console.log('[NOTIFY DEBUG] Email recipient:', emailTo || '(not configured)');
   if (emailTo) {
     const html = `
       <p>New human handover request</p>
@@ -215,43 +207,23 @@ export async function notifyHandover(opts: { ticketId: string; sessionId: string
         <li><b>Message:</b> ${opts.message || '(n/a)'}</li>
       </ul>
     `;
-    console.log('[NOTIFY DEBUG] Sending email...');
     await sendEmail(emailTo, `[Chatbot] Handover request ${opts.ticketId}`, html);
-    console.log('[NOTIFY DEBUG] Email sent successfully');
   }
-  
   const numbers: string[] = getMergedRecipients('HANDOVER_SMS_TO');
-  console.log('[NOTIFY DEBUG] SMS recipients found:', { count: numbers.length, numbers: numbers.slice(0, 3) });
-  
+  console.log('[notify] handover: sms recipients', { count: numbers.length });
   if (numbers.length) {
     const preview = (opts.message || '').slice(0, 120).replace(/\s+/g, ' ');
     const text = `Handover ${opts.ticketId} from ${opts.name || 'N/A'} ${opts.phone || ''}. Msg: ${preview}`;
-    
-    console.log('[NOTIFY DEBUG] SMS text prepared:', text.substring(0, 100) + '...');
-    console.log('[NOTIFY DEBUG] SMSOnlineGH config:', {
-      hasKey: !!(process.env.SMSONLINEGH_KEY || ''),
-      hasSender: !!(process.env.SMSONLINEGH_SENDER || ''),
-      sender: process.env.SMSONLINEGH_SENDER || '(not set)'
-    });
-    
     if ((process.env.SMSONLINEGH_KEY || '') && (process.env.SMSONLINEGH_SENDER || '')) {
-      console.log('[NOTIFY DEBUG] Calling sendSmsOnlineGhBulk...');
       const ok = await sendSmsOnlineGhBulk(numbers, text).catch((e) => {
-        console.error('[NOTIFY DEBUG] SMS bulk error caught:', (e as any)?.message || e);
         console.warn('[notify] handover sms bulk error', { err: (e as any)?.message || e });
         return false;
       });
-      console.log('[NOTIFY DEBUG] SMS bulk result:', ok ? 'SUCCESS' : 'FAILED');
       if (!ok) console.warn('[notify] handover sms bulk not sent');
     } else {
-      console.warn('[NOTIFY DEBUG] SMS suppressed: SMSOnlineGH not configured');
       console.warn('[notify] handover sms suppressed: SMSOnlineGH not configured');
     }
-  } else {
-    console.log('[NOTIFY DEBUG] No SMS recipients configured');
   }
-  
-  console.log('[NOTIFY DEBUG] notifyHandover completed');
 }
 
 // --- Internal: HTTP(S) helper with custom CA support ---

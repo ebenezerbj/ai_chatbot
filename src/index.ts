@@ -329,28 +329,9 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
     const phone = (body.phone ? String(body.phone) : '').trim();
     const message = (body.message ? String(body.message) : '').trim();
     
-    // Enhanced debugging for Render deployment
-    console.log('[HANDOVER DEBUG] Request received:', {
-      sessionId,
-      name,
-      phone,
-      message,
-      bodyKeys: Object.keys(body),
-      headers: req.headers,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (!sessionId) {
-      console.log('[HANDOVER DEBUG] Missing sessionId');
-      return res.status(400).json({ error: 'sessionId required' });
-    }
+    if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
     const s = chat.getSession(sessionId);
-    if (!s) {
-      console.log('[HANDOVER DEBUG] Session not found:', sessionId);
-      return res.status(404).json({ error: 'session not found' });
-    }
-    
-    console.log('[HANDOVER DEBUG] Session found, processing handover');
+    if (!s) return res.status(404).json({ error: 'session not found' });
 
     // Server-side basic phone validation (optional)
     const phoneRaw = (phone || '').replace(/[^\d+]/g, '');
@@ -379,16 +360,11 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
       recentHistory: s.history.slice(-6)
     }, 'handover:request');
 
-  // Enhanced debug logging for notification process
-  console.log('[HANDOVER DEBUG] About to call notifyHandover with ticketId:', ticketId);
-  
   // Unified notifications (webhook/email/SMS) if configured
   try { 
     await notifyHandover({ ticketId, sessionId, name, phone, message }); 
-    console.log('[HANDOVER DEBUG] notifyHandover completed successfully');
   } catch (notifyError) {
-    console.error('[HANDOVER DEBUG] notifyHandover failed:', notifyError);
-    // Continue processing even if notification fails
+    console.error('[handover] notification failed:', notifyError);
   }
 
   // Include diagnostics: count, provider, and a limited preview when admin header present
@@ -397,17 +373,8 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
   const isAdmin = ((req as any).headers?.['x-admin-token'] || '') === (process.env.ADMIN_TOKEN || '');
   const preview = isAdmin ? (previewHandoverRecipients().slice(0, 5)) : undefined;
   
-  console.log('[HANDOVER DEBUG] Sending response:', {
-    ticketId,
-    recipientCount,
-    provider,
-    isAdmin,
-    previewCount: preview?.length
-  });
-  
   return res.json({ ok: true, ticketId, status: 'queued', recipientCount, provider, preview });
   } catch (err: any) {
-    console.error('[HANDOVER DEBUG] Handover error caught:', err);
     (req as any).log?.error({ err }, 'handover error');
     return res.status(500).json({ error: 'handover error' });
   }
