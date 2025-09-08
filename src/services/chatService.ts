@@ -157,12 +157,18 @@ export class ChatService {
   if (/(invest|loan|mortgage|advice)/i.test(userText)) extra.push(adviceDisclaimer);
   if (/(password|pin|otp|card|security|scam|fraud)/i.test(userText)) extra.push(securityReminder);
   if (hint) extra.push(hint);
-  let reply = [processed.text, ...extra].join('\n\n');
+  
+  let reply;
   if (finalSuggestHandover && !alreadyAskedHandover && !lastWasHandover) {
-    // Only ask handover question if we haven't already asked recently and user isn't responding "yes"
+    // If suggesting handover and user isn't responding "yes", replace with single handover statement
     if (!isRespondingYesToHandover) {
-      reply += `\n\nI appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
+      reply = `I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
+    } else {
+      reply = processed.text; // User said yes, just use the original response
     }
+  } else {
+    // Normal response - use original text with any extras
+    reply = [processed.text, ...extra].join('\n\n');
   }
 
   return { reply, session, suggestHandover: finalSuggestHandover };
