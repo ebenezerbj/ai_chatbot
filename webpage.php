@@ -2,7 +2,50 @@
 
 <!--AI Chatbot Widget - Primary Customer Service Chat-->
 <script type="text/javascript">
-// Removed Tawk.to - Now using custom AI chatbot as primary chat solution
+// Ensure legacy Tawk.to is fully removed if injected by upstream includes
+(function(){
+    function killTawk(){
+        try {
+            // Remove Tawk loader scripts
+            document.querySelectorAll('script[src*="tawk.to"]').forEach(function(s){ s.remove(); });
+            // Remove common Tawk containers/iframes
+            var selectors = [
+                '[id^="tawk_"]',
+                '#tawkchat-minified-wrapper',
+                '#tawkchat-minified-container',
+                '#tawkchat-status',
+                'iframe[src*="tawk.to"]'
+            ];
+            document.querySelectorAll(selectors.join(',')).forEach(function(el){ try { el.remove(); } catch(e){} });
+            // Best-effort hide if removal is blocked
+            var style = document.getElementById('hide-tawk-style');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'hide-tawk-style';
+                style.textContent = '[id^="tawk_"],#tawkchat-minified-wrapper,#tawkchat-minified-container,#tawkchat-status,iframe[src*="tawk.to"]{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}';
+                document.head.appendChild(style);
+            }
+        } catch(_){}
+    }
+    // Observe DOM for late injections
+    var obs = new MutationObserver(function(muts){
+        var affected = false;
+        muts.forEach(function(m){
+            m.addedNodes && m.addedNodes.forEach(function(n){
+                if (n && n.nodeType === 1) {
+                    var el = n;
+                    if (el.matches && el.matches('script[src*="tawk.to"], [id^="tawk_"], iframe[src*="tawk.to"]')) affected = true;
+                    if (!affected && el.querySelector && el.querySelector('script[src*="tawk.to"], [id^="tawk_"], iframe[src*="tawk.to"]')) affected = true;
+                }
+            });
+        });
+        if (affected) killTawk();
+    });
+    try { obs.observe(document.documentElement, { childList: true, subtree: true }); } catch(_){ }
+    // Run immediately and on DOM ready
+    killTawk();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', killTawk);
+})();
 </script>
 
 <!-- AI Chatbot Widget -->
