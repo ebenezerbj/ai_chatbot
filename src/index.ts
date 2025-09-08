@@ -57,31 +57,49 @@ try {
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: '*'}));
+
+// Configure which sites may embed this app in an <iframe>
+// Provide a comma-separated list in FRAME_ANCESTORS env (e.g., "https://example.com, https://www.example.org")
+// Defaults allow localhost for development. 'self' is always included.
+const frameAncestors: string[] = [
+  "'self'",
+  ...(process.env.FRAME_ANCESTORS
+    ? process.env.FRAME_ANCESTORS.split(',').map((s: string) => s.trim()).filter(Boolean)
+    : [
+        'http://localhost:*',
+        'http://127.0.0.1:*'
+      ])
+];
+
 app.use(helmet({
+  // Disable X-Frame-Options header; use CSP frame-ancestors instead
+  frameguard: false,
   contentSecurityPolicy: {
     directives: {
-  ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-  "script-src": ["'self'", "'unsafe-inline'", "blob:"],
-  "script-src-elem": ["'self'", "'unsafe-inline'", "blob:"],
-  // Allow fetch/XHR/websocket destinations for both localhost and production
-  // Include Render domains, localhost variants, and common third-party services
-  "connect-src": [
-    "'self'", 
-    "http://localhost:3000", 
-    "http://localhost:*", 
-    "https://*.onrender.com",
-    "wss://*.onrender.com",
-    "https://www.google-analytics.com", 
-    "https://*.reasonlabsapi.com", 
-    "ws://localhost:*", 
-    "wss://localhost:*"
-  ],
-  // Allow web workers and blob-based scripts if used by TTS/UI
-  "worker-src": ["'self'", "blob:"],
-  "media-src": ["'self'", "data:", "blob:"],
-      "img-src": ["'self'", "data:", "blob:"],
-    },
-  },
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      // Permit embedding from allowed ancestors
+      'frame-ancestors': frameAncestors,
+      'script-src': ["'self'", "'unsafe-inline'", 'blob:'],
+      'script-src-elem': ["'self'", "'unsafe-inline'", 'blob:'],
+      // Allow fetch/XHR/websocket destinations for both localhost and production
+      // Include Render domains, localhost variants, and common third-party services
+      'connect-src': [
+        "'self'",
+        'http://localhost:3000',
+        'http://localhost:*',
+        'https://*.onrender.com',
+        'wss://*.onrender.com',
+        'https://www.google-analytics.com',
+        'https://*.reasonlabsapi.com',
+        'ws://localhost:*',
+        'wss://localhost:*'
+      ],
+      // Allow web workers and blob-based scripts if used by TTS/UI
+      'worker-src': ["'self'", 'blob:'],
+      'media-src': ["'self'", 'data:', 'blob:'],
+      'img-src': ["'self'", 'data:', 'blob:']
+    }
+  }
 }));
 app.use(pinoHttp({
   logger,
