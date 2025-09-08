@@ -1280,7 +1280,7 @@
               const lastMessages = chatEl.querySelectorAll('.message');
               const lastAssistantMsg = Array.from(lastMessages).slice(-3).find(msg => 
                 msg.classList.contains('assistant') && 
-                msg.textContent.includes('Would you like me to connect you to a human agent?')
+                msg.textContent.includes('Would you like me to facilitate a connection with a customer representative')
               );
               const userJustSaidYes = lastAssistantMsg && 
                 /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(msgText.trim());
@@ -1292,7 +1292,7 @@
                 }, 100);
               } else {
                 // First time suggesting handover - show the question and CTA
-                addMsg('assistant', 'Would you like me to connect you to a human agent?');
+                addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?');
                 renderHandoverCTA();
               }
             }

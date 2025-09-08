@@ -96,7 +96,7 @@ export class ChatService {
     const genericRe = /I can help with questions about our products, services, branch locations, and hours/i;
     const uncertainRe = /(i\s+(am\s+)?not\s+sure|i\s+couldn'?t|can\'?t\s+help|don'?t\s+have\s+that\s+info)/i;
     const trivialRe = /^(hi|hello|hey|thanks|thank you|ok|okay)$/i;
-    const handoverQuestionRe = /Would you like me to connect you to a human agent\?/i;
+    const handoverQuestionRe = /Would you like me to facilitate a connection with a customer representative/i;
     
     // Consider it unresolved if:
     // - Generic fallback text, or
@@ -122,13 +122,13 @@ export class ChatService {
     // Check if user is responding "yes" to a previous handover suggestion
     const lastAssistantMsg = session.history.slice().reverse().find(m => m.role === 'assistant');
     const isRespondingYesToHandover = lastAssistantMsg && 
-      /Would you like me to connect you to a human agent\?/i.test(lastAssistantMsg.content) &&
+      /Would you like me to facilitate a connection with a customer representative/i.test(lastAssistantMsg.content) &&
       /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(userText.trim());
     
     // Check if we've already asked the handover question recently to prevent loops
     const recentMessages = session.history.slice(-4); // Check last 4 messages
     const alreadyAskedHandover = recentMessages.some(m => 
-      m.role === 'assistant' && /Would you like me to connect you to a human agent\?/i.test(m.content)
+      m.role === 'assistant' && /Would you like me to facilitate a connection with a customer representative/i.test(m.content)
     );
     
     const finalSuggestHandover = suggestHandover || isRespondingYesToHandover;
@@ -153,7 +153,7 @@ export class ChatService {
   if (finalSuggestHandover && !alreadyAskedHandover) {
     // Only ask handover question if we haven't already asked recently and user isn't responding "yes"
     if (!isRespondingYesToHandover) {
-      reply += `\n\nWould you like me to connect you to a human agent?`;
+      reply += `\n\nI appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
     }
   }
 
