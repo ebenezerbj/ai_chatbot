@@ -74,6 +74,10 @@ const frameAncestors: string[] = [
 app.use(helmet({
   // Disable X-Frame-Options header; use CSP frame-ancestors instead
   frameguard: false,
+  // Avoid COEP blocking when embedded
+  crossOriginEmbedderPolicy: false,
+  // Allow resources to be shared cross-origin when embedded
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
@@ -81,6 +85,9 @@ app.use(helmet({
       'frame-ancestors': frameAncestors,
       'script-src': ["'self'", "'unsafe-inline'", 'blob:'],
       'script-src-elem': ["'self'", "'unsafe-inline'", 'blob:'],
+      // Styles and fonts (Google Fonts)
+      'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
       // Allow fetch/XHR/websocket destinations for both localhost and production
       // Include Render domains, localhost variants, and common third-party services
       'connect-src': [
