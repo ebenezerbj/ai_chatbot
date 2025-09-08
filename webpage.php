@@ -261,55 +261,6 @@
         chatWidget.src = CHATBOT_URL;
         chatWidget.title = 'AI Customer Service Chat';
         chatWidget.allow = 'microphone; camera; geolocation; autoplay; clipboard-read; clipboard-write';
-                // Track load state for fallback
-                let chatLoaded = false;
-                chatWidget.addEventListener('load', function() {
-                    chatLoaded = true;
-                    // Hide fallback if it was showing and iframe finally loaded
-                    const fb = document.getElementById('ai-chatbot-fallback');
-                    if (fb) fb.style.display = 'none';
-                });
-
-                // Fallback overlay if embedding is blocked
-                const fallback = document.createElement('div');
-                fallback.id = 'ai-chatbot-fallback';
-                fallback.style.position = 'fixed';
-                fallback.style.bottom = '100px';
-                fallback.style.right = '20px';
-                fallback.style.zIndex = '1002';
-                fallback.style.display = 'none';
-                fallback.style.background = '#fff';
-                fallback.style.border = '1px solid #e5e7eb';
-                fallback.style.borderRadius = '10px';
-                fallback.style.boxShadow = '0 10px 25px rgba(0,0,0,0.12)';
-                fallback.style.padding = '12px 14px';
-                fallback.style.maxWidth = '300px';
-                fallback.style.fontFamily = "'IBM Plex Sans Condensed', sans-serif";
-                fallback.style.color = '#374151';
-                                fallback.innerHTML = `
-                                        <div style="display:flex; align-items:flex-start; gap:10px">
-                                                <div style="flex:1">
-                                                        <div style="font-weight:600; margin-bottom:4px">Chat couldn’t be embedded</div>
-                                                        <div style="font-size:13px; line-height:1.4">Your browser or our security settings blocked the in-page chat. You can still chat in a new tab.</div>
-                                                </div>
-                                                <div style="display:flex; gap:8px">
-                                                    <button type="button" class="retry-embed" style="white-space:nowrap; background:#111827; color:#fff; border:none; cursor:pointer; padding:8px 10px; border-radius:8px; font-size:13px; font-weight:600">Retry</button>
-                                                    <a href="${CHATBOT_URL}" target="_blank" rel="noopener" style="white-space:nowrap; background:#0F4C81; color:#fff; text-decoration:none; padding:8px 10px; border-radius:8px; font-size:13px; font-weight:600">Open chat</a>
-                                                </div>
-                                        </div>`;
-                                // Wire up retry
-                                fallback.addEventListener('click', function(e){
-                                    const t = e.target;
-                                    if (t && t.classList && t.classList.contains('retry-embed')) {
-                                        chatLoaded = false;
-                                        // bust cache and retry load
-                                        const url = CHATBOT_URL + (CHATBOT_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
-                                        chatWidget.src = url;
-                                        // show a quick loading state on the button
-                                        t.textContent = 'Retrying…';
-                                        setTimeout(function(){ t.textContent = 'Retry'; }, 2000);
-                                    }
-                                });
         
         // Welcome message
         const welcomeMessage = document.createElement('div');
@@ -322,7 +273,6 @@
         // Add elements to page
     document.body.appendChild(toggleButton);
     document.body.appendChild(chatWidget);
-    document.body.appendChild(fallback);
     document.body.appendChild(welcomeMessage);
         
         // Show welcome message after 3 seconds
@@ -349,15 +299,11 @@
         toggleButton.addEventListener('click', function() {
             chatbotVisible = !chatbotVisible;
             chatWidget.style.display = chatbotVisible ? 'block' : 'none';
-            if (!chatbotVisible) { fallback.style.display = 'none'; }
             welcomeMessage.style.display = 'none'; // Hide welcome when opening chat
             
             // Hide notification when chat is opened
             if (chatbotVisible) {
                 notification.style.display = 'none';
-                // If iframe doesn’t load within 3s, show fallback
-                chatLoaded = false;
-                setTimeout(function(){ if (!chatLoaded && chatbotVisible) fallback.style.display = 'block'; }, 3000);
                 // Let iframe know it became visible
                 try { chatWidget.contentWindow?.postMessage({ source: 'akcb-chat-parent', type: 'setVisible', visible: true }, '*'); } catch(e){}
             }
