@@ -167,9 +167,29 @@
       max-width: 220px;
     }
   .tts-note { font-size: 0.8rem; color: var(--warning-color); }
+    
+    /* Ensure button text is always visible */
+    .send-text {
+      display: inline;
+      font-weight: 500;
+    }
+    
+    .header-action-btn .label {
+      display: inline;
+    }
+    
     @media (max-width: 768px) {
-      .header-action-btn .label { display: none; }
-      .header-action-select { max-width: 120px; }
+      .header-action-btn .label { 
+        display: none; 
+      }
+      .header-action-select { 
+        max-width: 120px; 
+      }
+      
+      /* Keep send button text visible on mobile */
+      .send-text {
+        display: inline !important;
+      }
     }
 
     @keyframes pulse {
@@ -338,6 +358,13 @@
     .icon-button:hover {
       background: var(--gray-200);
     }
+    
+    /* Ensure all button text elements are visible */
+    button span, .btn span, .send-text, .label {
+      display: inline !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
 
     .sidebar {
       width: 300px;
@@ -466,6 +493,12 @@
     }
 
     .msg-action-btn i { font-size: 0.9rem; }
+    
+    /* Ensure button text is always visible */
+    .msg-action-btn span {
+      display: inline !important;
+      font-weight: 500;
+    }
 
     .msg-action-btn.call { border-color: #10b98133; background: #10b98111; }
     .msg-action-btn.whatsapp { border-color: #25D36633; background: #25D36611; }
