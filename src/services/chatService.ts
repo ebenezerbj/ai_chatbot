@@ -114,7 +114,16 @@ export class ChatService {
       console.log(`[DEBUG] Resolved turn. Streak reset to 0`);
     }
     const suggestHandover = session.unresolvedStreak >= 2 || /human agent|talk to (a )?(human|person)/i.test(userText);
-    console.log(`[DEBUG] Suggest handover: ${suggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)})`);
+    
+    // Check if user is responding "yes" to a previous handover suggestion
+    const lastAssistantMsg = session.history.slice().reverse().find(m => m.role === 'assistant');
+    const isRespondingYesToHandover = lastAssistantMsg && 
+      /Would you like me to connect you to a human agent\?/i.test(lastAssistantMsg.content) &&
+      /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(userText.trim());
+    
+    const finalSuggestHandover = suggestHandover || isRespondingYesToHandover;
+    
+    console.log(`[DEBUG] Suggest handover: ${finalSuggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)}, yesToHandover: ${!!isRespondingYesToHandover})`);
 
     const assistantMsg: Message = {
       id: uuidv4(),
@@ -131,11 +140,14 @@ export class ChatService {
   if (/(password|pin|otp|card|security|scam|fraud)/i.test(userText)) extra.push(securityReminder);
   if (hint) extra.push(hint);
   let reply = [processed.text, ...extra].join('\n\n');
-  if (suggestHandover) {
-    reply += `\n\nWould you like me to connect you to a human agent?`;
+  if (finalSuggestHandover) {
+    // If user is responding "yes" to handover, don't ask again - they've already confirmed
+    if (!isRespondingYesToHandover) {
+      reply += `\n\nWould you like me to connect you to a human agent?`;
+    }
   }
 
-  return { reply, session, suggestHandover };
+  return { reply, session, suggestHandover: finalSuggestHandover };
   }
 
   getMetrics() {

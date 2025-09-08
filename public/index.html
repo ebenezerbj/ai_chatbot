@@ -1276,8 +1276,25 @@
           addMsg('assistant', data.reply);
           try {
             if (data.suggestHandover) {
-              addMsg('assistant', 'Would you like me to connect you to a human agent?');
-              renderHandoverCTA();
+              // Check if user just said "yes" to a handover question
+              const lastMessages = chatEl.querySelectorAll('.message');
+              const lastAssistantMsg = Array.from(lastMessages).slice(-3).find(msg => 
+                msg.classList.contains('assistant') && 
+                msg.textContent.includes('Would you like me to connect you to a human agent?')
+              );
+              const userJustSaidYes = lastAssistantMsg && 
+                /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(msgText.trim());
+              
+              if (userJustSaidYes) {
+                // User confirmed they want handover - open form directly
+                setTimeout(() => {
+                  openHandoverForm();
+                }, 100);
+              } else {
+                // First time suggesting handover - show the question and CTA
+                addMsg('assistant', 'Would you like me to connect you to a human agent?');
+                renderHandoverCTA();
+              }
             }
           } catch {}
         } else {
