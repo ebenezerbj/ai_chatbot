@@ -320,7 +320,7 @@ app.post('/api/tts', async (req: Request, res: any) => {
 });
 
 // Human handover: accept a request to connect with a human agent
-// Body: { sessionId: string, name?: string, phone?: string, message?: string }
+// Body: { sessionId: string, name?: string, phone?: string, message?: string, lat?: number, lng?: number, plusCode?: string }
 app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
   try {
     const body: any = (req as any).body || {};
@@ -328,6 +328,9 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
     const name = (body.name ? String(body.name) : '').trim();
     const phone = (body.phone ? String(body.phone) : '').trim();
     const message = (body.message ? String(body.message) : '').trim();
+    const lat = body.lat ? Number(body.lat) : undefined;
+    const lng = body.lng ? Number(body.lng) : undefined;
+    const plusCode = body.plusCode ? String(body.plusCode).trim() : undefined;
     
     if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
     const s = chat.getSession(sessionId);
@@ -350,6 +353,30 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
     }
 
     const ticketId = uuidv4();
+    
+    // Determine target branch based on location
+    let targetBranch: any = null;
+    let locationCoords: { lat: number; lng: number } | null = null;
+    
+    // Try to get coordinates from lat/lng or plusCode
+    if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
+      locationCoords = { lat, lng };
+    } else if (plusCode) {
+      const resolved = resolvePlusCode(plusCode);
+      if (resolved) {
+        locationCoords = resolved;
+      }
+    }
+    
+    // Find nearest branch if we have coordinates
+    if (locationCoords) {
+      const nearest = findNearestBranch(locationCoords.lat, locationCoords.lng);
+      targetBranch = nearest.branch;
+      console.log(`[handover] Location-based routing: ${targetBranch.name} (${nearest.distanceKm.toFixed(1)}km away)`);
+    } else {
+      console.log('[handover] No location provided, using global routing');
+    }
+    
     // Basic structured log; in a real setup, forward to a ticketing system/email/webhook
     (req as any).log?.info({
       ticketId,
@@ -357,23 +384,38 @@ app.post('/api/handover', handoverLimiter, async (req: Request, res: any) => {
       name,
       phone,
       message,
+      targetBranch: targetBranch?.name || 'global',
+      location: locationCoords,
       recentHistory: s.history.slice(-6)
     }, 'handover:request');
 
   // Unified notifications (webhook/email/SMS) if configured
   try { 
-    await notifyHandover({ ticketId, sessionId, name, phone, message }); 
+    await notifyHandover({ ticketId, sessionId, name, phone, message, targetBranch }); 
   } catch (notifyError) {
     console.error('[handover] notification failed:', notifyError);
   }
 
   // Include diagnostics: count, provider, and a limited preview when admin header present
-  const recipientCount = getHandoverRecipientCount();
+  const recipientCount = targetBranch 
+    ? (process.env.HANDOVER_SMS_TO || '').split(',').filter(Boolean).length + 
+      (process.env.EXTRA_SMS_RECIPIENTS || '').split(',').filter(Boolean).length +
+      (targetBranch.phone ? 1 : 0)
+    : getHandoverRecipientCount();
   const provider = getSmsProvider();
   const isAdmin = ((req as any).headers?.['x-admin-token'] || '') === (process.env.ADMIN_TOKEN || '');
   const preview = isAdmin ? (previewHandoverRecipients().slice(0, 5)) : undefined;
   
-  return res.json({ ok: true, ticketId, status: 'queued', recipientCount, provider, preview });
+  return res.json({ 
+    ok: true, 
+    ticketId, 
+    status: 'queued', 
+    recipientCount, 
+    provider, 
+    preview,
+    targetBranch: targetBranch?.name || null,
+    routing: targetBranch ? 'location-based' : 'global'
+  });
   } catch (err: any) {
     (req as any).log?.error({ err }, 'handover error');
     return res.status(500).json({ error: 'handover error' });

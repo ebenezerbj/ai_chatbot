@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { BRANCHES } from '../geo/branches';
+import { BRANCHES, Branch } from '../geo/branches';
 import * as https from 'https';
 import * as http from 'http';
 import { existsSync, readFileSync } from 'fs';
@@ -162,6 +162,34 @@ function getMergedRecipients(envVar: string): string[] {
   return out;
 }
 
+// Get recipients for a specific branch (includes branch phone + global recipients)
+function getBranchSpecificRecipients(envVar: string, targetBranch: Branch): string[] {
+  const fromEnv = (process.env[envVar as keyof NodeJS.ProcessEnv] || '') as string;
+  const extra = process.env.EXTRA_SMS_RECIPIENTS || '';
+  const split = (s: string) => s.split(',').map(x => x.trim()).filter(Boolean);
+  
+  const candidates = [
+    ...split(fromEnv),
+    ...split(extra)
+  ];
+  
+  // Add the specific branch phone if it exists
+  if (targetBranch.phone) {
+    candidates.push(targetBranch.phone);
+  }
+  
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const c of candidates) {
+    const canon = canonicalizeForDedup(c);
+    if (!canon) continue;
+    if (seen.has(canon)) continue;
+    seen.add(canon);
+    out.push(canon);
+  }
+  return out;
+}
+
 export async function notifyEscalation(opts: { sessionId: string; lastUserMessage?: string }): Promise<void> {
   const enable = String(process.env.NOTIFY_ON_ESCALATION || '').toLowerCase() === 'true';
   if (!enable) return;
@@ -190,7 +218,14 @@ export async function notifyEscalation(opts: { sessionId: string; lastUserMessag
   }
 }
 
-export async function notifyHandover(opts: { ticketId: string; sessionId: string; name?: string; phone?: string; message?: string }): Promise<void> {
+export async function notifyHandover(opts: { 
+  ticketId: string; 
+  sessionId: string; 
+  name?: string; 
+  phone?: string; 
+  message?: string;
+  targetBranch?: any;
+}): Promise<void> {
   const payload: HandoverPayload = { kind: 'handover', ticketId: opts.ticketId, sessionId: opts.sessionId, name: opts.name, phone: opts.phone, message: opts.message, at: new Date().toISOString() };
   await sendWebhook(process.env.HANDOVER_WEBHOOK_URL || '', payload);
   // Ticketing webhook (generic)
@@ -209,11 +244,20 @@ export async function notifyHandover(opts: { ticketId: string; sessionId: string
     `;
     await sendEmail(emailTo, `[Chatbot] Handover request ${opts.ticketId}`, html);
   }
-  const numbers: string[] = getMergedRecipients('HANDOVER_SMS_TO');
-  console.log('[notify] handover: sms recipients', { count: numbers.length });
+  const numbers: string[] = opts.targetBranch 
+    ? getBranchSpecificRecipients('HANDOVER_SMS_TO', opts.targetBranch)
+    : getMergedRecipients('HANDOVER_SMS_TO');
+    
+  const routingInfo = opts.targetBranch 
+    ? `${opts.targetBranch.name} branch (${opts.targetBranch.phone || 'no phone'})`
+    : 'global routing';
+    
+  console.log(`[notify] handover: ${routingInfo}, sms recipients`, { count: numbers.length });
+  
   if (numbers.length) {
     const preview = (opts.message || '').slice(0, 120).replace(/\s+/g, ' ');
-    const text = `Handover ${opts.ticketId} from ${opts.name || 'N/A'} ${opts.phone || ''}. Msg: ${preview}`;
+    const branchInfo = opts.targetBranch ? ` [${opts.targetBranch.name}]` : '';
+    const text = `Handover${branchInfo} ${opts.ticketId} from ${opts.name || 'N/A'} ${opts.phone || ''}. Msg: ${preview}`;
     if ((process.env.SMSONLINEGH_KEY || '') && (process.env.SMSONLINEGH_SENDER || '')) {
       const ok = await sendSmsOnlineGhBulk(numbers, text).catch((e) => {
         console.warn('[notify] handover sms bulk error', { err: (e as any)?.message || e });

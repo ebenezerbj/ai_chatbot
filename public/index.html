@@ -1329,13 +1329,70 @@
         </div>
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
           <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <button id="getLocationBtn" class="header-action-btn" style="white-space:nowrap; background: var(--secondary-color);"><i class="fa fa-map-marker"></i><span class="label">Get Location</span></button>
           <button id="handoverSend" class="header-action-btn" style="white-space:nowrap"><i class="fa fa-paper-plane"></i><span class="label">Request callback</span></button>
         </div>
+        <div id="locationStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color);"></div>
         <div id="handoverStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--gray-600);"></div>
       `;
       last.appendChild(wrap);
       const sendBtn = wrap.querySelector('#handoverSend');
+      const locationBtn = wrap.querySelector('#getLocationBtn');
       sendBtn?.addEventListener('click', submitHandoverRequest);
+      locationBtn?.addEventListener('click', requestLocation);
+    }
+
+    let userLocation = null; // Store user's location
+    
+    function requestLocation() {
+      const statusEl = document.getElementById('locationStatus');
+      if (!statusEl) return;
+      
+      if (!navigator.geolocation) {
+        statusEl.textContent = 'Location services not supported by this browser.';
+        statusEl.style.color = 'var(--danger, #c62828)';
+        return;
+      }
+      
+      statusEl.textContent = 'Getting your location...';
+      statusEl.style.color = 'var(--primary-color)';
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          statusEl.textContent = `Location found! This will help route you to your nearest branch.`;
+          statusEl.style.color = 'var(--success, #2e7d32)';
+        },
+        (error) => {
+          console.error('Location error:', error);
+          let errorMsg = 'Could not get location. ';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg += 'Location access denied.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg += 'Location information unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMsg += 'Location request timeout.';
+              break;
+            default:
+              errorMsg += 'Unknown error.';
+              break;
+          }
+          statusEl.textContent = errorMsg + ' Your request will use global routing.';
+          statusEl.style.color = 'var(--warning, #f57c00)';
+          userLocation = null;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
     }
 
     async function submitHandoverRequest() {
@@ -1346,6 +1403,7 @@
   const phone = phoneEl ? (phoneEl.value || '') : '';
   const msg = msgEl ? (msgEl.value || '') : '';
       const statusEl = document.getElementById('handoverStatus');
+      
       // Basic phone validation (Ghana): allow +233XXXXXXXXX or 0XXXXXXXXX; ignore spaces/dashes
       const phoneRaw = (phone || '').replace(/[^\d+]/g, '');
       if (phoneRaw) {
@@ -1367,20 +1425,54 @@
           return;
         }
       }
+      
       try {
         const sid = await ensureSession();
   if (statusEl) statusEl.textContent = 'Submitting…';
-        let resp = await fetch('/api/handover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: sid, name, phone, message: msg }) });
+        
+        // Prepare request body with location if available
+        const requestBody = { 
+          sessionId: sid, 
+          name, 
+          phone, 
+          message: msg 
+        };
+        
+        if (userLocation) {
+          requestBody.lat = userLocation.lat;
+          requestBody.lng = userLocation.lng;
+        }
+        
+        let resp = await fetch('/api/handover', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(requestBody) 
+        });
         let data = await resp.json();
+        
         // If session expired (e.g., server restart), create a fresh session and retry once
         if (resp.status === 404 && (data?.error || '').toLowerCase().includes('session not found')) {
           sessionId = null; // Clear the stale session ID
           const newSid = await ensureSession();
-          resp = await fetch('/api/handover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: newSid, name, phone, message: msg }) });
+          requestBody.sessionId = newSid;
+          resp = await fetch('/api/handover', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(requestBody) 
+          });
           try { data = await resp.json(); } catch { data = undefined; }
         }
+        
         if (resp.ok && data?.ok) {
-          if (statusEl) statusEl.textContent = `Request received. Ticket: ${data.ticketId}. An agent will contact you soon.`;
+          let successMsg = `Request received. Ticket: ${data.ticketId}.`;
+          if (data.targetBranch) {
+            successMsg += ` Routed to ${data.targetBranch} branch.`;
+          }
+          successMsg += ' An agent will contact you soon.';
+          if (statusEl) {
+            statusEl.textContent = successMsg;
+            statusEl.style.color = 'var(--success, #2e7d32)';
+          }
           return;
         }
         if (statusEl) {
@@ -1389,9 +1481,13 @@
           } else {
             statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
           }
+          statusEl.style.color = 'var(--danger, #c62828)';
         }
       } catch (e) {
-        if (statusEl) statusEl.textContent = 'Network error submitting request.';
+        if (statusEl) {
+          statusEl.textContent = 'Network error submitting request.';
+          statusEl.style.color = 'var(--danger, #c62828)';
+        }
       }
     }
 
