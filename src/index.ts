@@ -62,6 +62,7 @@ app.use(helmet({
     directives: {
   ...helmet.contentSecurityPolicy.getDefaultDirectives(),
   "script-src": ["'self'", "'unsafe-inline'", "blob:"],
+  "script-src-elem": ["'self'", "'unsafe-inline'", "blob:"],
   // Allow web workers and blob-based scripts if used by TTS/UI
   "worker-src": ["'self'", "blob:"],
   "media-src": ["'self'", "data:", "blob:"],
