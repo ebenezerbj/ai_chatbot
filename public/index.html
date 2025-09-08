@@ -354,13 +354,22 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 0.5rem;
     }
     .icon-button:hover {
       background: var(--gray-200);
     }
     
+    .icon-button .button-text {
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: inline !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
     /* Ensure all button text elements are visible */
-    button span, .btn span, .send-text, .label {
+    button span, .btn span, .send-text, .label, .button-text {
       display: inline !important;
       visibility: visible !important;
       opacity: 1 !important;
@@ -677,8 +686,9 @@
               required
               aria-label="Message input"
             ></textarea>
-            <button type="button" id="useLocationBtn" class="icon-button" title="Use my location" aria-label="Use my location">
-              <i class="fas fa-location-crosshairs" aria-hidden="true"></i>
+            <button type="button" id="useLocationBtn" class="icon-button" title="Get directions using my location" aria-label="Get directions using my location">
+              <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+              <span class="button-text">Get Directions</span>
             </button>
             <button type="submit" class="send-button" aria-label="Send message">
               <i class="fas fa-paper-plane" aria-hidden="true"></i>
