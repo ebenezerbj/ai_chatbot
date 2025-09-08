@@ -310,6 +310,8 @@
                 // If iframe doesn’t load within 3s, show fallback
                 chatLoaded = false;
                 setTimeout(function(){ if (!chatLoaded && chatbotVisible) fallback.style.display = 'block'; }, 3000);
+                // Let iframe know it became visible
+                try { chatWidget.contentWindow?.postMessage({ source: 'akcb-chat-parent', type: 'setVisible', visible: true }, '*'); } catch(e){}
             }
             
             // Update button icon
@@ -328,8 +330,39 @@
                         <circle cx="15" cy="12" r="1"/>
                     </svg>
                 `;
+                                // Inform iframe it is hidden
+                                try { chatWidget.contentWindow?.postMessage({ source: 'akcb-chat-parent', type: 'setVisible', visible: false }, '*'); } catch(e){}
             }
         });
+
+                // Unread badge: show when assistant messages arrive while hidden
+                (function wireUnreadBadge(){
+                    let unread = 0;
+                    window.addEventListener('message', function(e){
+                        try {
+                            const data = e?.data || {};
+                            if (!data || data.source !== 'akcb-chat') return;
+                            if (data.type === 'ready') {
+                                // Optionally clear unread on load
+                                if (chatbotVisible) unread = 0;
+                            }
+                            if (data.type === 'assistantMessage') {
+                                if (!chatbotVisible) {
+                                    unread++;
+                                    notification.style.display = 'flex';
+                                    notification.textContent = unread > 9 ? '9+' : String(unread);
+                                }
+                            }
+                        } catch(_){}
+                    });
+                    // Reset unread when opening
+                    const openObserver = new MutationObserver(function(){
+                        if (chatWidget.style.display === 'block') {
+                            unread = 0; notification.style.display = 'none';
+                        }
+                    });
+                    try { openObserver.observe(chatWidget, { attributes: true, attributeFilter: ['style'] }); } catch(_){ }
+                })();
     }
     
     // Initialize when page loads

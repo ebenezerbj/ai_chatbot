@@ -690,6 +690,8 @@
   addMsg('assistant', `Hi, I'm ${assistantName}. I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you?`);
   // Init TTS UI state
   initTTS();
+      // Notify parent that the chat is ready (for iframed embedding)
+      try { window.parent?.postMessage({ source: 'akcb-chat', type: 'ready' }, '*'); } catch {}
     });
 
     async function ensureSession() {
@@ -707,7 +709,7 @@
       }
     }
 
-    function addMsg(role, text) {
+  function addMsg(role, text) {
       const div = document.createElement('div');
       div.className = `message ${role}`;
       
@@ -824,6 +826,13 @@
       div.appendChild(content);
       chatEl.appendChild(div);
       chatEl.scrollTop = chatEl.scrollHeight;
+      // Notify parent about assistant messages to drive unread badge
+      if (role === 'assistant') {
+        try {
+          const preview = String(text || '').slice(0, 140);
+          window.parent?.postMessage({ source: 'akcb-chat', type: 'assistantMessage', preview }, '*');
+        } catch {}
+      }
     }
 
     // Simple user-interaction gate for autoplay policies (especially iOS Safari)
@@ -1597,6 +1606,19 @@
 
     // Focus input on load
     input.focus();
+
+    // Listen for parent visibility hints (optional)
+    window.addEventListener('message', (e) => {
+      try {
+        const data = e?.data || {};
+        if (!data || data.source !== 'akcb-chat-parent') return;
+        if (data.type === 'setVisible' && data.visible) {
+          // Focus input and scroll to bottom when parent opens chat
+          input?.focus();
+          chatEl.scrollTop = chatEl.scrollHeight;
+        }
+      } catch {}
+    });
   </script>
 </body>
 </html>
