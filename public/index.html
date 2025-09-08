@@ -1291,8 +1291,13 @@
                   openHandoverForm();
                 }, 100);
               } else {
-                // First time suggesting handover - show the question and CTA
-                addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?');
+                // Check if the reply already contains the handover question
+                const replyContainsHandover = data.reply.includes('Would you like me to facilitate a connection with a customer representative');
+                
+                if (!replyContainsHandover) {
+                  // Only add handover message if not already in the reply
+                  addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?');
+                }
                 renderHandoverCTA();
               }
             }
