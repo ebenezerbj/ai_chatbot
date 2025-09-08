@@ -1281,12 +1281,19 @@
             }
           } catch {}
         } else {
-          addMsg('assistant', 'Sorry, I encountered an issue processing your request. Please try again.');
+          addMsg('assistant', 'I\'m having some technical difficulties right now. Let me connect you with one of our human agents who can help you immediately.');
+          setTimeout(() => {
+            renderHandoverCTA();
+          }, 100);
         }
       } catch (error) {
         hideTyping();
         console.error('Chat error:', error);
-        addMsg('assistant', 'Sorry, I\'m having trouble connecting right now. Please check your connection and try again.');
+        addMsg('assistant', 'I\'m having some technical difficulties right now. Let me connect you with one of our human agents who can help you immediately.');
+        // Automatically trigger handover when there's a connection error
+        setTimeout(() => {
+          renderHandoverCTA();
+        }, 100);
       } finally {
         sendButton.disabled = false;
         input.focus();

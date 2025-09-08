@@ -57,7 +57,9 @@ export class ChatService {
     if (kbContext) console.log(`[DEBUG] KB Context: ${kbContext.substring(0, 100)}...`);
 
   const t0 = Date.now();
-  const response = await this.provider.generate({
+  let response;
+  try {
+    response = await this.provider.generate({
       systemPrompt: SYSTEM_PERSONA,
       messages: [
         ...messages,
@@ -66,6 +68,23 @@ export class ChatService {
       temperature: 0.2,
       maxTokens: 600
     });
+  } catch (error: any) {
+    console.log('[ChatService] Provider error, triggering handover:', error?.message || error);
+    // If the AI provider fails, immediately suggest handover
+    const assistantMsg: Message = {
+      id: uuidv4(),
+      role: 'assistant',
+      content: "I'm having some technical difficulties right now. Let me connect you with one of our human agents who can help you immediately.",
+      timestamp: Date.now()
+    };
+    session.history.push(assistantMsg);
+    
+    return { 
+      reply: assistantMsg.content, 
+      session, 
+      suggestHandover: true 
+    };
+  }
   const t1 = Date.now();
   this.metrics.totalTurns += 1;
   this.metrics.lastLatencyMs = t1 - t0;
