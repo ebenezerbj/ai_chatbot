@@ -110,19 +110,15 @@ export class ChatService {
       !handoverQuestionRe.test(processed.text)
     );
     console.log(`[DEBUG] Checking unresolved: generic=${genericRe.test(processed.text)}, uncertain=${uncertainRe.test(processed.text)}, noKB=${!trivialRe.test(userText.trim()) && snippets.length === 0}, handoverQuestion=${handoverQuestionRe.test(processed.text)}, result=${looksUnresolved}`);
-    if (looksUnresolved) {
-      session.unresolvedStreak = (session.unresolvedStreak || 0) + 1;
-      console.log(`[DEBUG] Unresolved turn detected. Streak now: ${session.unresolvedStreak}`);
-    } else {
-      session.unresolvedStreak = 0;
-      console.log(`[DEBUG] Resolved turn. Streak reset to 0`);
-    }
     
     // Reset unresolved streak if we're about to suggest handover to prevent loops
-    const shouldSuggestHandover = session.unresolvedStreak >= 2 || /human agent|talk to (a )?(human|person)/i.test(userText);
+    const shouldSuggestHandover = looksUnresolved || /human agent|talk to (a )?(human|person)/i.test(userText);
     if (shouldSuggestHandover) {
       session.unresolvedStreak = 0; // Reset to prevent handover suggestions from being detected as unresolved
-      console.log(`[DEBUG] Suggesting handover, resetting streak to 0`);
+      console.log(`[DEBUG] Suggesting handover immediately for unresolved query`);
+    } else {
+      session.unresolvedStreak = 0; // Always reset since we're doing immediate handover
+      console.log(`[DEBUG] Query resolved successfully`);
     }
     const suggestHandover = shouldSuggestHandover;
     
