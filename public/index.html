@@ -1329,7 +1329,6 @@
         </div>
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
           <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <button id="getLocationBtn" class="header-action-btn" style="white-space:nowrap; background: var(--secondary-color);"><i class="fa fa-map-marker"></i><span class="label">Get Location</span></button>
           <button id="handoverSend" class="header-action-btn" style="white-space:nowrap"><i class="fa fa-paper-plane"></i><span class="label">Request callback</span></button>
         </div>
         <div id="locationStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color);"></div>
@@ -1337,24 +1336,25 @@
       `;
       last.appendChild(wrap);
       const sendBtn = wrap.querySelector('#handoverSend');
-      const locationBtn = wrap.querySelector('#getLocationBtn');
       sendBtn?.addEventListener('click', submitHandoverRequest);
-      locationBtn?.addEventListener('click', requestLocation);
+      
+      // Automatically request location when form opens
+      requestLocationAutomatically();
     }
 
     let userLocation = null; // Store user's location
     
-    function requestLocation() {
+    function requestLocationAutomatically() {
       const statusEl = document.getElementById('locationStatus');
       if (!statusEl) return;
       
       if (!navigator.geolocation) {
-        statusEl.textContent = 'Location services not supported by this browser.';
-        statusEl.style.color = 'var(--danger, #c62828)';
+        statusEl.textContent = 'Location services not available. Using global routing.';
+        statusEl.style.color = 'var(--gray-500)';
         return;
       }
       
-      statusEl.textContent = 'Getting your location...';
+      statusEl.textContent = 'Detecting your location for smart routing...';
       statusEl.style.color = 'var(--primary-color)';
       
       navigator.geolocation.getCurrentPosition(
@@ -1363,33 +1363,33 @@
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
-          statusEl.textContent = `Location found! This will help route you to your nearest branch.`;
+          statusEl.textContent = `✓ Location detected! Will route to your nearest branch.`;
           statusEl.style.color = 'var(--success, #2e7d32)';
         },
         (error) => {
-          console.error('Location error:', error);
-          let errorMsg = 'Could not get location. ';
+          console.log('Location detection:', error.message);
+          let errorMsg = '';
           switch(error.code) {
             case error.PERMISSION_DENIED:
-              errorMsg += 'Location access denied.';
+              errorMsg = 'Location access not permitted. Using global routing.';
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMsg += 'Location information unavailable.';
+              errorMsg = 'Location unavailable. Using global routing.';
               break;
             case error.TIMEOUT:
-              errorMsg += 'Location request timeout.';
+              errorMsg = 'Location timeout. Using global routing.';
               break;
             default:
-              errorMsg += 'Unknown error.';
+              errorMsg = 'Location detection failed. Using global routing.';
               break;
           }
-          statusEl.textContent = errorMsg + ' Your request will use global routing.';
-          statusEl.style.color = 'var(--warning, #f57c00)';
+          statusEl.textContent = errorMsg;
+          statusEl.style.color = 'var(--gray-500)';
           userLocation = null;
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 5000,
           maximumAge: 300000 // 5 minutes
         }
       );
