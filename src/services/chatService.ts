@@ -128,6 +128,11 @@ export class ChatService {
       /Would you like me to facilitate a connection with a customer representative/i.test(lastAssistantMsg.content) &&
       /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(userText.trim());
     
+    // Check if user is responding "no" to a previous handover suggestion
+    const isRespondingNoToHandover = lastAssistantMsg && 
+      /Would you like me to facilitate a connection with a customer representative/i.test(lastAssistantMsg.content) &&
+      /^(no|nope|nah|not now|maybe later|i'm good|i'm fine|continue|keep going)$/i.test(userText.trim());
+    
     // Check if we've already asked the handover question recently to prevent loops
     const recentMessages = session.history.slice(-6); // Check last 6 messages for broader context
     const alreadyAskedHandover = recentMessages.some(m => 
@@ -141,7 +146,7 @@ export class ChatService {
     
     const finalSuggestHandover = suggestHandover || isRespondingYesToHandover;
     
-    console.log(`[DEBUG] Suggest handover: ${finalSuggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)}, yesToHandover: ${!!isRespondingYesToHandover}, alreadyAsked: ${alreadyAskedHandover}, lastWasHandover: ${!!lastWasHandover})`);
+    console.log(`[DEBUG] Suggest handover: ${finalSuggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)}, yesToHandover: ${!!isRespondingYesToHandover}, noToHandover: ${!!isRespondingNoToHandover}, alreadyAsked: ${alreadyAskedHandover}, lastWasHandover: ${!!lastWasHandover})`);
 
     const assistantMsg: Message = {
       id: uuidv4(),
@@ -160,8 +165,11 @@ export class ChatService {
   
   let reply;
   if (isRespondingYesToHandover) {
-    // User said yes to handover - just acknowledge and let frontend handle it
+    // User said yes to handover - acknowledge and let frontend handle it
     reply = "Perfect! I'll connect you with a customer representative right away.";
+  } else if (isRespondingNoToHandover) {
+    // User said no to handover - acknowledge and offer continued assistance
+    reply = "No problem! I'm here to help with any questions about our products, services, branch locations, and hours. Feel free to ask me anything else, or you can always request to speak with a representative later if needed.";
   } else if (suggestHandover && !alreadyAskedHandover && !lastWasHandover) {
     // Suggest handover for unresolved queries
     reply = `I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
