@@ -44,17 +44,20 @@ height: 100%;
 <style> body{
 background-color: #DDDDDD;
 }
-@media only screen and (min-width: 280px)  {
-.slide-bg-img bg-img {
+@media only screen and (min-width: 280px) {
+.slide-bg-img.bg-img {
 height: 900px;
-width:880px;
-} }
+width: 880px;
+}
+}
 
-@media only screen and (min-width: 768px)  {
-.slide-bg-img bg-img {
+@media only screen and (min-width: 768px) {
+.slide-bg-img.bg-img {
 height: 590px;
-width:580px;
-margin-left:90px;} }
+width: 580px;
+margin-left: 90px;
+}
+}
 </style>
 
 
@@ -95,26 +98,27 @@ while($row=mysqli_fetch_array($result)){
 </div>
 
 <style>
-@media  (min-width: 280px) {
+@media (min-width: 280px) {
 .credit-btn.btn-1 {
-margin-top:80px;
-margin-left:1px; } }
+margin-top: 80px;
+margin-left: 1px;
+}
+}
 
 /* Tablet and bigger 059 673 9448 */
-@media ( min-width: 280px ) {
+@media (min-width: 280px) {
 .grid-divider {
 position: relative;
 padding: 0;
-background-color:#0F4C81;
+background-color: #0F4C81;
 color: white;
 }
 .grid-divider>[class*='col-'] {
 position: static;
-background-color:#0F4C81;
+background-color: #0F4C81;
 color: white;
-
 height: 100px;
-width:90%;
+width: 90%;
 }
 
 .grid-divider>[class*='col-']:nth-child(n+2):before {
@@ -123,23 +127,20 @@ border-left: 1px solid #DDD;
 position: absolute;
 top: 0;
 bottom: 0;
-
 }
 .col-padding {
 padding: 0 1px;
-
 }
 }
 
 /* Tablet and bigger */
-@media ( min-width: 768px ) {
+@media (min-width: 768px) {
 .grid-divider1 {
 position: relative;
 padding: 0;
 }
 .grid-divider1>[class*='col-'] {
 position: static;
-
 }
 .grid-divider1>[class*='col-']:nth-child(n+2):before {
 content: "";
@@ -154,7 +155,7 @@ padding: 0 1px;
 }
 
 /* Tablet and bigger */
-@media ( min-width: 768px ) {
+@media (min-width: 768px) {
 .grid-divider2 {
 position: relative;
 padding: 0;
@@ -162,7 +163,6 @@ padding: 0;
 .grid-divider2>[class*='col-'] {
 position: static;
 height: auto;
-
 }
 .grid-divider2>[class*='col-']:nth-child(n+2):before {
 content: "";
@@ -211,8 +211,7 @@ padding: 0 1px;
 </div>
 <div class="col-md-3 col-sm-3">
 <div class="col-padding">
-<h3 > <a class="" href="products.php">  <img src="icons8-online-money-transfer-100
-.png" style="width:60px;margin-left:10px"/><span style=" font-size:14px; color:white; font-family:'IBM Plex Sans Condensed'; text-transform:uppercase">Create an account </span> <br> <span style=" font-size:12px; color:white; font-family:'IBM Plex Sans Condensed'; text-align:center; margin-left:50px">Help you to transact easy banking with us </span></a> </h3>
+<h3><a class="" href="products.php"><img src="icons8-online-money-transfer-100.png" style="width:60px;margin-left:10px"/><span style="font-size:14px; color:white; font-family:'IBM Plex Sans Condensed'; text-transform:uppercase">Create an account</span><br><span style="font-size:12px; color:white; font-family:'IBM Plex Sans Condensed'; text-align:center; margin-left:50px">Help you to transact easy banking with us</span></a></h3>
 </h3>
 
 </div>
@@ -221,9 +220,12 @@ padding: 0 1px;
 
 </div>
 
-<style>.btn-default{
-position:fixed;
-color:blue;} </style>
+<style>
+.btn-default {
+position: fixed;
+color: blue;
+}
+</style>
 
 <div class="row">
 <div class="col-lg-12">
@@ -452,20 +454,22 @@ while($row=mysqli_fetch_array($result)){
 
 </div>
 
-<style>.card{
+<style>
+.card {
 height: 600px;
 background: #fff;
 box-shadow: 0px 1px 0px 0px;
-}.content{
-background-color: #dDDDDD;
+}
+.content {
+background-color: #DDDDDD;
 height: auto;
-} </style>
+}
+</style>
 
 <style>
 .card-img-top {
 width: 100%;
 height: 400px;
-
 }
 </style>
 
