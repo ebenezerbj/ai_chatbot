@@ -109,7 +109,7 @@ export class ChatService {
       (!trivialRe.test(userText.trim()) && snippets.length === 0)) &&
       !handoverQuestionRe.test(processed.text)
     );
-    console.log(`[DEBUG] Checking unresolved: generic=${genericRe.test(processed.text)}, uncertain=${uncertainRe.test(processed.text)}, noKB=${!trivialRe.test(userText.trim()) && snippets.length === 0}, result=${looksUnresolved}`);
+    console.log(`[DEBUG] Checking unresolved: generic=${genericRe.test(processed.text)}, uncertain=${uncertainRe.test(processed.text)}, noKB=${!trivialRe.test(userText.trim()) && snippets.length === 0}, handoverQuestion=${handoverQuestionRe.test(processed.text)}, result=${looksUnresolved}`);
     if (looksUnresolved) {
       session.unresolvedStreak = (session.unresolvedStreak || 0) + 1;
       console.log(`[DEBUG] Unresolved turn detected. Streak now: ${session.unresolvedStreak}`);
@@ -117,7 +117,14 @@ export class ChatService {
       session.unresolvedStreak = 0;
       console.log(`[DEBUG] Resolved turn. Streak reset to 0`);
     }
-    const suggestHandover = session.unresolvedStreak >= 2 || /human agent|talk to (a )?(human|person)/i.test(userText);
+    
+    // Reset unresolved streak if we're about to suggest handover to prevent loops
+    const shouldSuggestHandover = session.unresolvedStreak >= 2 || /human agent|talk to (a )?(human|person)/i.test(userText);
+    if (shouldSuggestHandover) {
+      session.unresolvedStreak = 0; // Reset to prevent handover suggestions from being detected as unresolved
+      console.log(`[DEBUG] Suggesting handover, resetting streak to 0`);
+    }
+    const suggestHandover = shouldSuggestHandover;
     
     // Check if user is responding "yes" to a previous handover suggestion
     const lastAssistantMsg = session.history.slice().reverse().find(m => m.role === 'assistant');
@@ -126,14 +133,19 @@ export class ChatService {
       /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(userText.trim());
     
     // Check if we've already asked the handover question recently to prevent loops
-    const recentMessages = session.history.slice(-4); // Check last 4 messages
+    const recentMessages = session.history.slice(-6); // Check last 6 messages for broader context
     const alreadyAskedHandover = recentMessages.some(m => 
       m.role === 'assistant' && /Would you like me to facilitate a connection with a customer representative/i.test(m.content)
     );
     
+    // Additional check: if the last assistant message was a handover question, don't ask again
+    const lastAssistantMessage = session.history.slice().reverse().find(m => m.role === 'assistant');
+    const lastWasHandover = lastAssistantMessage && 
+      /Would you like me to facilitate a connection with a customer representative/i.test(lastAssistantMessage.content);
+    
     const finalSuggestHandover = suggestHandover || isRespondingYesToHandover;
     
-    console.log(`[DEBUG] Suggest handover: ${finalSuggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)}, yesToHandover: ${!!isRespondingYesToHandover}, alreadyAsked: ${alreadyAskedHandover})`);
+    console.log(`[DEBUG] Suggest handover: ${finalSuggestHandover} (streak: ${session.unresolvedStreak}, keywordMatch: ${/human agent|talk to (a )?(human|person)/i.test(userText)}, yesToHandover: ${!!isRespondingYesToHandover}, alreadyAsked: ${alreadyAskedHandover}, lastWasHandover: ${!!lastWasHandover})`);
 
     const assistantMsg: Message = {
       id: uuidv4(),
@@ -150,7 +162,7 @@ export class ChatService {
   if (/(password|pin|otp|card|security|scam|fraud)/i.test(userText)) extra.push(securityReminder);
   if (hint) extra.push(hint);
   let reply = [processed.text, ...extra].join('\n\n');
-  if (finalSuggestHandover && !alreadyAskedHandover) {
+  if (finalSuggestHandover && !alreadyAskedHandover && !lastWasHandover) {
     // Only ask handover question if we haven't already asked recently and user isn't responding "yes"
     if (!isRespondingYesToHandover) {
       reply += `\n\nI appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
