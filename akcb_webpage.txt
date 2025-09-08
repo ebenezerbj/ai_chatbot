@@ -206,7 +206,7 @@
 <!-- AI Chatbot Widget HTML -->
 <div id="ai-chatbot-container">
   <div id="ai-chatbot-tip">
-    👋 Hi, I'm Ama. I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you?. Click to chat!
+    👋 Hi, I'm Ama. I can help with questions about our products, services, branch locations, and hours. For example, you can ask 'what are your loan options?' or 'where is the nearest branch?'. How can I assist you? Click to chat!
   </div>
   
   <button id="ai-chatbot-toggle" aria-label="Toggle AI Chat Assistant">
