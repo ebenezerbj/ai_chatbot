@@ -37,7 +37,7 @@
   }
 }
 
-/* Toggle Button */
+/* Toggle Button with Avatar */
 #ai-chatbot-toggle {
   position: relative;
   width: 64px;
@@ -54,6 +54,50 @@
   color: white;
   font-size: 24px;
   margin-left: auto;
+  overflow: hidden;
+}
+
+#ai-chatbot-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+}
+
+#ai-chatbot-toggle:active {
+  transform: translateY(0);
+}
+
+/* Chatbot Avatar */
+#ai-chatbot-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+  border: 2px solid rgba(255,255,255,0.3);
+  transition: all 0.3s ease;
+}
+
+#ai-chatbot-toggle:hover #ai-chatbot-avatar {
+  transform: scale(1.1);
+  border-color: rgba(255,255,255,0.5);
+}
+
+/* Avatar animation */
+@keyframes avatarPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+  }
+}
+
+#ai-chatbot-avatar.pulse {
+  animation: avatarPulse 2s infinite;
 }
 
 #ai-chatbot-toggle:hover {
@@ -166,8 +210,9 @@
   </div>
   
   <button id="ai-chatbot-toggle" aria-label="Toggle AI Chat Assistant">
-    <i class="fas fa-comments" id="chat-icon"></i>
-    <i class="fas fa-times" id="close-icon" style="display: none;"></i>
+    <div id="ai-chatbot-avatar" class="pulse">
+      🤖
+    </div>
     <div id="ai-chatbot-badge">1</div>
   </button>
   
@@ -185,8 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const toggle = document.getElementById('ai-chatbot-toggle');
   const badge = document.getElementById('ai-chatbot-badge');
   const tip = document.getElementById('ai-chatbot-tip');
-  const chatIcon = document.getElementById('chat-icon');
-  const closeIcon = document.getElementById('close-icon');
+  const avatar = document.getElementById('ai-chatbot-avatar');
   
   let isOpen = false;
   let unreadCount = 0;
@@ -213,8 +257,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (isOpen) {
       widget.classList.add('show');
-      chatIcon.style.display = 'none';
-      closeIcon.style.display = 'block';
+      avatar.textContent = '✖️';
+      avatar.classList.remove('pulse');
       badge.style.display = 'none';
       unreadCount = 0;
       
@@ -225,8 +269,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }, '*');
     } else {
       widget.classList.remove('show');
-      chatIcon.style.display = 'block';
-      closeIcon.style.display = 'none';
+      avatar.textContent = '🤖';
+      avatar.classList.add('pulse');
       
       // Notify iframe about visibility
       widget.contentWindow?.postMessage({
@@ -395,9 +439,9 @@ body {
 
 <!-- ##### Hero Area Start ##### -->
 <style>
-/* Modern gradient background */
+/* Fix body background overlap issue */
 body {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
   min-height: 100vh;
 }
 
@@ -426,12 +470,13 @@ body {
   }
 }
 
-/* Modern single slide styling */
+/* Modern single slide styling with better visibility */
 .single-slide {
   position: relative;
   overflow: hidden;
   border-radius: 20px;
   margin: 10px;
+  background: rgba(255,255,255,0.1);
 }
 
 .single-slide::before {
@@ -441,7 +486,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, rgba(15,76,129,0.1), rgba(59,130,246,0.1));
+  background: linear-gradient(45deg, rgba(15,76,129,0.05), rgba(59,130,246,0.05));
   z-index: 1;
   pointer-events: none;
 }
@@ -449,7 +494,12 @@ body {
 .welcome-text {
   position: relative;
   z-index: 2;
+  background: rgba(255,255,255,0.9);
+  padding: 20px;
+  border-radius: 15px;
+  margin: 20px;
 }
+</style>
 </style>
 
 
@@ -517,24 +567,29 @@ while($row=mysqli_fetch_array($result)){
 @media (min-width: 280px) {
   .grid-divider {
     position: relative;
-    padding: 0;
-    background: linear-gradient(135deg, rgba(15,76,129,0.9), rgba(59,130,246,0.9));
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(15,76,129,0.95), rgba(59,130,246,0.95));
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 20px;
     margin: 20px 0;
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     color: white;
+    z-index: 10;
   }
   
   .grid-divider>[class*='col-'] {
     position: static;
     background: transparent;
     color: white;
-    height: 120px;
+    height: auto;
+    min-height: 120px;
     width: 90%;
     border-radius: 15px;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .grid-divider>[class*='col-']:hover {
@@ -552,10 +607,12 @@ while($row=mysqli_fetch_array($result)){
   
   .col-padding {
     padding: 20px;
+    width: 100%;
   }
   
   .col-padding h3 a span {
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    color: white !important;
   }
 }
 
@@ -743,25 +800,33 @@ h2 a span {
   border-radius: 2px;
 }
 
-/* Modern CTA areas */
+/* Enhanced CTA areas with better visibility */
 .cta-area, .cta-area2 {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0,0,0,0.1);
   margin: 30px 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 5;
 }
 
 .cta-content, .cta-content2 {
-  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+  background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
   backdrop-filter: blur(10px);
   padding: 40px;
   border-radius: 20px;
+  position: relative;
+  z-index: 6;
 }
 
-/* Enhanced images */
+/* Enhanced images with better contrast */
 img.slide-bg-img.bg-img {
   border-radius: 15px;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 3;
 }
 
 img.slide-bg-img.bg-img:hover {
@@ -769,11 +834,14 @@ img.slide-bg-img.bg-img:hover {
   filter: brightness(1.1) contrast(1.1) saturate(1.2);
 }
 
-/* Modern carousel styling */
+/* Modern carousel styling with visibility fix */
 .carousel {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+  position: relative;
+  z-index: 5;
+  background: rgba(255,255,255,0.1);
 }
 
 .carousel-item img {
@@ -788,6 +856,11 @@ img.slide-bg-img.bg-img:hover {
   height: 50px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 10;
+}
+
+.carousel-indicators {
+  z-index: 10;
 }
 
 .carousel-indicators li {
@@ -1085,6 +1158,31 @@ section {
   margin: 60px 0;
 }
 
+/* Enhanced section visibility and spacing */
+section {
+  margin: 60px 0;
+  position: relative;
+  z-index: 5;
+}
+
+.container {
+  position: relative;
+  z-index: 5;
+}
+
+/* Fix for hidden content */
+.row {
+  position: relative;
+  z-index: 5;
+  margin: 0 -15px;
+}
+
+.col-lg-12, .col-sm-4, .col-sm-3, .col-md-3 {
+  position: relative;
+  z-index: 5;
+  padding: 15px;
+}
+
 /* Enhanced responsive design */
 @media (max-width: 768px) {
   .container {
@@ -1094,11 +1192,49 @@ section {
   .grid-divider, .grid-divider1, .grid-divider2 {
     margin: 20px 10px;
     border-radius: 15px;
+    position: relative;
+    z-index: 5;
   }
   
   .col-padding, .col-padding1, .col-padding2 {
     padding: 15px;
   }
+  
+  .single-slide {
+    margin: 5px;
+  }
+  
+  .welcome-text {
+    margin: 10px;
+    padding: 15px;
+  }
+}
+
+/* Ensure content visibility */
+.hero-area, .cta-area, .cta-area2 {
+  position: relative;
+  z-index: 5;
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(1px);
+}
+
+/* Fix text contrast issues */
+h1, h2, h3, h4, h5, h6 {
+  color: #1e293b !important;
+  text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+}
+
+/* Ensure all content is visible */
+* {
+  position: relative;
+}
+
+body > * {
+  z-index: 1;
+}
+
+#ai-chatbot-container {
+  z-index: 9999 !important;
 }
 
 /* Modern link styling */
