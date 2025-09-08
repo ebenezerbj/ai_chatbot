@@ -98,18 +98,31 @@ export class ChatService {
     const trivialRe = /^(hi|hello|hey|thanks|thank you|ok|okay)$/i;
     const handoverQuestionRe = /Would you like me to facilitate a connection with a customer representative/i;
     
+    // Check if user is responding to a previous handover suggestion first
+    const lastAssistantMsg = session.history.slice().reverse().find(m => m.role === 'assistant');
+    const isRespondingToHandover = lastAssistantMsg && 
+      /Would you like me to facilitate a connection with a customer representative/i.test(lastAssistantMsg.content);
+    
+    const isRespondingYesToHandover = isRespondingToHandover &&
+      /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(userText.trim());
+    
+    const isRespondingNoToHandover = isRespondingToHandover &&
+      /^(no|nope|nah|not now|maybe later|i'm good|i'm fine|continue|keep going)$/i.test(userText.trim());
+
     // Consider it unresolved if:
     // - Generic fallback text, or
     // - Uncertain language, or
     // - No KB snippets matched for this user input (excluding trivial greetings/thanks)
     // BUT NOT if the response contains a handover question (to prevent loops)
+    // AND NOT if user is responding to a handover question (yes/no responses are contextual, not unresolved)
     const looksUnresolved = (
       (genericRe.test(processed.text) ||
       uncertainRe.test(processed.text) ||
       (!trivialRe.test(userText.trim()) && snippets.length === 0)) &&
-      !handoverQuestionRe.test(processed.text)
+      !handoverQuestionRe.test(processed.text) &&
+      !isRespondingToHandover
     );
-    console.log(`[DEBUG] Checking unresolved: generic=${genericRe.test(processed.text)}, uncertain=${uncertainRe.test(processed.text)}, noKB=${!trivialRe.test(userText.trim()) && snippets.length === 0}, handoverQuestion=${handoverQuestionRe.test(processed.text)}, result=${looksUnresolved}`);
+    console.log(`[DEBUG] Checking unresolved: generic=${genericRe.test(processed.text)}, uncertain=${uncertainRe.test(processed.text)}, noKB=${!trivialRe.test(userText.trim()) && snippets.length === 0}, handoverQuestion=${handoverQuestionRe.test(processed.text)}, respondingToHandover=${!!isRespondingToHandover}, result=${looksUnresolved}`);
     
     // Reset unresolved streak if we're about to suggest handover to prevent loops
     const shouldSuggestHandover = looksUnresolved || /human agent|talk to (a )?(human|person)/i.test(userText);
@@ -121,17 +134,6 @@ export class ChatService {
       console.log(`[DEBUG] Query resolved successfully`);
     }
     const suggestHandover = shouldSuggestHandover;
-    
-    // Check if user is responding "yes" to a previous handover suggestion
-    const lastAssistantMsg = session.history.slice().reverse().find(m => m.role === 'assistant');
-    const isRespondingYesToHandover = lastAssistantMsg && 
-      /Would you like me to facilitate a connection with a customer representative/i.test(lastAssistantMsg.content) &&
-      /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(userText.trim());
-    
-    // Check if user is responding "no" to a previous handover suggestion
-    const isRespondingNoToHandover = lastAssistantMsg && 
-      /Would you like me to facilitate a connection with a customer representative/i.test(lastAssistantMsg.content) &&
-      /^(no|nope|nah|not now|maybe later|i'm good|i'm fine|continue|keep going)$/i.test(userText.trim());
     
     // Check if we've already asked the handover question recently to prevent loops
     const recentMessages = session.history.slice(-6); // Check last 6 messages for broader context
