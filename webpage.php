@@ -2,49 +2,95 @@
 
 <!--AI Chatbot Widget - Primary Customer Service Chat-->
 <script type="text/javascript">
-// Ensure legacy Tawk.to is fully removed if injected by upstream includes
+// Aggressively remove/neutralize any Tawk.to artifacts so it can’t overlay the chatbot
 (function(){
+    function neutralizeTawkGlobals(){
+        try {
+            // Create a no-op proxy so any method calls safely do nothing
+            var noopProxy = new Proxy({}, { get: function(){ return function(){}; }, set: function(){ return true; }, has: function(){ return true; } });
+            window.Tawk_API = noopProxy;
+            window.Tawk_LoadStart = undefined;
+        } catch(_){}
+    }
+
     function killTawk(){
         try {
-            // Remove Tawk loader scripts
-            document.querySelectorAll('script[src*="tawk.to"]').forEach(function(s){ s.remove(); });
+            // Remove any scripts/links that reference tawk domains or inline tawk code
+            document.querySelectorAll('script,link[rel="preload"],link[rel="prefetch"],link[rel="stylesheet"]').forEach(function(n){
+                try {
+                    var src = n.src || n.href || '';
+                    if (/tawk\.to|embed\.tawk|va\.tawk/i.test(src) || /Tawk_API|tawk\.to/i.test(n.textContent || '')) {
+                        n.remove();
+                    }
+                } catch(__){}
+            });
+
             // Remove common Tawk containers/iframes
             var selectors = [
                 '[id^="tawk_"]',
+                '[id*="tawk"]',
+                '[class*="tawk"]',
                 '#tawkchat-minified-wrapper',
                 '#tawkchat-minified-container',
                 '#tawkchat-status',
-                'iframe[src*="tawk.to"]'
+                'iframe[src*="tawk.to"]',
+                'iframe[name^="__tawkuuid"]',
+                'iframe[name*="tawk"]',
+                'div[aria-label*="Tawk"]'
             ];
             document.querySelectorAll(selectors.join(',')).forEach(function(el){ try { el.remove(); } catch(e){} });
-            // Best-effort hide if removal is blocked
+
+            // Best-effort hide if removal is blocked (cross-origin iframe etc.)
             var style = document.getElementById('hide-tawk-style');
             if (!style) {
                 style = document.createElement('style');
                 style.id = 'hide-tawk-style';
-                style.textContent = '[id^="tawk_"],#tawkchat-minified-wrapper,#tawkchat-minified-container,#tawkchat-status,iframe[src*="tawk.to"]{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}';
+                style.textContent = [
+                    '[id^="tawk_"], [id*="tawk"], [class*="tawk"],',
+                    '#tawkchat-minified-wrapper, #tawkchat-minified-container, #tawkchat-status,',
+                    'iframe[src*="tawk.to"], iframe[name^="__tawkuuid"], iframe[name*="tawk"], div[aria-label*="Tawk"]',
+                    '{display:none!important; visibility:hidden!important; opacity:0!important; pointer-events:none!important; z-index:-1!important;}
+                '].join('');
                 document.head.appendChild(style);
             }
-        } catch(_){}
+        } catch(_){ }
+        neutralizeTawkGlobals();
     }
-    // Observe DOM for late injections
+
+    // Observe DOM for late injections and attribute changes
     var obs = new MutationObserver(function(muts){
         var affected = false;
-        muts.forEach(function(m){
-            m.addedNodes && m.addedNodes.forEach(function(n){
-                if (n && n.nodeType === 1) {
-                    var el = n;
-                    if (el.matches && el.matches('script[src*="tawk.to"], [id^="tawk_"], iframe[src*="tawk.to"]')) affected = true;
-                    if (!affected && el.querySelector && el.querySelector('script[src*="tawk.to"], [id^="tawk_"], iframe[src*="tawk.to"]')) affected = true;
+        for (var i=0;i<muts.length;i++){
+            var m = muts[i];
+            if (m.type === 'childList') {
+                m.addedNodes && m.addedNodes.forEach(function(n){
+                    if (n && n.nodeType === 1) {
+                        var el = n;
+                        if (el.matches && el.matches('script[src*="tawk"], [id*="tawk"], [class*="tawk"], iframe[src*="tawk"]')) affected = true;
+                        if (!affected && el.querySelector && el.querySelector('script[src*="tawk"], [id*="tawk"], [class*="tawk"], iframe[src*="tawk"]')) affected = true;
+                    }
+                });
+            } else if (m.type === 'attributes') {
+                var t = m.target;
+                if (t && t.nodeType === 1) {
+                    var src = t.src || t.href || '';
+                    if (/tawk\.to|embed\.tawk|va\.tawk/i.test(src)) affected = true;
+                    if ((t.id && /tawk/i.test(t.id)) || (t.className && /tawk/i.test(t.className))) affected = true;
                 }
-            });
-        });
+            }
+            if (affected) break;
+        }
         if (affected) killTawk();
     });
-    try { obs.observe(document.documentElement, { childList: true, subtree: true }); } catch(_){ }
-    // Run immediately and on DOM ready
+    try { obs.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src','href','id','class','name','style','aria-label'] }); } catch(_){ }
+
+    // Retry for a short period in case scripts load late
+    var tries = 0, iv = setInterval(function(){ tries++; killTawk(); if (tries > 30) clearInterval(iv); }, 1000);
+
+    // Run immediately and on DOM ready + window load
     killTawk();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', killTawk);
+    window.addEventListener('load', killTawk);
 })();
 </script>
 
@@ -60,7 +106,7 @@
     border: none;
     border-radius: 12px;
     box-shadow: 0 8px 30px rgba(15, 76, 129, 0.3);
-    z-index: 1000;
+    z-index: 2147483600 !important; /* ensure above any legacy widgets */
     display: none;
     background: white;
 }
@@ -76,7 +122,7 @@
     border: none;
     cursor: pointer;
     box-shadow: 0 6px 25px rgba(15, 76, 129, 0.4);
-    z-index: 1001;
+    z-index: 2147483601 !important;
     display: flex;
     align-items: center;
     justify-content: center;
