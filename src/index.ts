@@ -60,8 +60,10 @@ app.use(cors({ origin: '*'}));
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'"],
+  ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+  "script-src": ["'self'", "'unsafe-inline'", "blob:"],
+  // Allow web workers and blob-based scripts if used by TTS/UI
+  "worker-src": ["'self'", "blob:"],
   "media-src": ["'self'", "data:", "blob:"],
       "img-src": ["'self'", "data:", "blob:"],
     },
