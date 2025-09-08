@@ -9,7 +9,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
-            "url": "http://localhost:3000/webpage.php",
+            "url": "http://localhost:8080/ai_chatbot/webpage.php",
             "webRoot": "${workspaceFolder}"
         }
     ]
