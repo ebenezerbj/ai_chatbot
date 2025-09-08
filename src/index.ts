@@ -63,9 +63,19 @@ app.use(helmet({
   ...helmet.contentSecurityPolicy.getDefaultDirectives(),
   "script-src": ["'self'", "'unsafe-inline'", "blob:"],
   "script-src-elem": ["'self'", "'unsafe-inline'", "blob:"],
-  // Allow fetch/XHR/websocket destinations (defaulted to default-src if not set)
-  // Permit localhost API calls, Google Analytics, and common extension domains
-  "connect-src": ["'self'", "http://localhost:3000", "http://localhost:*", "https://www.google-analytics.com", "https://*.reasonlabsapi.com", "ws://localhost:*", "wss://localhost:*"],
+  // Allow fetch/XHR/websocket destinations for both localhost and production
+  // Include Render domains, localhost variants, and common third-party services
+  "connect-src": [
+    "'self'", 
+    "http://localhost:3000", 
+    "http://localhost:*", 
+    "https://*.onrender.com",
+    "wss://*.onrender.com",
+    "https://www.google-analytics.com", 
+    "https://*.reasonlabsapi.com", 
+    "ws://localhost:*", 
+    "wss://localhost:*"
+  ],
   // Allow web workers and blob-based scripts if used by TTS/UI
   "worker-src": ["'self'", "blob:"],
   "media-src": ["'self'", "data:", "blob:"],
