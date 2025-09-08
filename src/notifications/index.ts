@@ -69,26 +69,16 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 }
 
 export async function sendSMS(toRaw: string, message: string): Promise<void> {
-  // Prefer SMSOnlineGH if configured
+  // SMSOnlineGH-only
   const smsGhKey = process.env.SMSONLINEGH_KEY || '';
   const smsGhSender = process.env.SMSONLINEGH_SENDER || '';
-  if (smsGhKey && smsGhSender) {
-    const num = toSmsOnlineGhNumber(toRaw);
-    if (!num) return;
-    await sendSmsOnlineGhBulk([num], message).catch(() => {});
+  if (!smsGhKey || !smsGhSender) {
+    console.warn('[notify] SMS suppressed: SMSOnlineGH not configured');
     return;
   }
-
-  const sid = process.env.TWILIO_ACCOUNT_SID || '';
-  const token = process.env.TWILIO_AUTH_TOKEN || '';
-  const from = process.env.TWILIO_FROM || '';
-  if (!sid || !token || !from) return;
-  // Lazy import to avoid load if unused
-  const twilio = (await import('twilio')).default as any;
-  const client = twilio(sid, token);
-  const to = normalizeGhPhone(toRaw);
-  if (!to) return;
-  await client.messages.create({ to, from, body: message }).catch(() => {});
+  const num = toSmsOnlineGhNumber(toRaw);
+  if (!num) return;
+  await sendSmsOnlineGhBulk([num], message).catch(() => {});
 }
 
 export async function sendSmsOnlineGhBulk(destinations: string[], text: string): Promise<boolean> {
@@ -192,11 +182,10 @@ export async function notifyEscalation(opts: { sessionId: string; lastUserMessag
   console.log('[notify] escalation: sms recipients', { count: numbers.length });
   if (numbers.length) {
     const text = `Chatbot escalation suggested. Session ${opts.sessionId}.`;
-    // Prefer bulk via SMSOnlineGH when available
     if ((process.env.SMSONLINEGH_KEY || '') && (process.env.SMSONLINEGH_SENDER || '')) {
       await sendSmsOnlineGhBulk(numbers, text).catch(() => {});
     } else {
-      await Promise.all(numbers.map((n: string) => sendSMS(n, text)));
+      console.warn('[notify] escalation sms suppressed: SMSOnlineGH not configured');
     }
   }
 }
@@ -232,7 +221,7 @@ export async function notifyHandover(opts: { ticketId: string; sessionId: string
       });
       if (!ok) console.warn('[notify] handover sms bulk not sent');
     } else {
-      await Promise.all(numbers.map((n: string) => sendSMS(n, text)));
+      console.warn('[notify] handover sms suppressed: SMSOnlineGH not configured');
     }
   }
 }
@@ -257,11 +246,9 @@ export function getEscalationRecipientCount(): number {
   }
 }
 
-export function getSmsProvider(): 'smsonlinegh' | 'twilio' | 'none' {
+export function getSmsProvider(): 'smsonlinegh' | 'none' {
   const hasGh = !!(process.env.SMSONLINEGH_KEY && process.env.SMSONLINEGH_SENDER);
   if (hasGh) return 'smsonlinegh';
-  const hasTwilio = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM);
-  if (hasTwilio) return 'twilio';
   return 'none';
 }
 
