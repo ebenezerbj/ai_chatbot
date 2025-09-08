@@ -1,35 +1,356 @@
 <?php include ('header.php'); ?>
 
-
-<!-- AI Chatbot Widget Embed -->
+<!-- AI Chatbot Widget with Toggle, Unread Badge, and Interactive Features -->
 <style>
-#ai-chatbot-widget {
-	position: fixed;
-	bottom: 24px;
-	right: 24px;
-	width: 370px;
-	height: 540px;
-	border: none;
-	border-radius: 14px;
-	box-shadow: 0 8px 32px rgba(15,76,129,0.18);
-	z-index: 9999;
-	background: #fff;
+/* AI Chatbot Widget Styles */
+#ai-chatbot-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
 }
+
+#ai-chatbot-widget {
+  width: 370px;
+  height: 540px;
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(15,76,129,0.18);
+  background: #fff;
+  display: none; /* Hidden by default */
+  transition: all 0.3s ease-in-out;
+}
+
+#ai-chatbot-widget.show {
+  display: block;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toggle Button */
+#ai-chatbot-toggle {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  margin-left: auto;
+}
+
+#ai-chatbot-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+}
+
+#ai-chatbot-toggle:active {
+  transform: translateY(0);
+}
+
+/* Unread Badge */
+#ai-chatbot-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Welcome Tip */
+#ai-chatbot-tip {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  max-width: 200px;
+  font-size: 14px;
+  color: #374151;
+  display: none;
+  animation: tipFadeIn 0.3s ease-out;
+}
+
+#ai-chatbot-tip:before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 20px;
+  border: 8px solid transparent;
+  border-top-color: white;
+}
+
+@keyframes tipFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsive */
 @media (max-width: 600px) {
-	#ai-chatbot-widget {
-		width: 98vw;
-		height: 60vh;
-		right: 1vw;
-		bottom: 1vh;
-		border-radius: 8px;
-	}
+  #ai-chatbot-widget {
+    width: 98vw;
+    height: 60vh;
+    right: 1vw;
+    bottom: 1vh;
+    border-radius: 8px;
+  }
+  
+  #ai-chatbot-container {
+    bottom: 16px;
+    right: 16px;
+  }
+  
+  #ai-chatbot-toggle {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+  
+  #ai-chatbot-tip {
+    bottom: 70px;
+    max-width: 160px;
+    font-size: 13px;
+  }
+}
+
+/* Aggressive Tawk.to removal */
+#tidio-chat, .tidio-chat-iframe, [id*="tawk"], [class*="tawk"], 
+.tawk-to-container, .tawk-to-iframe, #tawkchat, .tawkchat-iframe,
+[src*="tawk.to"], [href*="tawk.to"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
 }
 </style>
-<iframe id="ai-chatbot-widget"
-	src="https://ai-chatbot-1-a596.onrender.com/"
-	title="AI Customer Service Chatbot"
-	allow="microphone; camera; geolocation; autoplay; clipboard-read; clipboard-write"
-></iframe>
+
+<!-- AI Chatbot Widget HTML -->
+<div id="ai-chatbot-container">
+  <div id="ai-chatbot-tip">
+    👋 Hi! I'm here to help with banking questions. Click to chat!
+  </div>
+  
+  <button id="ai-chatbot-toggle" aria-label="Toggle AI Chat Assistant">
+    <i class="fas fa-comments" id="chat-icon"></i>
+    <i class="fas fa-times" id="close-icon" style="display: none;"></i>
+    <div id="ai-chatbot-badge">1</div>
+  </button>
+  
+  <iframe id="ai-chatbot-widget"
+    src="https://ai-chatbot-1-a596.onrender.com/"
+    title="AI Customer Service Chatbot"
+    allow="microphone; camera; geolocation; autoplay; clipboard-read; clipboard-write">
+  </iframe>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('ai-chatbot-container');
+  const widget = document.getElementById('ai-chatbot-widget');
+  const toggle = document.getElementById('ai-chatbot-toggle');
+  const badge = document.getElementById('ai-chatbot-badge');
+  const tip = document.getElementById('ai-chatbot-tip');
+  const chatIcon = document.getElementById('chat-icon');
+  const closeIcon = document.getElementById('close-icon');
+  
+  let isOpen = false;
+  let unreadCount = 0;
+  let hasInteracted = false;
+  
+  // Show welcome tip after delay
+  setTimeout(() => {
+    if (!hasInteracted) {
+      tip.style.display = 'block';
+      setTimeout(() => {
+        if (tip.style.display === 'block') {
+          tip.style.display = 'none';
+        }
+      }, 10000);
+    }
+  }, 3000);
+  
+  // Toggle widget
+  toggle.addEventListener('click', function() {
+    hasInteracted = true;
+    tip.style.display = 'none';
+    
+    isOpen = !isOpen;
+    
+    if (isOpen) {
+      widget.classList.add('show');
+      chatIcon.style.display = 'none';
+      closeIcon.style.display = 'block';
+      badge.style.display = 'none';
+      unreadCount = 0;
+      
+      // Notify iframe about visibility
+      widget.contentWindow?.postMessage({
+        type: 'PARENT_VISIBILITY_CHANGE',
+        visible: true
+      }, '*');
+    } else {
+      widget.classList.remove('show');
+      chatIcon.style.display = 'block';
+      closeIcon.style.display = 'none';
+      
+      // Notify iframe about visibility
+      widget.contentWindow?.postMessage({
+        type: 'PARENT_VISIBILITY_CHANGE',
+        visible: false
+      }, '*');
+    }
+  });
+  
+  // Handle messages from iframe
+  window.addEventListener('message', function(event) {
+    if (event.origin !== 'https://ai-chatbot-1-a596.onrender.com') return;
+    
+    const { type, data } = event.data;
+    
+    switch (type) {
+      case 'IFRAME_READY':
+        console.log('AI Chatbot iframe ready');
+        break;
+        
+      case 'UNREAD_MESSAGE':
+        if (!isOpen && data?.count > 0) {
+          unreadCount = data.count;
+          badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+          badge.style.display = 'flex';
+        }
+        break;
+        
+      case 'MESSAGE_READ':
+        unreadCount = Math.max(0, unreadCount - 1);
+        if (unreadCount === 0) {
+          badge.style.display = 'none';
+        } else {
+          badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        }
+        break;
+    }
+  });
+  
+  // Audio notification for new messages
+  let audioContext;
+  let hasPlayedSound = false;
+  
+  function initAudio() {
+    if (!audioContext && !hasPlayedSound) {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        hasPlayedSound = true;
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
+  }
+  
+  function playNotificationSound() {
+    if (!audioContext) return;
+    
+    try {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (e) {
+      console.log('Could not play notification sound');
+    }
+  }
+  
+  // Initialize audio on first user interaction
+  document.addEventListener('click', initAudio, { once: true });
+  document.addEventListener('keydown', initAudio, { once: true });
+  
+  // Play sound for unread messages
+  window.addEventListener('message', function(event) {
+    if (event.origin !== 'https://ai-chatbot-1-a596.onrender.com') return;
+    
+    if (event.data.type === 'UNREAD_MESSAGE' && !isOpen) {
+      playNotificationSound();
+    }
+  });
+  
+  // Aggressive Tawk.to removal observer
+  const tawkObserver = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      mutation.addedNodes.forEach(function(node) {
+        if (node.nodeType === 1) {
+          // Remove Tawk.to elements
+          if (node.id && (node.id.includes('tawk') || node.id.includes('tidio'))) {
+            node.remove();
+          }
+          if (node.className && (node.className.includes('tawk') || node.className.includes('tidio'))) {
+            node.remove();
+          }
+          // Remove script tags containing tawk.to
+          if (node.tagName === 'SCRIPT' && node.src && node.src.includes('tawk.to')) {
+            node.remove();
+          }
+          // Check children
+          const tawkElements = node.querySelectorAll('[id*="tawk"], [class*="tawk"], [id*="tidio"], [class*="tidio"]');
+          tawkElements.forEach(el => el.remove());
+        }
+      });
+    });
+  });
+  
+  tawkObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  // Remove any existing Tawk.to elements
+  document.querySelectorAll('[id*="tawk"], [class*="tawk"], [id*="tidio"], [class*="tidio"]').forEach(el => el.remove());
+});
+</script>
 
 <style>
 html
