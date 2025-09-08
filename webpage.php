@@ -335,9 +335,46 @@
             }
         });
 
-                // Unread badge: show when assistant messages arrive while hidden
-                (function wireUnreadBadge(){
+                        // Unread badge + quiet audio cue (behind user-gesture gate)
+                        (function wireUnreadBadge(){
                     let unread = 0;
+                            // Audio setup: create on first user gesture to satisfy autoplay policies
+                            let audioCtx = null; let audioUnlocked = false; let unlocking = false;
+                            function unlockAudio() {
+                                if (audioUnlocked || unlocking) return; unlocking = true;
+                                try {
+                                    // Prefer Web Audio for small, soft ping
+                                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                                    // Resume if suspended (Safari/iOS)
+                                    if (audioCtx.state === 'suspended') {
+                                        audioCtx.resume().catch(function(){});
+                                    }
+                                    audioUnlocked = true;
+                                } catch(_) { /* ignore */ }
+                                unlocking = false;
+                            }
+                            function playQuietPing() {
+                                if (!audioUnlocked || !audioCtx) return;
+                                try {
+                                    const duration = 0.12; // 120ms
+                                    const now = audioCtx.currentTime;
+                                    const osc = audioCtx.createOscillator();
+                                    const gain = audioCtx.createGain();
+                                    osc.type = 'sine';
+                                    osc.frequency.setValueAtTime(880, now); // A5
+                                    // Quick attack/decay envelope at low volume
+                                    gain.gain.setValueAtTime(0.0001, now);
+                                    gain.gain.exponentialRampToValueAtTime(0.03, now + 0.02);
+                                    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+                                    osc.connect(gain).connect(audioCtx.destination);
+                                    osc.start(now);
+                                    osc.stop(now + duration + 0.01);
+                                } catch(_) { /* non-fatal */ }
+                            }
+                            // Unlock on first gesture (and toggle click)
+                            ['click','touchstart','keydown'].forEach(function(evt){ window.addEventListener(evt, unlockAudio, { once: true, passive: true }); });
+                            toggleButton.addEventListener('click', unlockAudio, { once: true });
+
                     window.addEventListener('message', function(e){
                         try {
                             const data = e?.data || {};
@@ -351,6 +388,8 @@
                                     unread++;
                                     notification.style.display = 'flex';
                                     notification.textContent = unread > 9 ? '9+' : String(unread);
+                                            // Soft ping
+                                            playQuietPing();
                                 }
                             }
                         } catch(_){}
