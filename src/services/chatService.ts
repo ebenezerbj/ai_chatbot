@@ -159,13 +159,12 @@ export class ChatService {
   if (hint) extra.push(hint);
   
   let reply;
-  if (finalSuggestHandover && !alreadyAskedHandover && !lastWasHandover) {
-    // If suggesting handover and user isn't responding "yes", replace with single handover statement
-    if (!isRespondingYesToHandover) {
-      reply = `I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
-    } else {
-      reply = processed.text; // User said yes, just use the original response
-    }
+  if (isRespondingYesToHandover) {
+    // User said yes to handover - just acknowledge and let frontend handle it
+    reply = "Perfect! I'll connect you with a customer representative right away.";
+  } else if (suggestHandover && !alreadyAskedHandover && !lastWasHandover) {
+    // Suggest handover for unresolved queries
+    reply = `I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
   } else {
     // Normal response - use original text with any extras
     reply = [processed.text, ...extra].join('\n\n');
