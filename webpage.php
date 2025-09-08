@@ -30,6 +30,8 @@
                 '[id^="tawk_"]',
                 '[id*="tawk"]',
                 '[class*="tawk"]',
+                '[id^="twk-"]',
+                '[class^="twk-"]',
                 '#tawkchat-minified-wrapper',
                 '#tawkchat-minified-container',
                 '#tawkchat-status',
@@ -46,11 +48,11 @@
                 style = document.createElement('style');
                 style.id = 'hide-tawk-style';
                 style.textContent = [
-                    '[id^="tawk_"], [id*="tawk"], [class*="tawk"],',
+                    '[id^="tawk_"], [id*="tawk"], [class*="tawk"], [id^="twk-"], [class^="twk-"],',
                     '#tawkchat-minified-wrapper, #tawkchat-minified-container, #tawkchat-status,',
                     'iframe[src*="tawk.to"], iframe[name^="__tawkuuid"], iframe[name*="tawk"], div[aria-label*="Tawk"]',
-                    '{display:none!important; visibility:hidden!important; opacity:0!important; pointer-events:none!important; z-index:-1!important;}
-                '].join('');
+                    '{display:none!important; visibility:hidden!important; opacity:0!important; pointer-events:none!important; z-index:-1!important;}'
+                ].join('');
                 document.head.appendChild(style);
             }
         } catch(_){ }
@@ -66,8 +68,8 @@
                 m.addedNodes && m.addedNodes.forEach(function(n){
                     if (n && n.nodeType === 1) {
                         var el = n;
-                        if (el.matches && el.matches('script[src*="tawk"], [id*="tawk"], [class*="tawk"], iframe[src*="tawk"]')) affected = true;
-                        if (!affected && el.querySelector && el.querySelector('script[src*="tawk"], [id*="tawk"], [class*="tawk"], iframe[src*="tawk"]')) affected = true;
+                        if (el.matches && el.matches('script[src*="tawk"], [id*="tawk"], [class*="tawk"], [id^="twk-"], [class^="twk-"], iframe[src*="tawk"]')) affected = true;
+                        if (!affected && el.querySelector && el.querySelector('script[src*="tawk"], [id*="tawk"], [class*="tawk"], [id^="twk-"], [class^="twk-"], iframe[src*="tawk"]')) affected = true;
                     }
                 });
             } else if (m.type === 'attributes') {
@@ -75,7 +77,7 @@
                 if (t && t.nodeType === 1) {
                     var src = t.src || t.href || '';
                     if (/tawk\.to|embed\.tawk|va\.tawk/i.test(src)) affected = true;
-                    if ((t.id && /tawk/i.test(t.id)) || (t.className && /tawk/i.test(t.className))) affected = true;
+                    if ((t.id && (/tawk/i.test(t.id) || /^twk-/i.test(t.id))) || (t.className && (/tawk/i.test(t.className) || /(^|\s)twk-/i.test(t.className)))) affected = true;
                 }
             }
             if (affected) break;
