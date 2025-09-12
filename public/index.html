@@ -767,7 +767,7 @@
   let ttsEnabled = JSON.parse(localStorage.getItem('ttsEnabled') || 'true');
   let currentUtterance = null;
   let ttsVoiceName = localStorage.getItem('ttsVoiceName') || '';
-  let ttsLangPref = localStorage.getItem('ttsLangPref') || 'auto'; // 'auto' | 'en' | 'twi'
+  let ttsLangPref = localStorage.getItem('ttsLangPref') || 'female-uk'; // 'auto' | 'female-uk' | 'twi' | 'french'
   let ttsForceServer = JSON.parse(localStorage.getItem('ttsForceServer') || 'false');
   const ttsToggleBtn = document.getElementById('ttsToggle');
   const ttsStopBtn = document.getElementById('ttsStop');
@@ -959,6 +959,25 @@
       } catch { return false; }
     }
 
+    function isFrenchVoice(v) {
+      try {
+        const ln = (v.lang || '').toLowerCase();
+        const nm = (v.name || '').toLowerCase();
+        return /^fr(-|_|$)/.test(ln) || /french|française?/i.test(nm);
+      } catch { return false; }
+    }
+
+    function isFemaleUKVoice(v) {
+      try {
+        const ln = (v.lang || '').toLowerCase();
+        const nm = (v.name || '').toLowerCase();
+        // Check for UK English variants and female names
+        const isUKLang = /en-gb|en-uk/i.test(ln) || /british|uk/i.test(nm);
+        const isFemale = /female|woman|girl|kate|emma|amy|susan|claire|serena|karen|samantha|victoria|alice/i.test(nm);
+        return isUKLang && isFemale;
+      } catch { return false; }
+    }
+
     function pickVoice() {
       const voices = getVoicesSafe();
       if (!voices.length) return null;
@@ -966,17 +985,42 @@
         const v = voices.find(v => v.name === ttsVoiceName);
         if (v) return v;
       }
+      
       // Language preference ordering
       if (ttsLangPref === 'twi') {
         const tw = voices.find(v => isTwiVoice(v));
         if (tw) return tw;
       }
-      if (ttsLangPref === 'en' || ttsLangPref === 'auto') {
+      
+      if (ttsLangPref === 'french') {
+        const fr = voices.find(v => isFrenchVoice(v));
+        if (fr) return fr;
+        // Fallback to any French voice
+        const frGeneral = voices.find(v => /fr/i.test(v.lang || ''));
+        if (frGeneral) return frGeneral;
+      }
+      
+      if (ttsLangPref === 'female-uk') {
+        const femaleUK = voices.find(v => isFemaleUKVoice(v));
+        if (femaleUK) return femaleUK;
+        // Fallback to any UK English voice
+        const ukVoice = voices.find(v => /en-gb|en-uk/i.test(v.lang || '') || /british|uk/i.test(v.name || ''));
+        if (ukVoice) return ukVoice;
+        // Fallback to any female English voice
+        const femaleEn = voices.find(v => /en/i.test(v.lang || '') && /female|woman|girl|kate|emma|amy|susan|claire|serena|karen|samantha|victoria|alice/i.test(v.name || ''));
+        if (femaleEn) return femaleEn;
+      }
+      
+      if (ttsLangPref === 'auto' || ttsLangPref === 'female-uk') {
+        // For auto, prefer Female UK, then Ghana English, then any English
+        const femaleUK = voices.find(v => isFemaleUKVoice(v));
+        if (femaleUK) return femaleUK;
         const enGh = voices.find(v => /en-?gh/i.test((v.lang||'')) || /ghana/i.test((v.name||'')));
         if (enGh) return enGh;
         const en = voices.find(v => /en[-_]/i.test(v.lang));
         if (en) return en;
       }
+      
       return voices[0];
     }
 
@@ -1015,8 +1059,12 @@
           utter.lang = v.lang;
         } else if (ttsLangPref === 'twi') {
           utter.lang = 'ak-GH';
-        } else if (ttsLangPref === 'en') {
-          utter.lang = 'en-GH';
+        } else if (ttsLangPref === 'french') {
+          utter.lang = 'fr-FR';
+        } else if (ttsLangPref === 'female-uk') {
+          utter.lang = 'en-GB';
+        } else {
+          utter.lang = 'en-GB'; // Default to UK English
         }
       } catch {}
       utter.rate = 1.0; utter.pitch = 1.0;
@@ -1129,8 +1177,9 @@
         ttsSelect.innerHTML = '';
         const core = [
           { v: 'auto', label: 'Auto' },
-          { v: 'en', label: 'English' },
-          { v: 'twi-server', label: 'Twi (server)' }
+          { v: 'twi-server', label: 'Ghana Twi' },
+          { v: 'french', label: 'French' },
+          { v: 'female-uk', label: 'Female UK' }
         ];
         for (const o of core) {
           const el = document.createElement('option');
@@ -1143,28 +1192,52 @@
           el.textContent = `Twi — ${v.name} (${v.lang})`;
           ttsSelect.appendChild(el);
         }
-        const others = voices.filter(v => !isTwiVoice(v)).sort((a,b)=>a.name.localeCompare(b.name));
+        
+        // Add French voices
+        const frenchVoices = voices.filter(v => isFrenchVoice(v) && !isTwiVoice(v));
+        for (const v of frenchVoices) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `French — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        
+        // Add Female UK voices
+        const femaleUKVoices = voices.filter(v => isFemaleUKVoice(v) && !isTwiVoice(v) && !isFrenchVoice(v));
+        for (const v of femaleUKVoices) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `Female UK — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        
+        // Add other voices
+        const others = voices.filter(v => !isTwiVoice(v) && !isFrenchVoice(v) && !isFemaleUKVoice(v)).sort((a,b)=>a.name.localeCompare(b.name));
         for (const v of others) {
           const el = document.createElement('option');
           el.value = `voice::${v.name}`;
-          el.textContent = `Device — ${v.name} (${v.lang})`;
+          el.textContent = `Other — ${v.name} (${v.lang})`;
           ttsSelect.appendChild(el);
         }
         ttsSelect._lastCount = voices.length;
       }
-      let val = 'auto';
+      let val = 'female-uk'; // Default to Female UK
       if (ttsLangPref === 'twi' && ttsForceServer) val = 'twi-server';
-      else if (ttsLangPref === 'en') val = 'en';
+      else if (ttsLangPref === 'auto') val = 'auto';
+      else if (ttsLangPref === 'french') val = 'french';
+      else if (ttsLangPref === 'female-uk') val = 'female-uk';
       else if (ttsVoiceName) val = `voice::${ttsVoiceName}`;
       ttsSelect.value = val;
       ttsSelect.style.display = 'inline-block';
       if (!ttsSelect._wired) {
         ttsSelect.addEventListener('change', () => {
-          const value = ttsSelect.value || 'auto';
+          const value = ttsSelect.value || 'female-uk';
           if (value === 'auto') {
             ttsLangPref = 'auto'; ttsVoiceName = ''; ttsForceServer = false;
-          } else if (value === 'en') {
-            ttsLangPref = 'en'; ttsVoiceName = ''; ttsForceServer = false;
+          } else if (value === 'female-uk') {
+            ttsLangPref = 'female-uk'; ttsVoiceName = ''; ttsForceServer = false;
+          } else if (value === 'french') {
+            ttsLangPref = 'french'; ttsVoiceName = ''; ttsForceServer = false;
           } else if (value === 'twi-server') {
             ttsLangPref = 'twi'; ttsVoiceName = ''; ttsForceServer = true;
           } else if (value.startsWith('voice::')) {

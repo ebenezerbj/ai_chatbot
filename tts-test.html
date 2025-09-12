@@ -104,10 +104,11 @@
         </div>
         
         <div class="control-group">
-            <h3>Test Speech</h3>
-            <button class="test-btn" onclick="testShortSpeech()">Test Short Speech</button>
-            <button class="test-btn" onclick="testLongSpeech()">Test Long Speech</button>
-            <button class="test-btn" onclick="testTwiSpeech()">Test Twi Speech</button>
+            <h3>Test Speech by Language</h3>
+            <button class="test-btn" onclick="testAutoSpeech()">Test Auto</button>
+            <button class="test-btn" onclick="testFemaleUKSpeech()">Test Female UK</button>
+            <button class="test-btn" onclick="testFrenchSpeech()">Test French</button>
+            <button class="test-btn" onclick="testTwiSpeech()">Test Ghana Twi</button>
         </div>
         
         <div id="status" class="status">Ready</div>
@@ -249,7 +250,35 @@
             speak("This is a longer speech test to demonstrate the text-to-speech functionality. The mute and unmute buttons should work properly to control this speech. You can mute me at any time by clicking the mute button, or stop me completely with the stop button.");
         }
         
+        function testAutoSpeech() {
+            // Set to auto and test
+            if (window.AndroidTTSControl && window.AndroidTTSControl.setLanguage) {
+                window.AndroidTTSControl.setLanguage('auto');
+            }
+            speak("Hello! This is an automatic language selection test. The system will choose the best voice available.");
+        }
+        
+        function testFemaleUKSpeech() {
+            // Set to Female UK and test
+            if (window.AndroidTTSControl && window.AndroidTTSControl.setLanguage) {
+                window.AndroidTTSControl.setLanguage('female-uk');
+            }
+            speak("Good afternoon! This is a test using Female UK voice. I'm speaking with a British accent and feminine voice characteristics.");
+        }
+        
+        function testFrenchSpeech() {
+            // Set to French and test
+            if (window.AndroidTTSControl && window.AndroidTTSControl.setLanguage) {
+                window.AndroidTTSControl.setLanguage('french');
+            }
+            speak("Bonjour! Ceci est un test de la synthèse vocale en français. Comment allez-vous aujourd'hui?");
+        }
+        
         function testTwiSpeech() {
+            // Set to Twi and test
+            if (window.AndroidTTSControl && window.AndroidTTSControl.setLanguage) {
+                window.AndroidTTSControl.setLanguage('twi');
+            }
             speak("Akwaaba! Me din de Ama. Me yɛ digital assistant a ɛboa wo wɔ banking ho nhyehyeɛ ho.");
         }
         

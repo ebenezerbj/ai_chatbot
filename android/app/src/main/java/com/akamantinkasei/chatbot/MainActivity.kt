@@ -231,6 +231,22 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                                     if (window.speechSynthesis) {
                                         window.speechSynthesis.cancel();
                                     }
+                                },
+                                setLanguage: function(lang) {
+                                    // Set TTS language preference for Android
+                                    if (window.AndroidTTS) {
+                                        if (lang === 'female-uk') {
+                                            AndroidTTS.setSpeechRate(0.9);
+                                            AndroidTTS.setSpeechPitch(1.1);
+                                        } else if (lang === 'french') {
+                                            AndroidTTS.setSpeechRate(0.8);
+                                            AndroidTTS.setSpeechPitch(1.0);
+                                        } else {
+                                            AndroidTTS.setSpeechRate(1.0);
+                                            AndroidTTS.setSpeechPitch(1.0);
+                                        }
+                                    }
+                                    console.log('TTS language set to: ' + lang);
                                 }
                             };
                             
@@ -396,9 +412,15 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             textToSpeech?.let { tts ->
-                val result = tts.setLanguage(Locale.US)
+                // Set default to UK English (Female UK preference)
+                val result = tts.setLanguage(Locale.UK)
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Toast.makeText(this, "TTS Language not supported", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "UK English TTS not supported, using default", Toast.LENGTH_SHORT).show()
+                    tts.setLanguage(Locale.US) // Fallback to US English
+                } else {
+                    // Set default parameters for Female UK voice
+                    tts.setSpeechRate(0.9f)
+                    tts.setPitch(1.1f)
                 }
             }
         } else {
@@ -444,6 +466,40 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         @JavascriptInterface
         fun setSpeechPitch(pitch: Float) {
             textToSpeech?.setPitch(pitch)
+        }
+        
+        @JavascriptInterface
+        fun setLanguage(language: String) {
+            textToSpeech?.let { tts ->
+                when (language) {
+                    "female-uk", "en-GB" -> {
+                        tts.setLanguage(Locale.UK)
+                        tts.setSpeechRate(0.9f)
+                        tts.setPitch(1.1f)
+                    }
+                    "french", "fr-FR" -> {
+                        tts.setLanguage(Locale.FRANCE)
+                        tts.setSpeechRate(0.8f)
+                        tts.setPitch(1.0f)
+                    }
+                    "twi", "ak-GH" -> {
+                        // Try to set Twi/Akan language if available
+                        val locale = Locale("ak", "GH")
+                        val result = tts.setLanguage(locale)
+                        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                            // Fallback to English with Ghana accent if Twi not available
+                            tts.setLanguage(Locale("en", "GH"))
+                        }
+                        tts.setSpeechRate(0.85f)
+                        tts.setPitch(0.95f)
+                    }
+                    else -> {
+                        tts.setLanguage(Locale.UK) // Default to UK English
+                        tts.setSpeechRate(1.0f)
+                        tts.setPitch(1.0f)
+                    }
+                }
+            }
         }
     }
 }
