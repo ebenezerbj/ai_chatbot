@@ -19,11 +19,30 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug // Change to release signing config when ready
+            debuggable false
+            
+            // App Bundle optimization
+            splits {
+                abi {
+                    enable true
+                    reset()
+                    include "arm64-v8a", "armeabi-v7a", "x86_64"
+                    universalApk false
+                }
+                density {
+                    enable false
+                }
+            }
         }
         debug {
             debuggable true
+            minifyEnabled false
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
 
