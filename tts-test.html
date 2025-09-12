@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Mute/Unmute Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .control-group {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            margin: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .mute-btn {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .unmute-btn {
+            background: #10b981;
+            color: white;
+        }
+        
+        .test-btn {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .stop-btn {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .status.muted {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .status.unmuted {
+            background: #bbf7d0;
+            color: #166534;
+        }
+        
+        .status.speaking {
+            background: #bfdbfe;
+            color: #1e40af;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔊 TTS Mute/Unmute Test</h1>
+        <p>This page tests the text-to-speech mute/unmute functionality for both web and Android app.</p>
+        
+        <div class="control-group">
+            <h3>Voice Controls</h3>
+            <button class="mute-btn" onclick="muteVoice()">🔇 Mute Voice</button>
+            <button class="unmute-btn" onclick="unmuteVoice()">🔊 Unmute Voice</button>
+            <button class="stop-btn" onclick="stopVoice()">⏹️ Stop Speaking</button>
+        </div>
+        
+        <div class="control-group">
+            <h3>Test Speech</h3>
+            <button class="test-btn" onclick="testShortSpeech()">Test Short Speech</button>
+            <button class="test-btn" onclick="testLongSpeech()">Test Long Speech</button>
+            <button class="test-btn" onclick="testTwiSpeech()">Test Twi Speech</button>
+        </div>
+        
+        <div id="status" class="status">Ready</div>
+        
+        <div class="control-group">
+            <h3>Android-Specific Tests</h3>
+            <button class="test-btn" onclick="testAndroidTTS()">Test Android Native TTS</button>
+            <button class="test-btn" onclick="checkAndroidTTSAvailable()">Check Android TTS Available</button>
+        </div>
+        
+        <div class="control-group">
+            <h3>Debug Info</h3>
+            <div id="debug-info">
+                <p><strong>Speech Synthesis Support:</strong> <span id="synthesis-support"></span></p>
+                <p><strong>Android TTS Available:</strong> <span id="android-tts-support"></span></p>
+                <p><strong>Current State:</strong> <span id="current-state"></span></p>
+                <p><strong>Available Voices:</strong> <span id="voices-count"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isMuted = false;
+        let currentUtterance = null;
+        
+        function updateStatus(message, type = '') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+        
+        function updateDebugInfo() {
+            document.getElementById('synthesis-support').textContent = 
+                'speechSynthesis' in window ? 'Yes' : 'No';
+            
+            document.getElementById('android-tts-support').textContent = 
+                (window.AndroidTTS && window.AndroidTTS.isAvailable()) ? 'Yes' : 'No';
+            
+            document.getElementById('current-state').textContent = 
+                isMuted ? 'Muted' : 'Unmuted';
+            
+            if ('speechSynthesis' in window) {
+                try {
+                    const voices = speechSynthesis.getVoices();
+                    document.getElementById('voices-count').textContent = voices.length;
+                } catch (e) {
+                    document.getElementById('voices-count').textContent = 'Error getting voices';
+                }
+            } else {
+                document.getElementById('voices-count').textContent = 'N/A';
+            }
+        }
+        
+        function muteVoice() {
+            isMuted = true;
+            stopVoice();
+            updateStatus('Voice muted 🔇', 'muted');
+            
+            // Use Android TTS control if available
+            if (window.AndroidTTSControl && window.AndroidTTSControl.mute) {
+                window.AndroidTTSControl.mute();
+            }
+            
+            updateDebugInfo();
+        }
+        
+        function unmuteVoice() {
+            isMuted = false;
+            updateStatus('Voice unmuted 🔊', 'unmuted');
+            
+            // Use Android TTS control if available
+            if (window.AndroidTTSControl && window.AndroidTTSControl.unmute) {
+                window.AndroidTTSControl.unmute();
+            }
+            
+            updateDebugInfo();
+        }
+        
+        function stopVoice() {
+            if (currentUtterance) {
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.cancel();
+                }
+                currentUtterance = null;
+            }
+            
+            // Use Android TTS control if available
+            if (window.AndroidTTSControl && window.AndroidTTSControl.stop) {
+                window.AndroidTTSControl.stop();
+            } else if (window.AndroidTTS && window.AndroidTTS.stop) {
+                window.AndroidTTS.stop();
+            }
+            
+            updateStatus('Speech stopped ⏹️');
+            updateDebugInfo();
+        }
+        
+        function speak(text) {
+            if (isMuted) {
+                updateStatus('Cannot speak - voice is muted 🔇', 'muted');
+                return;
+            }
+            
+            stopVoice();
+            updateStatus('Speaking... 🗣️', 'speaking');
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.onend = () => {
+                    currentUtterance = null;
+                    updateStatus('Speech completed ✅', 'unmuted');
+                    updateDebugInfo();
+                };
+                utterance.onerror = () => {
+                    currentUtterance = null;
+                    updateStatus('Speech error ❌');
+                    updateDebugInfo();
+                };
+                currentUtterance = utterance;
+                speechSynthesis.speak(utterance);
+            } else if (window.AndroidTTS && window.AndroidTTS.speak) {
+                window.AndroidTTS.speak(text);
+                setTimeout(() => {
+                    updateStatus('Android TTS completed ✅', 'unmuted');
+                    updateDebugInfo();
+                }, 3000);
+            } else {
+                updateStatus('No TTS available ❌');
+            }
+            
+            updateDebugInfo();
+        }
+        
+        function testShortSpeech() {
+            speak("Hello! This is a short speech test for the mute and unmute functionality.");
+        }
+        
+        function testLongSpeech() {
+            speak("This is a longer speech test to demonstrate the text-to-speech functionality. The mute and unmute buttons should work properly to control this speech. You can mute me at any time by clicking the mute button, or stop me completely with the stop button.");
+        }
+        
+        function testTwiSpeech() {
+            speak("Akwaaba! Me din de Ama. Me yɛ digital assistant a ɛboa wo wɔ banking ho nhyehyeɛ ho.");
+        }
+        
+        function testAndroidTTS() {
+            if (window.AndroidTTS && window.AndroidTTS.speak) {
+                window.AndroidTTS.speak("This is a test using Android native text-to-speech.");
+                updateStatus('Testing Android native TTS 📱', 'speaking');
+            } else {
+                updateStatus('Android TTS not available (probably on web) 🌐');
+            }
+            updateDebugInfo();
+        }
+        
+        function checkAndroidTTSAvailable() {
+            if (window.AndroidTTS && window.AndroidTTS.isAvailable()) {
+                updateStatus('Android TTS is available! 📱✅', 'unmuted');
+            } else {
+                updateStatus('Android TTS not available (normal for web) 🌐');
+            }
+            updateDebugInfo();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDebugInfo();
+            updateStatus('TTS Test Page Ready 🚀');
+            
+            // Set up voice change listener for web
+            if ('speechSynthesis' in window) {
+                speechSynthesis.onvoiceschanged = updateDebugInfo;
+            }
+            
+            // Auto-update debug info every 2 seconds
+            setInterval(updateDebugInfo, 2000);
+        });
+        
+        // Test function for Android WebView
+        window.testTTS = function(text) {
+            speak(text || "Hello from test function!");
+        };
+    </script>
+</body>
+</html>

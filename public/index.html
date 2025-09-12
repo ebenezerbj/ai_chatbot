@@ -157,6 +157,35 @@
     }
     .header-action-btn:hover { background: var(--gray-100); }
     .header-action-btn .label { display: inline; }
+    
+    /* Enhanced TTS button states */
+    .tts-toggle-btn {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .tts-toggle-btn[aria-pressed="true"] {
+      background: var(--primary-color) !important;
+      color: white !important;
+      border-color: var(--primary-color) !important;
+    }
+    
+    .tts-toggle-btn[aria-pressed="false"] {
+      background: var(--gray-300) !important;
+      color: var(--gray-600) !important;
+      border-color: var(--gray-400) !important;
+    }
+    
+    .tts-stop-btn {
+      background: var(--danger-color) !important;
+      color: white !important;
+      border-color: var(--danger-color) !important;
+      animation: pulse 1.5s infinite;
+    }
+    
+    .tts-stop-btn:hover {
+      background: #dc2626 !important;
+    }
     .header-action-select {
       background: var(--white);
       color: var(--gray-700);
@@ -686,11 +715,11 @@
           <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
             <select id="ttsSelect" class="header-action-select" title="Voice & language" aria-label="Voice and language" style="display:none"></select>
             <span id="ttsNote" class="tts-note" style="display:none"></span>
-            <button id="ttsToggle" class="header-action-btn" title="Toggle voice (text-to-speech)" aria-pressed="false" aria-label="Enable voice">
-              <i class="fa fa-volume-high" aria-hidden="true"></i>
+            <button id="ttsToggle" class="header-action-btn tts-toggle-btn" title="Unmute voice (text-to-speech)" aria-pressed="false" aria-label="Unmute voice">
+              <i class="fa fa-volume-xmark" aria-hidden="true"></i>
               <span class="label">Voice</span>
             </button>
-            <button id="ttsStop" class="header-action-btn" title="Stop voice" aria-label="Stop voice" style="display:none">
+            <button id="ttsStop" class="header-action-btn tts-stop-btn" title="Stop voice" aria-label="Stop voice" style="display:none">
               <i class="fa fa-stop" aria-hidden="true"></i>
               <span class="label">Stop</span>
             </button>
@@ -1040,8 +1069,25 @@
       // Toggle button icon/state
       const icon = ttsToggleBtn.querySelector('i');
       ttsToggleBtn.setAttribute('aria-pressed', String(!!ttsEnabled));
-      ttsToggleBtn.setAttribute('aria-label', ttsEnabled ? 'Disable voice' : 'Enable voice');
-      if (icon) icon.className = ttsEnabled ? 'fa fa-volume-high' : 'fa fa-volume-xmark';
+      ttsToggleBtn.setAttribute('aria-label', ttsEnabled ? 'Mute voice' : 'Unmute voice');
+      ttsToggleBtn.setAttribute('title', ttsEnabled ? 'Mute voice (text-to-speech)' : 'Unmute voice (text-to-speech)');
+      
+      // Enhanced icon states with better visual feedback
+      if (icon) {
+        if (ttsEnabled && currentUtterance) {
+          icon.className = 'fa fa-volume-high';
+          ttsToggleBtn.style.background = 'var(--success-color)';
+          ttsToggleBtn.style.color = 'white';
+        } else if (ttsEnabled) {
+          icon.className = 'fa fa-volume-up';
+          ttsToggleBtn.style.background = 'var(--primary-color)';
+          ttsToggleBtn.style.color = 'white';
+        } else {
+          icon.className = 'fa fa-volume-xmark';
+          ttsToggleBtn.style.background = 'var(--gray-300)';
+          ttsToggleBtn.style.color = 'var(--gray-600)';
+        }
+      }
       // Stop button visibility
       ttsStopBtn.style.display = currentUtterance ? 'inline-flex' : 'none';
   // Note visibility

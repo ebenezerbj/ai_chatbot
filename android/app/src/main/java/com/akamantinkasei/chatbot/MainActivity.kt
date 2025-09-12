@@ -173,6 +173,12 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                                     },
                                     getVoices: function() {
                                         return [];
+                                    },
+                                    get speaking() {
+                                        return window.AndroidTTS ? AndroidTTS.isSpeaking() : false;
+                                    },
+                                    get pending() {
+                                        return false;
                                     }
                                 };
                                 
@@ -183,10 +189,50 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                                     this.volume = 1;
                                     this.rate = 1;
                                     this.pitch = 1;
+                                    this.onstart = null;
+                                    this.onend = null;
+                                    this.onerror = null;
                                 };
                             } else {
                                 console.log('Speech Synthesis API is available');
                             }
+                            
+                            // Enhanced TTS control functions
+                            window.AndroidTTSControl = {
+                                mute: function() {
+                                    if (window.AndroidTTS) {
+                                        AndroidTTS.setEnabled(false);
+                                        AndroidTTS.stop();
+                                    }
+                                    if (window.speechSynthesis) {
+                                        window.speechSynthesis.cancel();
+                                    }
+                                    console.log('TTS muted');
+                                },
+                                unmute: function() {
+                                    if (window.AndroidTTS) {
+                                        AndroidTTS.setEnabled(true);
+                                    }
+                                    console.log('TTS unmuted');
+                                },
+                                isSpeaking: function() {
+                                    if (window.AndroidTTS && AndroidTTS.isSpeaking()) {
+                                        return true;
+                                    }
+                                    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+                                        return true;
+                                    }
+                                    return false;
+                                },
+                                stop: function() {
+                                    if (window.AndroidTTS) {
+                                        AndroidTTS.stop();
+                                    }
+                                    if (window.speechSynthesis) {
+                                        window.speechSynthesis.cancel();
+                                    }
+                                }
+                            };
                             
                             // Add debug function for testing TTS
                             window.testTTS = function(text) {
@@ -199,7 +245,36 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                                 }
                             };
                             
-                            console.log('TTS enhancement script loaded');
+                            // Enhanced button update function
+                            window.updateTTSButtons = function() {
+                                const ttsToggle = document.getElementById('ttsToggle');
+                                const ttsStop = document.getElementById('ttsStop');
+                                
+                                if (ttsToggle) {
+                                    const icon = ttsToggle.querySelector('i');
+                                    const isSpeaking = window.AndroidTTSControl.isSpeaking();
+                                    
+                                    if (isSpeaking) {
+                                        if (icon) icon.className = 'fa fa-volume-high';
+                                        ttsToggle.style.background = '#10b981';
+                                        ttsToggle.style.color = 'white';
+                                    }
+                                }
+                                
+                                if (ttsStop) {
+                                    const isSpeaking = window.AndroidTTSControl.isSpeaking();
+                                    ttsStop.style.display = isSpeaking ? 'inline-flex' : 'none';
+                                }
+                            };
+                            
+                            // Update buttons periodically
+                            setInterval(function() {
+                                if (window.updateTTSButtons) {
+                                    window.updateTTSButtons();
+                                }
+                            }, 500);
+                            
+                            console.log('Enhanced TTS functionality loaded');
                         })();
                     """.trimIndent(), null)
                 }
@@ -346,6 +421,29 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         @JavascriptInterface
         fun isAvailable(): Boolean {
             return textToSpeech != null
+        }
+        
+        @JavascriptInterface
+        fun isSpeaking(): Boolean {
+            return textToSpeech?.isSpeaking ?: false
+        }
+        
+        @JavascriptInterface
+        fun setEnabled(enabled: Boolean) {
+            // This could be used to control TTS at the native level
+            if (!enabled) {
+                textToSpeech?.stop()
+            }
+        }
+        
+        @JavascriptInterface
+        fun setSpeechRate(rate: Float) {
+            textToSpeech?.setSpeechRate(rate)
+        }
+        
+        @JavascriptInterface
+        fun setSpeechPitch(pitch: Float) {
+            textToSpeech?.setPitch(pitch)
         }
     }
 }
