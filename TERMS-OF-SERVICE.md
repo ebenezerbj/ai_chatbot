@@ -115,7 +115,35 @@ Any disputes not resolved informally shall be subject to binding arbitration or 
 
 ## Accessibility
 
-We are committed to making our App accessible to users with disabilities and comply with applicable accessibility standards.
+We are committed to making our App accessible to users with disabilities and comply with applicable accessibility standards, including:
+
+### Compliance Standards
+- **WCAG 2.1 Level AA**: Web Content Accessibility Guidelines for digital accessibility
+- **Section 508**: U.S. federal accessibility requirements for electronic content
+- **EN 301 549**: European accessibility standard for ICT products and services
+- **Ghana Disability Act (2006)**: National accessibility requirements
+
+### Accessibility Features Implemented
+- **Screen Reader Support**: Full compatibility with TalkBack, VoiceOver, and other assistive technologies
+- **Keyboard Navigation**: Complete app functionality accessible via keyboard and external input devices
+- **Touch Target Optimization**: Minimum 44px touch targets (48px on mobile) for users with motor impairments
+- **High Contrast Mode**: Enhanced visual contrast for users with visual impairments
+- **Text Scaling**: Support for system font size adjustments up to 200%
+- **Voice Interaction**: Text-to-speech and voice input capabilities for hands-free operation
+- **Focus Indicators**: Clear visual focus indicators for keyboard and assistive device navigation
+- **Reduced Motion**: Respect for user preferences to minimize animation and motion effects
+
+### Ongoing Commitment
+- Regular accessibility audits and testing with disabled users
+- Continuous updates to maintain compliance with evolving standards
+- User feedback integration for accessibility improvements
+- Training for development team on inclusive design principles
+
+### Accessibility Support
+If you encounter accessibility barriers or need assistance using the App, please contact our accessibility support team:
+- **Email**: info@amankacombank.com
+- **Phone**: +233 (0) 302 123 456 (accessible support line)
+- **Alternative Formats**: Documentation available in large print, Braille, or audio upon request
 
 ## Third-Party Services
 
@@ -131,7 +159,7 @@ For questions about these Terms:
 
 **Email**: legal@akamantinkasei.com  
 **Address**: AKCB Legal Department, Banking Centre, Accra, Ghana  
-**Phone**: +233 (0) 302 123 456
+**Phone**: +233 (0) 243 082 750
 
 ## Entire Agreement
 
