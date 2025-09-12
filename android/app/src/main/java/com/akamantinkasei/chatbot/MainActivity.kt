@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -11,6 +12,7 @@ import android.webkit.*
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -73,6 +75,9 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             
             // Add JavaScript interface for TTS fallback
             addJavascriptInterface(TTSJavaScriptInterface(), "AndroidTTS")
+            
+            // Add JavaScript interface for enhanced Android features
+            addJavascriptInterface(AndroidFeaturesInterface(), "AndroidFeatures")
             
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -500,6 +505,95 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     }
                 }
             }
+        }
+    }
+    
+    // JavaScript Interface for Enhanced Android Features
+    inner class AndroidFeaturesInterface {
+        @JavascriptInterface
+        fun getDeviceInfo(): String {
+            return """
+                {
+                    "platform": "android",
+                    "version": "${android.os.Build.VERSION.RELEASE}",
+                    "manufacturer": "${android.os.Build.MANUFACTURER}",
+                    "model": "${android.os.Build.MODEL}",
+                    "appVersion": "${packageManager.getPackageInfo(packageName, 0).versionName}",
+                    "darkMode": ${isDarkModeEnabled()}
+                }
+            """.trimIndent()
+        }
+        
+        @JavascriptInterface
+        fun toggleDarkMode() {
+            runOnUiThread {
+                val currentMode = AppCompatDelegate.getDefaultNightMode()
+                val newMode = if (currentMode == AppCompatDelegate.MODE_NIGHT_YES) {
+                    AppCompatDelegate.MODE_NIGHT_NO
+                } else {
+                    AppCompatDelegate.MODE_NIGHT_YES
+                }
+                AppCompatDelegate.setDefaultNightMode(newMode)
+                
+                // Notify web page of theme change
+                binding.webView.evaluateJavascript(
+                    "if(window.onAndroidThemeChanged) window.onAndroidThemeChanged(${newMode == AppCompatDelegate.MODE_NIGHT_YES});",
+                    null
+                )
+            }
+        }
+        
+        @JavascriptInterface
+        fun isDarkMode(): Boolean {
+            return isDarkModeEnabled()
+        }
+        
+        @JavascriptInterface
+        fun shareText(text: String) {
+            runOnUiThread {
+                val shareIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, text)
+                }
+                startActivity(Intent.createChooser(shareIntent, "Share via"))
+            }
+        }
+        
+        @JavascriptInterface
+        fun vibrate(duration: Int = 100) {
+            runOnUiThread {
+                if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.VIBRATE) 
+                    == PackageManager.PERMISSION_GRANTED) {
+                    @Suppress("DEPRECATION")
+                    (getSystemService(VIBRATOR_SERVICE) as android.os.Vibrator).vibrate(duration.toLong())
+                }
+            }
+        }
+        
+        @JavascriptInterface
+        fun showToast(message: String) {
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        @JavascriptInterface
+        fun keepScreenOn(keep: Boolean) {
+            runOnUiThread {
+                if (keep) {
+                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+        }
+    }
+    
+    private fun isDarkModeEnabled(): Boolean {
+        return when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_YES -> true
+            else -> false
         }
     }
 }

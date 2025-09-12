@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Amantin and Kasei Community Bank - Digital Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AKCB Chatbot">
+  <script type="text/javascript" src="cordova.js"></script>
+  <style>
+    :root {
+      --primary-color: #1e40af;
+      --primary-light: #3b82f6;
+      --primary-dark: #1e3a8a;
+      --secondary-color: #f59e0b;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --warning-color: #f59e0b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --white: #ffffff;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+      min-height: 100vh;
+      color: var(--gray-800);
+      line-height: 1.65;
+    }
+
+    .app-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+      color: var(--white);
+      padding: 1.5rem 0;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .logo-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      background: var(--secondary-color);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .header-subtitle {
+      color: var(--gray-200);
+      font-size: 0.875rem;
+      font-weight: 400;
+      margin-left: auto;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem;
+    }
+
+    .chat-container {
+      flex: 1;
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-width: 100%;
+    }
+
+    .chat-header {
+      background: var(--gray-50);
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-indicator {
+      width: 0.75rem;
+      height: 0.75rem;
+      background: var(--success-color);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .header-actions {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-action-btn {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 0.35rem 0.55rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+    .header-action-btn:hover { background: var(--gray-100); }
+    .header-action-btn .label { display: inline; }
+    
+    /* Enhanced TTS button states */
+    .tts-toggle-btn {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .tts-toggle-btn[aria-pressed="true"] {
+      background: var(--primary-color) !important;
+      color: white !important;
+      border-color: var(--primary-color) !important;
+    }
+    
+    .tts-toggle-btn[aria-pressed="false"] {
+      background: var(--gray-300) !important;
+      color: var(--gray-600) !important;
+      border-color: var(--gray-400) !important;
+    }
+    
+    .tts-stop-btn {
+      background: var(--danger-color) !important;
+      color: white !important;
+      border-color: var(--danger-color) !important;
+      animation: pulse 1.5s infinite;
+    }
+    
+    .tts-stop-btn:hover {
+      background: #dc2626 !important;
+    }
+    .header-action-select {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+      max-width: 220px;
+    }
+  .tts-note { font-size: 0.8rem; color: var(--warning-color); }
+    
+    /* Ensure button text is always visible */
+    .send-text {
+      display: inline;
+      font-weight: 500;
+    }
+    
+    .header-action-btn .label {
+      display: inline;
+    }
+    
+    @media (max-width: 768px) {
+      .header-action-btn .label { 
+        display: none; 
+      }
+      .header-action-select { 
+        max-width: 120px; 
+      }
+      
+      /* Keep send button text visible on mobile */
+      .send-text {
+        display: inline !important;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .chat-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .chat-subtitle {
+      font-size: 0.875rem;
+      color: var(--gray-500);
+      margin-left: auto;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      background: var(--white);
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      margin-bottom: 1.5rem;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--gray-500);
+      font-style: italic;
+      margin-bottom: 1rem;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .typing-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      background: var(--gray-400);
+      border-radius: 50%;
+      animation: typingDot 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typingDot {
+      0%, 60%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+      30% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+    }
+
+    .input-container {
+      padding: 1.5rem;
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .message-input {
+      flex: 1;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 0.875rem 1.125rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: var(--white);
+      transition: all 0.2s ease;
+      resize: none;
+      max-height: 140px;
+      min-height: 48px;
+    }
+
+    .message-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgb(30 64 175 / 0.1);
+    }
+
+    .message-input::placeholder {
+      color: var(--gray-400);
+    }
+
+    .send-button {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-lg);
+      padding: 0.875rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 44px;
+    }
+
+    .send-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .send-button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .send-button:disabled {
+      background: var(--gray-300);
+      color: var(--gray-500);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .icon-button, .send-button {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 0.6rem;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    
+    .icon-button:hover, .send-button:hover {
+      background: var(--gray-200);
+      transform: translateY(-1px);
+    }
+    
+    .send-button {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    
+    .send-button:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+    
+    /* Size inline SVG icons consistently */
+    .icon-button svg, .send-button svg {
+      width: 1rem;
+      height: 1rem;
+      display: inline-block;
+      fill: currentColor;
+    }
+    
+    /* Ensure all button text elements are visible */
+    button span, .btn span, .send-text, .label, .button-text {
+      display: inline !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+
+    .sidebar {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .info-card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.2s ease;
+    }
+
+    .info-card.clickable {
+      cursor: pointer;
+    }
+
+    .info-card.clickable:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .info-card-icon {
+      width: 2rem;
+      height: 2rem;
+      background: var(--primary-color);
+      color: var(--white);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .info-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .info-list {
+      list-style: none;
+    }
+
+    .info-item {
+      padding: 0.5rem 0;
+      color: var(--gray-600);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .info-item i {
+      color: var(--success-color);
+      width: 1rem;
+    }
+
+    /* Legacy classes for compatibility */
+    .msg {
+      margin-bottom: 1.5rem;
+    }
+
+    .user {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .user .msg-content {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+      color: var(--white);
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-lg);
+      border-bottom-right-radius: var(--radius-sm);
+      max-width: 80%;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .assistant {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .assistant .msg-content {
+      background: var(--gray-50);
+      color: var(--gray-800);
+      border: 1px solid var(--gray-200);
+      border-bottom-left-radius: var(--radius-sm);
+      white-space: pre-wrap;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-lg);
+      max-width: 85%;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Action buttons row (e.g., Call / WhatsApp) appended to assistant messages */
+    .msg-actions {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .msg-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid var(--gray-200);
+      background: var(--gray-100);
+      color: var(--gray-800);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .msg-action-btn i { font-size: 0.9rem; }
+    
+    /* Ensure button text is always visible */
+    .msg-action-btn span {
+      display: inline !important;
+      font-weight: 500;
+    }
+
+    .msg-action-btn.call { border-color: #10b98133; background: #10b98111; }
+    .msg-action-btn.whatsapp { border-color: #25D36633; background: #25D36611; }
+
+    @media (max-width: 1024px) {
+      .main-content {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      .info-card {
+        min-width: 280px;
+      }
+    }
+
+    /* Mobile-first approach - Cards horizontal by default on small screens */
+    @media screen and (max-width: 768px) {
+      .header-content {
+        padding: 0 1rem !important;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        text-align: center !important;
+      }
+
+      .logo {
+        font-size: 1.25rem !important;
+      }
+
+      .main-content {
+        padding: 1rem !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
+      }
+
+      .chat-container {
+        flex: 1 !important;
+        min-height: 60vh !important; /* Ensure chat takes up most of the screen */
+        order: 2 !important; /* Chat appears after sidebar */
+      }
+
+      .sidebar {
+        order: 1 !important; /* Sidebar appears first */
+        width: 100% !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        gap: 1rem !important;
+        padding: 0.5rem 0 !important;
+        -ms-overflow-style: none !important;  /* Hide scrollbar IE and Edge */
+        scrollbar-width: none !important;  /* Hide scrollbar Firefox */
+      }
+
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .sidebar::-webkit-scrollbar {
+        display: none !important;
+      }
+
+      .info-card {
+        min-width: 250px !important; /* Compact width for mobile */
+        max-width: 250px !important;
+        flex-shrink: 0 !important; /* Prevent cards from shrinking */
+        padding: 0.875rem !important;
+      }
+
+      .info-card-title {
+        font-size: 0.9rem !important;
+      }
+
+      .info-item {
+        padding: 0.25rem 0 !important;
+        font-size: 0.8rem !important;
+      }
+
+      .user .msg-content,
+      .assistant .msg-content {
+        max-width: 95% !important;
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+        padding: 0.8rem 1rem !important;
+      }
+
+      /* Make welcome message more compact on mobile */
+      .assistant:first-child .msg-content {
+        font-size: 0.8rem !important;
+        line-height: 1.3 !important;
+        max-width: 98% !important;
+      }
+
+      .header-subtitle {
+        display: none !important;
+      }
+
+      .input-container {
+        padding: 1rem !important;
+      }
+
+      .message-input {
+        padding: 0.9rem 1.1rem !important;
+        font-size: 1rem !important;
+        min-height: 60px !important; /* Bigger touch target and visible placeholder */
+        max-height: 200px !important; /* Allow more lines on mobile */
+      }
+
+      .message-input::placeholder {
+        font-size: 1rem !important;
+      }
+
+      .send-button {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.9rem !important;
+        min-height: 44px !important;
+      }
+    }
+
+    /* Scrollbar styling */
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: var(--gray-100);
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: var(--gray-300);
+      border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: var(--gray-400);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-university"></i>
+          </div>
+          <div>
+            <div>Amantin and Kasei Community Bank</div>
+          </div>
+        </div>
+        <div class="header-subtitle">Digital Banking Assistant</div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="status-indicator"></div>
+          <div class="chat-title">Digital Assistant</div>
+          <div class="chat-subtitle">Online</div>
+          <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
+            <select id="ttsSelect" class="header-action-select" title="Voice & language" aria-label="Voice and language" style="display:none"></select>
+            <span id="ttsNote" class="tts-note" style="display:none"></span>
+            <button id="ttsToggle" class="header-action-btn tts-toggle-btn" title="Unmute voice (text-to-speech)" aria-pressed="false" aria-label="Unmute voice">
+              <i class="fa fa-volume-xmark" aria-hidden="true"></i>
+              <span class="label">Voice</span>
+            </button>
+            <button id="ttsStop" class="header-action-btn tts-stop-btn" title="Stop voice" aria-label="Stop voice" style="display:none">
+              <i class="fa fa-stop" aria-hidden="true"></i>
+              <span class="label">Stop</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="chat" class="chat-messages">
+          <!-- Messages will be dynamically added here -->
+        </div>
+
+        <div class="input-container">
+          <form id="composer" class="input-wrapper">
+            <textarea 
+              id="input" 
+              class="message-input" 
+              placeholder="Ask about accounts, loans, branches..."
+              rows="1"
+              required
+              aria-label="Message input"
+            ></textarea>
+            <button type="button" id="useLocationBtn" class="icon-button" title="Get directions using my location" aria-label="Get directions using my location">
+              <!-- Map Marker Icon (inline SVG) -->
+              <svg viewBox="0 0 384 512" aria-hidden="true" focusable="false" role="img">
+                <path d="M172.3 501.7C26.7 291.1 0 269.4 0 192 0 86 86 0 192 0s192 86 192 192c0 77.4-26.7 99.1-172.3 309.7-9.5 13.6-29.9 13.6-39.4 0zM192 272a80 80 0 1 0 0-160 80 80 0 1 0 0 160z"/>
+              </svg>
+            </button>
+            <button type="submit" class="send-button" aria-label="Send message">
+              <!-- Paper Plane Icon (inline SVG) -->
+              <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false" role="img">
+                <path d="M476 3.2 12.5 270.6c-18.1 10.5-15.8 36.9 3.7 44.1l111.7 41.7 41.7 111.7c7.2 19.5 33.6 21.8 44.1 3.7L508.8 36c10.9-18.8-8.2-37.9-32.8-32.8zM190.5 470.7l-35.2-94.3 173-173c6.6-6.6-3.1-16.3-9.7-9.7l-173 173-94.3-35.2L451.7 60.3 190.5 470.7z"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Configure the chatbot's human-friendly name here
+  const assistantName = 'Ama';
+  // Show Call/WhatsApp action buttons on desktop too? (true = all devices)
+  const showContactActionsOnDesktop = true;
+  // Text-to-Speech (TTS) configuration
+  let ttsEnabled = JSON.parse(localStorage.getItem('ttsEnabled') || 'true');
+  let currentUtterance = null;
+  let ttsVoiceName = localStorage.getItem('ttsVoiceName') || '';
+  let ttsLangPref = localStorage.getItem('ttsLangPref') || 'female-uk'; // 'auto' | 'female-uk' | 'twi' | 'french'
+  let ttsForceServer = JSON.parse(localStorage.getItem('ttsForceServer') || 'false');
+  const ttsToggleBtn = document.getElementById('ttsToggle');
+  const ttsStopBtn = document.getElementById('ttsStop');
+  const ttsSelect = document.getElementById('ttsSelect');
+  const ttsNote = document.getElementById('ttsNote');
+    const chatEl = document.getElementById('chat');
+    const form = document.getElementById('composer');
+    const input = document.getElementById('input');
+    const sendButton = form.querySelector('button[type="submit"]');
+    const sendButtonText = sendButton.querySelector('.send-text');
+  const useLocationBtn = document.getElementById('useLocationBtn');
+
+    let sessionId = null;
+
+    // Initialize with welcome message
+    window.addEventListener('DOMContentLoaded', () => {
+      // Set the chat title to the assistant's name
+      const titleEl = document.querySelector('.chat-title');
+      if (titleEl) titleEl.textContent = assistantName;
+
+  addMsg('assistant', `Hi, I'm Ama! 👋\n\nI can help with:\n• Products & services\n• Branch locations\n• Hours & contact info\n\nTry asking "what are your loan options?" or "where is the nearest branch?"\n\nHow can I assist you?`);
+  // Init TTS UI state
+  initTTS();
+      // Notify parent that the chat is ready (for iframed embedding)
+      try { window.parent?.postMessage({ source: 'akcb-chat', type: 'ready' }, '*'); } catch {}
+    });
+
+    async function ensureSession() {
+      if (sessionId) return sessionId;
+      try {
+        const resp = await fetch('/api/session', { method: 'POST' });
+        if (!resp.ok) throw new Error('Failed to create session');
+        const data = await resp.json();
+        sessionId = data.sessionId;
+        console.log('[DEBUG] Created new session:', sessionId);
+        return sessionId;
+      } catch (error) {
+        console.error('Session creation failed:', error);
+        throw error;
+      }
+    }
+
+  function addMsg(role, text) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      
+      const content = document.createElement('div');
+      content.className = 'msg-content';
+      // Normalize assistant text to display literal \n as real line breaks
+      const normalize = (s) => {
+        try {
+          return String(s)
+            .replace(/\\r\\n/g, '\n')
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '    ');
+        } catch {
+          return s;
+        }
+      };
+      const processed = role === 'assistant' ? normalize(text) : text;
+
+      // Minimal, safe markdown renderer for assistant messages: **bold**, - bullets, numbered lists
+      function renderMarkdownSafe(input) {
+        const escapeHtml = (str) => str
+                .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+
+        const applyInline = (str) => {
+          // Bold: **text**
+          let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          // Auto-link plain URLs (http/https only)
+                  out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
+            try {
+              const safe = escapeHtml(url);
+              return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+            } catch { return url; }
+          });
+          return out;
+        };
+
+        const src = escapeHtml(String(input));
+        const lines = src.split('\n');
+        let out = '';
+        let listType = null; // 'ul' | 'ol' | null
+
+        const closeList = () => {
+          if (listType) {
+            out += listType === 'ul' ? '</ul>' : '</ol>';
+            listType = null;
+          }
+        };
+
+        for (let i = 0; i < lines.length; i++) {
+          const raw = lines[i];
+          const liBullet = raw.match(/^\s*[-*•]\s+(.+)$/);
+          const liNumber = raw.match(/^\s*(\d+)[\.).]\s+(.+)$/);
+
+          if (liBullet) {
+            const text = applyInline(liBullet[1]);
+            if (listType !== 'ul') {
+              closeList();
+              listType = 'ul';
+              out += '<ul>';
+            }
+            out += `<li>${text}</li>`;
+            continue;
+          }
+
+          if (liNumber) {
+            const text = applyInline(liNumber[2]);
+            if (listType !== 'ol') {
+              closeList();
+              listType = 'ol';
+              out += '<ol>';
+            }
+            out += `<li>${text}</li>`;
+            continue;
+          }
+
+          // Not a list item
+          closeList();
+          const text = applyInline(raw);
+          if (text.trim() === '') {
+            // paragraph break
+            out += '<br />';
+          } else {
+            out += `${text}`;
+            // Add line break if next line exists and isn't closing/opening a list
+            if (i < lines.length - 1) out += '<br />';
+          }
+        }
+
+        closeList();
+        return out;
+      }
+
+      if (role === 'assistant') {
+        content.innerHTML = renderMarkdownSafe(processed);
+        // After rendering, append mobile-only call/WhatsApp actions if a phone number is present
+        try {
+          addMobileContactActionsIfAny(content, processed);
+        } catch (e) { /* non-fatal */ }
+        // Append Listen button and optionally auto-speak
+        try {
+          addSpeakAction(content, processed);
+          if (ttsEnabled && isTTSSupported() && hasUserInteracted()) {
+            speak(processed);
+          }
+        } catch (e) { /* non-fatal */ }
+      } else {
+        content.textContent = processed;
+      }
+      
+      div.appendChild(content);
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      // Notify parent about assistant messages to drive unread badge
+      if (role === 'assistant') {
+        try {
+          const preview = String(text || '').slice(0, 140);
+          window.parent?.postMessage({ source: 'akcb-chat', type: 'assistantMessage', preview }, '*');
+        } catch {}
+      }
+    }
+
+    // Simple user-interaction gate for autoplay policies (especially iOS Safari)
+    let _userInteracted = false;
+    ['click','keydown','touchstart'].forEach(evt => {
+      window.addEventListener(evt, () => { _userInteracted = true; }, { once: true });
+    });
+    function hasUserInteracted() { return _userInteracted; }
+
+    function isTTSSupported() {
+      return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+    }
+
+    function getVoicesSafe() {
+      try { return window.speechSynthesis.getVoices() || []; } catch { return []; }
+    }
+
+    function isTwiVoice(v) {
+      try {
+        const ln = (v.lang || '').toLowerCase();
+        const nm = (v.name || '').toLowerCase();
+        return /^(ak|tw)(-|_|$)/.test(ln) || /ak-?gh/.test(ln) || /twi|akan/.test(nm);
+      } catch { return false; }
+    }
+
+    function isFrenchVoice(v) {
+      try {
+        const ln = (v.lang || '').toLowerCase();
+        const nm = (v.name || '').toLowerCase();
+        return /^fr(-|_|$)/.test(ln) || /french|française?/i.test(nm);
+      } catch { return false; }
+    }
+
+    function isFemaleUKVoice(v) {
+      try {
+        const ln = (v.lang || '').toLowerCase();
+        const nm = (v.name || '').toLowerCase();
+        // Check for UK English variants and female names
+        const isUKLang = /en-gb|en-uk/i.test(ln) || /british|uk/i.test(nm);
+        const isFemale = /female|woman|girl|kate|emma|amy|susan|claire|serena|karen|samantha|victoria|alice/i.test(nm);
+        return isUKLang && isFemale;
+      } catch { return false; }
+    }
+
+    function pickVoice() {
+      const voices = getVoicesSafe();
+      if (!voices.length) return null;
+      if (ttsVoiceName) {
+        const v = voices.find(v => v.name === ttsVoiceName);
+        if (v) return v;
+      }
+      
+      // Language preference ordering
+      if (ttsLangPref === 'twi') {
+        const tw = voices.find(v => isTwiVoice(v));
+        if (tw) return tw;
+      }
+      
+      if (ttsLangPref === 'french') {
+        const fr = voices.find(v => isFrenchVoice(v));
+        if (fr) return fr;
+        // Fallback to any French voice
+        const frGeneral = voices.find(v => /fr/i.test(v.lang || ''));
+        if (frGeneral) return frGeneral;
+      }
+      
+      if (ttsLangPref === 'female-uk') {
+        const femaleUK = voices.find(v => isFemaleUKVoice(v));
+        if (femaleUK) return femaleUK;
+        // Fallback to any UK English voice
+        const ukVoice = voices.find(v => /en-gb|en-uk/i.test(v.lang || '') || /british|uk/i.test(v.name || ''));
+        if (ukVoice) return ukVoice;
+        // Fallback to any female English voice
+        const femaleEn = voices.find(v => /en/i.test(v.lang || '') && /female|woman|girl|kate|emma|amy|susan|claire|serena|karen|samantha|victoria|alice/i.test(v.name || ''));
+        if (femaleEn) return femaleEn;
+      }
+      
+      if (ttsLangPref === 'auto' || ttsLangPref === 'female-uk') {
+        // For auto, prefer Female UK, then Ghana English, then any English
+        const femaleUK = voices.find(v => isFemaleUKVoice(v));
+        if (femaleUK) return femaleUK;
+        const enGh = voices.find(v => /en-?gh/i.test((v.lang||'')) || /ghana/i.test((v.name||'')));
+        if (enGh) return enGh;
+        const en = voices.find(v => /en[-_]/i.test(v.lang));
+        if (en) return en;
+      }
+      
+      return voices[0];
+    }
+
+    async function speak(text) {
+      if (!isTTSSupported()) return;
+      const clean = String(text).replace(/\s+/g, ' ').trim();
+      
+      // Try Cordova TTS first if available
+      if (window.TTS) {
+        try {
+          stopSpeaking();
+          let lang = 'en-GB'; // Default
+          if (ttsLangPref === 'twi') lang = 'ak-GH';
+          else if (ttsLangPref === 'french') lang = 'fr-FR';
+          else if (ttsLangPref === 'female-uk') lang = 'en-GB';
+          
+          await new Promise((resolve, reject) => {
+            TTS.speak({
+              text: clean,
+              locale: lang,
+              rate: 1.0
+            }, resolve, reject);
+          });
+          return;
+        } catch (e) {
+          console.log('Cordova TTS failed, falling back to browser TTS:', e);
+        }
+      }
+      
+      // If user selected Twi and no Twi voice exists, call server TTS
+    const voices = getVoicesSafe();
+  const needServer = ttsLangPref === 'twi' && (ttsForceServer || !voices.some(v => isTwiVoice(v)));
+    if (needServer) {
+        try {
+          stopSpeaking();
+    // For server Twi, server decides the voice (Azure/OpenAI/eSpeak)
+    const resp = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: clean, lang: 'twi', voice: '' }) });
+          if (!resp.ok) throw new Error('TTS HTTP ' + resp.status);
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          audio.onerror = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          currentUtterance = { kind: 'audio', audio };
+          updateTTSButtons();
+          await audio.play();
+          return;
+        } catch (e) {
+          // Fallback to browser TTS
+        }
+      }
+      // Browser TTS path
+      stopSpeaking();
+      const utter = new SpeechSynthesisUtterance(clean);
+      const v = pickVoice();
+      if (v) utter.voice = v;
+      try {
+        if (v?.lang) {
+          utter.lang = v.lang;
+        } else if (ttsLangPref === 'twi') {
+          utter.lang = 'ak-GH';
+        } else if (ttsLangPref === 'french') {
+          utter.lang = 'fr-FR';
+        } else if (ttsLangPref === 'female-uk') {
+          utter.lang = 'en-GB';
+        } else {
+          utter.lang = 'en-GB'; // Default to UK English
+        }
+      } catch {}
+      utter.rate = 1.0; utter.pitch = 1.0;
+      utter.onstart = () => { currentUtterance = utter; updateTTSButtons(); };
+      utter.onend = () => { currentUtterance = null; updateTTSButtons(); };
+      utter.onerror = () => { currentUtterance = null; updateTTSButtons(); };
+      try { window.speechSynthesis.speak(utter); } catch {}
+    }
+
+  function stopSpeaking() {
+      try {
+    if (currentUtterance && currentUtterance.kind === 'audio' && currentUtterance.audio) { try { currentUtterance.audio.pause(); } catch {} }
+    if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) { window.speechSynthesis.cancel(); }
+      } finally {
+        currentUtterance = null;
+        updateTTSButtons();
+      }
+    }
+
+    function addSpeakAction(containerEl, text) {
+      if (!isTTSSupported()) return;
+      // Find or create action row
+      let row = containerEl.querySelector('.msg-actions');
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'msg-actions';
+        containerEl.appendChild(row);
+      }
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'msg-action-btn';
+      btn.setAttribute('aria-label', 'Listen to message');
+      btn.innerHTML = `<i class="fa fa-play" aria-hidden="true"></i><span>Listen</span>`;
+      btn.addEventListener('click', () => speak(text));
+      row.prepend(btn);
+    }
+
+    function updateTTSButtons() {
+      if (!ttsToggleBtn || !ttsStopBtn) return;
+      const supported = isTTSSupported();
+      if (!supported) {
+        ttsToggleBtn.style.display = 'none';
+        ttsStopBtn.style.display = 'none';
+        if (ttsSelect) ttsSelect.style.display = 'none';
+        if (ttsNote) ttsNote.style.display = 'none';
+        return;
+      }
+  // Combined TTS selector visibility
+  refreshCombinedTTSOptions();
+      // Toggle button icon/state
+      const icon = ttsToggleBtn.querySelector('i');
+      ttsToggleBtn.setAttribute('aria-pressed', String(!!ttsEnabled));
+      ttsToggleBtn.setAttribute('aria-label', ttsEnabled ? 'Mute voice' : 'Unmute voice');
+      ttsToggleBtn.setAttribute('title', ttsEnabled ? 'Mute voice (text-to-speech)' : 'Unmute voice (text-to-speech)');
+      
+      // Enhanced icon states with better visual feedback
+      if (icon) {
+        if (ttsEnabled && currentUtterance) {
+          icon.className = 'fa fa-volume-high';
+          ttsToggleBtn.style.background = 'var(--success-color)';
+          ttsToggleBtn.style.color = 'white';
+        } else if (ttsEnabled) {
+          icon.className = 'fa fa-volume-up';
+          ttsToggleBtn.style.background = 'var(--primary-color)';
+          ttsToggleBtn.style.color = 'white';
+        } else {
+          icon.className = 'fa fa-volume-xmark';
+          ttsToggleBtn.style.background = 'var(--gray-300)';
+          ttsToggleBtn.style.color = 'var(--gray-600)';
+        }
+      }
+      // Stop button visibility
+      ttsStopBtn.style.display = currentUtterance ? 'inline-flex' : 'none';
+  // Note visibility
+  updateTTSNote();
+    }
+
+    function initTTS() {
+      updateTTSButtons();
+      // Some browsers load voices asynchronously
+      if (isTTSSupported()) {
+        try { window.speechSynthesis.onvoiceschanged = () => { refreshCombinedTTSOptions(); updateTTSButtons(); }; } catch { /* ignore */ }
+      }
+      // Wire header buttons
+      ttsToggleBtn?.addEventListener('click', () => {
+        ttsEnabled = !ttsEnabled;
+        localStorage.setItem('ttsEnabled', JSON.stringify(!!ttsEnabled));
+        updateTTSButtons();
+        // If enabling and last message is assistant, optionally speak it
+        if (ttsEnabled) {
+          const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+          if (nodes.length) {
+            const last = nodes[nodes.length - 1];
+            const txt = last.textContent || '';
+            if (txt.trim()) speak(txt);
+          }
+        } else {
+          stopSpeaking();
+        }
+      });
+      ttsStopBtn?.addEventListener('click', stopSpeaking);
+    }
+
+    function refreshCombinedTTSOptions() {
+      if (!ttsSelect) return;
+      if (!isTTSSupported()) { ttsSelect.style.display = 'none'; return; }
+      const voices = getVoicesSafe();
+      const shouldBuild = !ttsSelect.options.length || (ttsSelect._lastCount !== voices.length);
+      if (shouldBuild) {
+        ttsSelect.innerHTML = '';
+        const core = [
+          { v: 'auto', label: 'Auto' },
+          { v: 'twi-server', label: 'Ghana Twi' },
+          { v: 'french', label: 'French' },
+          { v: 'female-uk', label: 'Female UK' }
+        ];
+        for (const o of core) {
+          const el = document.createElement('option');
+          el.value = o.v; el.textContent = o.label; ttsSelect.appendChild(el);
+        }
+        const twiVoices = voices.filter(v => isTwiVoice(v));
+        for (const v of twiVoices) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `Twi — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        
+        // Add French voices
+        const frenchVoices = voices.filter(v => isFrenchVoice(v) && !isTwiVoice(v));
+        for (const v of frenchVoices) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `French — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        
+        // Add Female UK voices
+        const femaleUKVoices = voices.filter(v => isFemaleUKVoice(v) && !isTwiVoice(v) && !isFrenchVoice(v));
+        for (const v of femaleUKVoices) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `Female UK — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        
+        // Add other voices
+        const others = voices.filter(v => !isTwiVoice(v) && !isFrenchVoice(v) && !isFemaleUKVoice(v)).sort((a,b)=>a.name.localeCompare(b.name));
+        for (const v of others) {
+          const el = document.createElement('option');
+          el.value = `voice::${v.name}`;
+          el.textContent = `Other — ${v.name} (${v.lang})`;
+          ttsSelect.appendChild(el);
+        }
+        ttsSelect._lastCount = voices.length;
+      }
+      let val = 'female-uk'; // Default to Female UK
+      if (ttsLangPref === 'twi' && ttsForceServer) val = 'twi-server';
+      else if (ttsLangPref === 'auto') val = 'auto';
+      else if (ttsLangPref === 'french') val = 'french';
+      else if (ttsLangPref === 'female-uk') val = 'female-uk';
+      else if (ttsVoiceName) val = `voice::${ttsVoiceName}`;
+      ttsSelect.value = val;
+      ttsSelect.style.display = 'inline-block';
+      if (!ttsSelect._wired) {
+        ttsSelect.addEventListener('change', () => {
+          const value = ttsSelect.value || 'female-uk';
+          if (value === 'auto') {
+            ttsLangPref = 'auto'; ttsVoiceName = ''; ttsForceServer = false;
+          } else if (value === 'female-uk') {
+            ttsLangPref = 'female-uk'; ttsVoiceName = ''; ttsForceServer = false;
+          } else if (value === 'french') {
+            ttsLangPref = 'french'; ttsVoiceName = ''; ttsForceServer = false;
+          } else if (value === 'twi-server') {
+            ttsLangPref = 'twi'; ttsVoiceName = ''; ttsForceServer = true;
+          } else if (value.startsWith('voice::')) {
+            ttsVoiceName = value.slice('voice::'.length);
+            ttsLangPref = 'auto'; ttsForceServer = false;
+          }
+          localStorage.setItem('ttsLangPref', ttsLangPref);
+          localStorage.setItem('ttsVoiceName', ttsVoiceName);
+          localStorage.setItem('ttsForceServer', JSON.stringify(!!ttsForceServer));
+          updateTTSNote();
+          if (currentUtterance) {
+            const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+            const last = nodes[nodes.length - 1];
+            const txt = last?.textContent || '';
+            if (txt.trim()) speak(txt);
+          }
+        });
+        ttsSelect._wired = true;
+      }
+    }
+
+    function updateTTSNote() {
+      if (!ttsNote) return;
+  const voices = getVoicesSafe();
+  const anyTwi = voices.some(v => isTwiVoice(v));
+  const showWarn = ttsLangPref === 'twi' && (ttsForceServer || !anyTwi);
+      if (showWarn) {
+  ttsNote.textContent = 'No Twi/Akan voice found on this device. I\'ll use server TTS (Azure/eSpeak) instead.';
+        ttsNote.style.display = 'inline';
+      } else {
+        ttsNote.textContent = '';
+        ttsNote.style.display = 'none';
+      }
+    }
+    // Detect mobile devices (simple UA check)
+    function isMobileDevice() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+    }
+
+    // Extract the first Ghana-style phone number from text and build tel/whatsapp links
+    function parsePhoneLinks(raw) {
+      if (!raw) return null;
+      // Match +233 XX XXX XXXX or 0XX XXX XXXX, as well as compact variants (e.g., 0202055171)
+      const re = /(\+233[\s\-]?(?:\d[\s\-]?){9,10}|\b0\d{2}[\s\-]?\d{3}[\s\-]?\d{4}\b|\b0\d{9}\b)/;
+      const m = raw.match(re);
+      if (!m) return null;
+      let display = (m[0] || '').trim().replace(/[\.,]+$/, '');
+      // Normalize
+      const digitsPlus = display.replace(/[^\d+]/g, '');
+      let tel = digitsPlus;
+      let wa = '';
+      if (/^\+233/.test(digitsPlus)) {
+        wa = digitsPlus.replace(/^\+/, '');
+      } else if (/^0\d{9}$/.test(digitsPlus)) {
+        // Convert local (0XXXXXXXXX) to E.164 for WA
+        wa = '233' + digitsPlus.slice(1);
+        // tel can keep local format (better compatibility in GH)
+        tel = digitsPlus;
+      } else if (/^233\d{9}$/.test(digitsPlus)) {
+        // Already international without +
+        tel = '+' + digitsPlus;
+        wa = digitsPlus;
+      } else if (/^\+\d{6,}$/.test(digitsPlus)) {
+        // Fallback: generic international
+        tel = digitsPlus;
+        wa = digitsPlus.replace(/^\+/, '');
+      } else {
+        // Couldn’t confidently parse
+        return null;
+      }
+      return {
+        display,
+        telHref: `tel:${tel}`,
+        waHref: `https://wa.me/${wa}`
+      };
+    }
+
+    // Append Call / WhatsApp buttons below assistant messages when applicable
+    function addMobileContactActionsIfAny(containerEl, messageText) {
+      // Respect desktop override; otherwise only show on mobile devices
+      if (!showContactActionsOnDesktop && !isMobileDevice()) return;
+      const info = parsePhoneLinks(messageText);
+      if (!info) return;
+      const row = document.createElement('div');
+      row.className = 'msg-actions';
+      const call = document.createElement('a');
+      call.className = 'msg-action-btn call';
+      call.href = info.telHref;
+      call.setAttribute('aria-label', `Call ${info.display}`);
+      call.innerHTML = `<i class="fas fa-phone" aria-hidden="true"></i><span>Call</span>`;
+      const wa = document.createElement('a');
+      wa.className = 'msg-action-btn whatsapp';
+      wa.href = info.waHref;
+      wa.target = '_blank';
+      wa.rel = 'noopener noreferrer';
+      wa.setAttribute('aria-label', `WhatsApp ${info.display}`);
+      wa.innerHTML = `<i class="fab fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>`;
+      row.appendChild(call);
+      row.appendChild(wa);
+      containerEl.appendChild(row);
+    }
+
+    function showTyping() {
+      // Avoid showing multiple typing indicators
+      if (document.getElementById('typing-indicator')) return;
+
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message assistant';
+      typingDiv.id = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="msg-content">
+          <div class="typing-indicator">
+            <div class="typing-dots">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      chatEl.appendChild(typingDiv);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function hideTyping() {
+      const typing = document.getElementById('typing-indicator');
+      if (typing) typing.remove();
+    }
+
+  async function sendMessage(message) {
+      const msgText = (message || input.value).trim();
+      if (!msgText) return;
+
+      // If user asks for the nearest branch, auto-request geolocation and handle locally
+      try {
+        const isNearestBranchQuery = (s) => {
+          const t = s.toLowerCase();
+          return (
+            /\b(where\s+(is|'s)\s+(the\s+)?)?(nearest|closest)\s+(branch|bank)(\s+(to\s+me|near\s+me))?\b/i.test(t) ||
+            /\b(find|show|get)\s+(me\s+)?(the\s+)?(nearest|closest)\s+(branch|bank)\b/i.test(t) ||
+            /\bnearest\s+(branch|bank)\b/i.test(t)
+          );
+        };
+        if (isNearestBranchQuery(msgText)) {
+          // Echo user message and request location
+          input.value = '';
+          input.style.height = 'auto';
+          addMsg('user', msgText);
+          if (!('geolocation' in navigator)) {
+            addMsg('assistant', 'Geolocation is not supported by your browser. Please use the crosshair button or enter a GhanaPost plus code (e.g., QQJG+P27).');
+            return;
+          }
+          addMsg('assistant', 'Requesting your location…');
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              const { latitude, longitude } = pos.coords;
+              await callNearestBranch({ lat: latitude, lng: longitude });
+            },
+            (err) => {
+              console.error('geo error', err);
+              addMsg('assistant', 'I could not access your location. Please allow location access, use the crosshair button, or share a GhanaPost plus code.');
+            },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+          );
+          return; // handled locally
+        }
+      } catch (e) { /* non-fatal */ }
+
+      // If user replies "yes" after a directions prompt, auto-request geolocation
+      try {
+        const getLastAssistantText = () => {
+          const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+          if (!nodes.length) return '';
+          return nodes[nodes.length - 1].textContent || '';
+        };
+        const lastAssistant = (getLastAssistantText() || '');
+        const askedForDirections = /need directions from your location\?/i.test(lastAssistant);
+        const affirmative = /^\s*(yes|yeah|yep|sure|ok|okay)\s*\.?$/i.test(msgText);
+        if (askedForDirections && affirmative) {
+          // Clear input and echo user's confirmation
+          input.value = '';
+          input.style.height = 'auto';
+          addMsg('user', msgText);
+
+          if (!('geolocation' in navigator)) {
+            addMsg('assistant', 'Geolocation is not supported by your browser. Please enter a GhanaPost plus code instead.');
+            return;
+          }
+          addMsg('assistant', 'Requesting your location…');
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              const { latitude, longitude } = pos.coords;
+              await callNearestBranch({ lat: latitude, lng: longitude });
+            },
+            (err) => {
+              console.error('geo error', err);
+              addMsg('assistant', 'I could not access your location. You can enter a GhanaPost plus code instead.');
+            },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+          );
+          return; // Do not forward this to the chat backend
+        }
+      } catch (e) {
+        // Non-fatal
+      }
+      
+      input.value = '';
+      input.style.height = 'auto'; // Reset height
+      sendButton.disabled = true;
+      
+      addMsg('user', msgText);
+      showTyping();
+
+      try {
+        const sid = await ensureSession();
+        const makeCall = async () => {
+          const resp = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: sid, message: msgText })
+          });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          return resp.json();
+        };
+        let data;
+        try {
+          data = await makeCall();
+        } catch (e1) {
+          // brief retry for transient issues
+          await new Promise(r => setTimeout(r, 300));
+          data = await makeCall();
+        }
+        hideTyping();
+        if (data?.reply) {
+          addMsg('assistant', data.reply);
+          try {
+            if (data.suggestHandover) {
+              // Check if user just said "yes" to a handover question
+              const lastMessages = chatEl.querySelectorAll('.message');
+              const lastAssistantMsg = Array.from(lastMessages).slice(-3).find(msg => 
+                msg.classList.contains('assistant') && 
+                msg.textContent.includes('Would you like me to facilitate a connection with a customer representative')
+              );
+              const userJustSaidYes = lastAssistantMsg && 
+                /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(msgText.trim());
+              
+              if (userJustSaidYes) {
+                // User confirmed they want handover - open form directly
+                setTimeout(() => {
+                  openHandoverForm();
+                }, 100);
+              } else {
+                // Check if the reply already contains the handover question
+                const replyContainsHandover = data.reply.includes('Would you like me to facilitate a connection with a customer representative');
+                
+                if (!replyContainsHandover) {
+                  // Only add handover message if not already in the reply
+                  addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?');
+                }
+                renderHandoverCTA();
+              }
+            }
+          } catch {}
+        } else {
+          addMsg('assistant', 'I\'m having some technical difficulties right now. Let me connect you with one of our human agents who can help you immediately.');
+          setTimeout(() => {
+            renderHandoverCTA();
+          }, 100);
+        }
+      } catch (error) {
+        hideTyping();
+        console.error('Chat error:', error);
+        addMsg('assistant', 'I\'m having some technical difficulties right now. Let me connect you with one of our human agents who can help you immediately.');
+        // Automatically trigger handover when there's a connection error
+        setTimeout(() => {
+          renderHandoverCTA();
+        }, 100);
+      } finally {
+        sendButton.disabled = false;
+        input.focus();
+      }
+    }
+
+    function renderHandoverCTA() {
+      // Append a compact CTA to the last assistant message
+      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (last.querySelector('.handover-cta')) return; // avoid duplicates
+      const row = last.querySelector('.msg-actions') || (() => {
+        const r = document.createElement('div'); r.className = 'msg-actions'; last.appendChild(r); return r;
+      })();
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'msg-action-btn handover-cta';
+      btn.innerHTML = `<i class="fa fa-user-headset" aria-hidden="true"></i><span>Talk to a person</span>`;
+      btn.addEventListener('click', openHandoverForm);
+      row.appendChild(btn);
+    }
+
+    function openHandoverForm() {
+      // Create a simple inline form under the last assistant message
+      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (last.querySelector('.handover-form')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'handover-form';
+      wrap.style.marginTop = '0.5rem';
+      wrap.style.padding = '0.5rem';
+      wrap.style.border = '1px solid var(--gray-200)';
+      wrap.style.borderRadius = '8px';
+      wrap.innerHTML = `
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center">
+          <input type="text" id="handoverName" placeholder="Your name (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="handoverPhone" placeholder="Phone (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+        </div>
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+          <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <button id="handoverSend" class="header-action-btn" style="white-space:nowrap"><i class="fa fa-paper-plane"></i><span class="label">Request callback</span></button>
+        </div>
+        <div id="locationStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color);"></div>
+        <div id="handoverStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--gray-600);"></div>
+      `;
+      last.appendChild(wrap);
+      const sendBtn = wrap.querySelector('#handoverSend');
+      sendBtn?.addEventListener('click', submitHandoverRequest);
+      
+      // Automatically request location when form opens
+      requestLocationAutomatically();
+    }
+
+    let userLocation = null; // Store user's location
+    
+    function requestLocationAutomatically() {
+      const statusEl = document.getElementById('locationStatus');
+      if (!statusEl) return;
+      
+      if (!navigator.geolocation) {
+        statusEl.textContent = 'Location services not available. Using global routing.';
+        statusEl.style.color = 'var(--gray-500)';
+        return;
+      }
+      
+      statusEl.textContent = 'Detecting your location for smart routing...';
+      statusEl.style.color = 'var(--primary-color)';
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          statusEl.textContent = `✓ Location detected! Will route to your nearest branch.`;
+          statusEl.style.color = 'var(--success, #2e7d32)';
+        },
+        (error) => {
+          console.log('Location detection:', error.message);
+          let errorMsg = '';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg = 'Location access not permitted. Using global routing.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg = 'Location unavailable. Using global routing.';
+              break;
+            case error.TIMEOUT:
+              errorMsg = 'Location timeout. Using global routing.';
+              break;
+            default:
+              errorMsg = 'Location detection failed. Using global routing.';
+              break;
+          }
+          statusEl.textContent = errorMsg;
+          statusEl.style.color = 'var(--gray-500)';
+          userLocation = null;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    }
+
+    async function submitHandoverRequest() {
+      const nameEl = document.getElementById('handoverName');
+      const phoneEl = document.getElementById('handoverPhone');
+      const msgEl = document.getElementById('handoverMsg');
+  const name = nameEl ? (nameEl.value || '') : '';
+  const phone = phoneEl ? (phoneEl.value || '') : '';
+  const msg = msgEl ? (msgEl.value || '') : '';
+      const statusEl = document.getElementById('handoverStatus');
+      
+      // Basic phone validation (Ghana): allow +233XXXXXXXXX or 0XXXXXXXXX; ignore spaces/dashes
+      const phoneRaw = (phone || '').replace(/[^\d+]/g, '');
+      if (phoneRaw) {
+        let ok = false;
+        if (phoneRaw.startsWith('+233')) {
+          const digits = phoneRaw.replace(/\D/g, '');
+          ok = digits.length === 12; // 233 + 9 digits
+        } else if (phoneRaw.startsWith('233')) {
+          ok = phoneRaw.replace(/\D/g, '').length === 12;
+        } else if (phoneRaw.startsWith('0')) {
+          const digits = phoneRaw.replace(/\D/g, '');
+          ok = digits.length === 10; // 0 + 9 digits
+        }
+        if (!ok) {
+          if (statusEl) {
+            statusEl.style.color = 'var(--danger, #c62828)';
+            statusEl.textContent = 'Please enter a valid Ghana phone (e.g., 024XXXXXXX or +23324XXXXXXX).';
+          }
+          return;
+        }
+      }
+      
+      try {
+        const sid = await ensureSession();
+  if (statusEl) statusEl.textContent = 'Submitting…';
+        
+        // Prepare request body with location if available
+        const requestBody = { 
+          sessionId: sid, 
+          name, 
+          phone, 
+          message: msg 
+        };
+        
+        if (userLocation) {
+          requestBody.lat = userLocation.lat;
+          requestBody.lng = userLocation.lng;
+        }
+        
+        let resp = await fetch('/api/handover', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(requestBody) 
+        });
+        let data = await resp.json();
+        
+        // If session expired (e.g., server restart), create a fresh session and retry once
+        if (resp.status === 404 && (data?.error || '').toLowerCase().includes('session not found')) {
+          sessionId = null; // Clear the stale session ID
+          const newSid = await ensureSession();
+          requestBody.sessionId = newSid;
+          resp = await fetch('/api/handover', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(requestBody) 
+          });
+          try { data = await resp.json(); } catch { data = undefined; }
+        }
+        
+        if (resp.ok && data?.ok) {
+          let successMsg = `Request received. Ticket: ${data.ticketId}.`;
+          if (data.targetBranch) {
+            successMsg += ` Routed to ${data.targetBranch} branch.`;
+          }
+          successMsg += ' An agent will contact you soon.';
+          if (statusEl) {
+            statusEl.textContent = successMsg;
+            statusEl.style.color = 'var(--success, #2e7d32)';
+          }
+          return;
+        }
+        if (statusEl) {
+          if (resp.status === 429) {
+            statusEl.textContent = 'Too many requests. Please try again later.';
+          } else {
+            statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+          }
+          statusEl.style.color = 'var(--danger, #c62828)';
+        }
+      } catch (e) {
+        if (statusEl) {
+          statusEl.textContent = 'Network error submitting request.';
+          statusEl.style.color = 'var(--danger, #c62828)';
+        }
+      }
+    }
+
+    function sendQuickMessage(message) {
+      sendMessage(message);
+    }
+
+    // Auto-resize textarea
+    input.addEventListener('input', function() {
+      this.style.height = 'auto';
+      const isMobile = window.innerWidth <= 768;
+      const cap = isMobile ? 200 : 140;
+      this.style.height = Math.min(this.scrollHeight, cap) + 'px';
+    });
+
+    // Handle enter key
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        form.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await sendMessage();
+    });
+
+    async function callNearestBranch(payload) {
+      try {
+        const resp = await fetch('/api/nearest-branch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (data?.text) addMsg('assistant', data.text);
+        else addMsg('assistant', 'Location received. Nearest branch lookup will be available soon.');
+      } catch (e) {
+        console.error('nearest error', e);
+        addMsg('assistant', 'Sorry, I could not process the location right now. You can share a GhanaPost plus code (e.g., QQJG+P27).');
+      }
+    }
+
+    useLocationBtn.addEventListener('click', async () => {
+      if (!('geolocation' in navigator)) {
+        addMsg('assistant', 'Geolocation is not supported by your browser. Please enter a GhanaPost plus code instead.');
+        return;
+      }
+      addMsg('assistant', 'Requesting your location…');
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          await callNearestBranch({ lat: latitude, lng: longitude });
+        },
+        (err) => {
+          console.error('geo error', err);
+          addMsg('assistant', 'I could not access your location. You can enter a GhanaPost plus code instead.');
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+      );
+    });
+
+  // Removed Plus Code map pin button per request
+
+    // Hide "Send" text on smaller screens
+    function adjustSendButton() {
+        if (window.innerWidth <= 768) {
+            sendButtonText.style.display = 'none';
+        } else {
+            sendButtonText.style.display = 'inline';
+        }
+    }
+
+    window.addEventListener('resize', adjustSendButton);
+    window.addEventListener('DOMContentLoaded', adjustSendButton);
+
+    // Focus input on load
+    input.focus();
+
+    // Listen for parent visibility hints (optional)
+    window.addEventListener('message', (e) => {
+      try {
+        const data = e?.data || {};
+        if (!data || data.source !== 'akcb-chat-parent') return;
+        if (data.type === 'setVisible' && data.visible) {
+          // Focus input and scroll to bottom when parent opens chat
+          input?.focus();
+          chatEl.scrollTop = chatEl.scrollHeight;
+        }
+      } catch {}
+    });
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(function(registration) {
+          console.log('ServiceWorker registration successful');
+        })
+        .catch(function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+    }
+  </script>
+</body>
+</html>

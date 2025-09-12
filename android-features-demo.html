@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKCB Chatbot - Enhanced Features Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .feature-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 15px;
+            padding: 20px 15px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .feature-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .feature-btn:active {
+            transform: translateY(0);
+        }
+        
+        .feature-icon {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .info-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        .action-btn {
+            width: 100%;
+            background: #10b981;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: #059669;
+        }
+        
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .dark-mode {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+        }
+        
+        .dark-mode .container {
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">CB</div>
+            <h1>AKCB Enhanced</h1>
+            <p>Native Android Features Demo</p>
+        </div>
+        
+        <div class="info-panel" id="deviceInfo">
+            <div>📱 Loading device information...</div>
+        </div>
+        
+        <div class="feature-grid">
+            <button class="feature-btn" onclick="toggleTheme()">
+                <span class="feature-icon">🌙</span>
+                Toggle Theme
+            </button>
+            
+            <button class="feature-btn" onclick="testVibration()">
+                <span class="feature-icon">📳</span>
+                Vibrate
+            </button>
+            
+            <button class="feature-btn" onclick="shareApp()">
+                <span class="feature-icon">🔗</span>
+                Share App
+            </button>
+            
+            <button class="feature-btn" onclick="showToast()">
+                <span class="feature-icon">💬</span>
+                Show Toast
+            </button>
+            
+            <button class="feature-btn" onclick="testTTS()">
+                <span class="feature-icon">🔊</span>
+                Test TTS
+            </button>
+            
+            <button class="feature-btn" onclick="toggleScreenOn()">
+                <span class="feature-icon">💡</span>
+                Keep Screen On
+            </button>
+        </div>
+        
+        <button class="action-btn" onclick="openMainChatbot()">
+            🤖 Open Main Chatbot
+        </button>
+        
+        <button class="action-btn secondary-btn" onclick="runAllTests()">
+            🧪 Run All Tests
+        </button>
+    </div>
+
+    <script>
+        let screenOnEnabled = false;
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDeviceInfo();
+            setupAndroidFeatures();
+        });
+        
+        function loadDeviceInfo() {
+            if (window.AndroidFeatures) {
+                try {
+                    const info = JSON.parse(window.AndroidFeatures.getDeviceInfo());
+                    document.getElementById('deviceInfo').innerHTML = `
+                        <div><strong>Platform:</strong> ${info.platform}</div>
+                        <div><strong>Android:</strong> ${info.version}</div>
+                        <div><strong>Device:</strong> ${info.manufacturer} ${info.model}</div>
+                        <div><strong>App Version:</strong> ${info.appVersion}</div>
+                        <div><strong>Dark Mode:</strong> ${info.darkMode ? 'Enabled' : 'Disabled'}</div>
+                        <div><strong>TTS:</strong> ${window.AndroidTTS ? 'Available' : 'Not Available'}</div>
+                    `;
+                    
+                    // Apply dark mode if enabled
+                    if (info.darkMode) {
+                        document.body.classList.add('dark-mode');
+                    }
+                } catch (e) {
+                    console.error('Error loading device info:', e);
+                }
+            } else {
+                document.getElementById('deviceInfo').innerHTML = `
+                    <div>🌐 Running in web browser</div>
+                    <div>Android features not available</div>
+                `;
+            }
+        }
+        
+        function setupAndroidFeatures() {
+            // Set up theme change listener
+            window.onAndroidThemeChanged = function(isDark) {
+                if (isDark) {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                }
+                loadDeviceInfo(); // Refresh info panel
+            };
+        }
+        
+        function toggleTheme() {
+            if (window.AndroidFeatures) {
+                window.AndroidFeatures.toggleDarkMode();
+            } else {
+                // Fallback for web
+                document.body.classList.toggle('dark-mode');
+                showToast('Theme toggled (web fallback)');
+            }
+        }
+        
+        function testVibration() {
+            if (window.AndroidFeatures) {
+                window.AndroidFeatures.vibrate(200);
+                showToast('Vibration activated!');
+            } else {
+                // Web vibration API fallback
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                    showToast('Web vibration activated!');
+                } else {
+                    showToast('Vibration not supported');
+                }
+            }
+        }
+        
+        function shareApp() {
+            const text = "Check out the AKCB Chatbot - Your digital banking assistant!";
+            
+            if (window.AndroidFeatures) {
+                window.AndroidFeatures.shareText(text);
+            } else if (navigator.share) {
+                // Web Share API fallback
+                navigator.share({
+                    title: 'AKCB Chatbot',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                // Copy to clipboard fallback
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Copied to clipboard!');
+                });
+            }
+        }
+        
+        function showToast(message = 'Hello from AKCB Chatbot!') {
+            if (window.AndroidFeatures) {
+                window.AndroidFeatures.showToast(message);
+            } else {
+                // Web fallback - create custom toast
+                const toast = document.createElement('div');
+                toast.textContent = message;
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 25px;
+                    z-index: 1000;
+                    font-size: 14px;
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        }
+        
+        function testTTS() {
+            const text = "Hello! This is the AKCB Chatbot enhanced with native Android features.";
+            
+            if (window.AndroidTTS && window.AndroidTTS.isAvailable()) {
+                window.AndroidTTS.speak(text);
+                showToast('Native Android TTS activated!');
+            } else if (window.speechSynthesis) {
+                // Web Speech API fallback
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                speechSynthesis.speak(utterance);
+                showToast('Web TTS activated!');
+            } else {
+                showToast('TTS not available');
+            }
+        }
+        
+        function toggleScreenOn() {
+            screenOnEnabled = !screenOnEnabled;
+            
+            if (window.AndroidFeatures) {
+                window.AndroidFeatures.keepScreenOn(screenOnEnabled);
+                showToast(`Screen will ${screenOnEnabled ? 'stay on' : 'turn off normally'}`);
+            } else {
+                showToast('Screen control not available in web browser');
+            }
+            
+            // Update button text
+            const btn = event.target.closest('.feature-btn');
+            btn.querySelector('.feature-icon').textContent = screenOnEnabled ? '🔆' : '💡';
+        }
+        
+        function openMainChatbot() {
+            window.location.href = 'https://ai-chatbot-1-a596.onrender.com/';
+        }
+        
+        function runAllTests() {
+            showToast('Running all tests...');
+            
+            setTimeout(() => testVibration(), 500);
+            setTimeout(() => testTTS(), 1500);
+            setTimeout(() => loadDeviceInfo(), 2500);
+            setTimeout(() => showToast('All tests completed!'), 3500);
+        }
+    </script>
+</body>
+</html>
