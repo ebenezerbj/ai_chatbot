@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKCB UI Framework - HCI Button System</title>
+    <link rel="stylesheet" href="hci-button-framework.css">
+    <style>
+        body {
+            padding: var(--space-8);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            min-height: 100vh;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: var(--space-12);
+            padding-bottom: var(--space-6);
+            border-bottom: 2px solid var(--border-primary);
+        }
+        
+        .demo-title {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-bold);
+            color: var(--primary-blue);
+            margin-bottom: var(--space-3);
+        }
+        
+        .demo-subtitle {
+            font-size: var(--font-size-lg);
+            color: var(--text-secondary);
+            font-weight: var(--font-normal);
+        }
+        
+        .demo-section {
+            margin-bottom: var(--space-12);
+        }
+        
+        .section-title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--border-primary);
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-8);
+        }
+        
+        .button-showcase {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+        }
+        
+        .demo-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            border: 1px solid var(--border-primary);
+        }
+        
+        .card-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-4);
+        }
+        
+        .code-snippet {
+            background: var(--gray-900);
+            color: var(--gray-100);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: var(--font-size-sm);
+            overflow-x: auto;
+            margin-top: var(--space-4);
+        }
+        
+        .hci-principles {
+            background: linear-gradient(135deg, var(--primary-blue-50) 0%, var(--primary-blue-100) 100%);
+            border: 1px solid var(--primary-blue-200);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+        
+        .hci-principles h3 {
+            color: var(--primary-blue-800);
+            margin-bottom: var(--space-4);
+        }
+        
+        .principles-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .principles-list li {
+            padding: var(--space-2) 0;
+            color: var(--primary-blue-700);
+            position: relative;
+            padding-left: var(--space-6);
+        }
+        
+        .principles-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: var(--font-bold);
+        }
+        
+        @media (max-width: 768px) {
+            .demo-container {
+                margin: var(--space-4);
+                padding: var(--space-6);
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-showcase {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <header class="demo-header">
+            <h1 class="demo-title">AKCB UI Framework</h1>
+            <p class="demo-subtitle">Human-Computer Interaction Compliant Button System for Banking Applications</p>
+        </header>
+
+        <div class="hci-principles">
+            <h3>HCI Principles Implemented</h3>
+            <ul class="principles-list">
+                <li><strong>Consistency:</strong> Unified design patterns across all button states</li>
+                <li><strong>Accessibility:</strong> WCAG 2.1 compliant with screen reader support</li>
+                <li><strong>Affordances:</strong> Clear visual cues indicating clickable elements</li>
+                <li><strong>Feedback:</strong> Immediate visual and haptic response to interactions</li>
+                <li><strong>Error Prevention:</strong> Disabled states and loading indicators</li>
+                <li><strong>Touch Targets:</strong> Minimum 44px touch targets for mobile devices</li>
+                <li><strong>Cognitive Load:</strong> Clear labeling and logical grouping</li>
+            </ul>
+        </div>
+
+        <section class="demo-section">
+            <h2 class="section-title">Primary Actions - Banking Operations</h2>
+            <div class="button-showcase">
+                <button class="btn btn-primary btn-lg">
+                    <i class="icon">💳</i>
+                    Check Balance
+                </button>
+                <button class="btn btn-transaction btn-lg">
+                    <i class="icon">💸</i>
+                    Transfer Money
+                </button>
+                <button class="btn btn-security btn-lg">
+                    Secure Login
+                </button>
+                <button class="btn btn-voice btn-lg" id="voiceBtn">
+                    <i class="icon">🎤</i>
+                    Voice Assistant
+                </button>
+            </div>
+            <div class="code-snippet">
+&lt;button class="btn btn-primary btn-lg"&gt;
+    &lt;i class="icon"&gt;💳&lt;/i&gt;
+    Check Balance
+&lt;/button&gt;</div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="section-title">Button Sizes - Hierarchy & Importance</h2>
+            <div class="button-showcase">
+                <button class="btn btn-primary btn-xs">Extra Small</button>
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary">Default</button>
+                <button class="btn btn-primary btn-lg">Large</button>
+                <button class="btn btn-primary btn-xl">Extra Large</button>
+            </div>
+            <div class="code-snippet">
+&lt;button class="btn btn-primary btn-lg"&gt;Large Button&lt;/button&gt;</div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="section-title">Button Variants - Semantic Meaning</h2>
+            <div class="button-grid">
+                <div class="demo-card">
+                    <h3 class="card-title">Primary Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                        <button class="btn btn-primary btn-full">Login to Account</button>
+                        <button class="btn btn-secondary btn-full">Create Account</button>
+                        <button class="btn btn-outline btn-full">Learn More</button>
+                    </div>
+                </div>
+                
+                <div class="demo-card">
+                    <h3 class="card-title">Transaction Status</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                        <button class="btn btn-success btn-full">Confirm Payment</button>
+                        <button class="btn btn-warning btn-full">Pending Review</button>
+                        <button class="btn btn-danger btn-full">Cancel Transaction</button>
+                    </div>
+                </div>
+                
+                <div class="demo-card">
+                    <h3 class="card-title">Utility Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                        <button class="btn btn-ghost btn-full">View Details</button>
+                        <button class="btn btn-outline btn-full">Download Statement</button>
+                        <button class="btn btn-secondary btn-full">Print Receipt</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="section-title">Interactive States - User Feedback</h2>
+            <div class="button-showcase">
+                <button class="btn btn-primary">Normal State</button>
+                <button class="btn btn-primary" style="transform: translateY(-1px); box-shadow: var(--shadow-md);">Hover State</button>
+                <button class="btn btn-primary loading">Loading State</button>
+                <button class="btn btn-primary" disabled>Disabled State</button>
+                <button class="btn btn-primary" style="box-shadow: var(--focus-ring);">Focus State</button>
+            </div>
+            <div class="code-snippet">
+&lt;button class="btn btn-primary loading"&gt;Processing...&lt;/button&gt;
+&lt;button class="btn btn-primary" disabled&gt;Unavailable&lt;/button&gt;</div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="section-title">Button Groups - Related Actions</h2>
+            <div class="demo-card">
+                <h3 class="card-title">Account View Options</h3>
+                <div class="btn-group" style="margin-bottom: var(--space-4);">
+                    <button class="btn btn-secondary">Summary</button>
+                    <button class="btn btn-primary">Transactions</button>
+                    <button class="btn btn-secondary">Statements</button>
+                </div>
+                
+                <h3 class="card-title">Quick Actions</h3>
+                <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                    <button class="btn btn-icon btn-secondary">📊</button>
+                    <button class="btn btn-icon btn-secondary">🔍</button>
+                    <button class="btn btn-icon btn-secondary">📤</button>
+                    <button class="btn btn-icon btn-secondary">⚙️</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="section-title">Special Banking Buttons</h2>
+            <div class="button-showcase">
+                <button class="btn btn-emergency">Emergency Stop</button>
+                <button class="btn btn-toggle">Toggle Feature</button>
+                <button class="btn btn-toggle active">Active Toggle</button>
+                <button class="btn btn-voice" id="demoVoiceBtn">Voice Banking</button>
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="section-title">Mobile-Optimized Layouts</h2>
+            <div class="demo-card">
+                <h3 class="card-title">Mobile Banking Interface</h3>
+                <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                    <button class="btn btn-primary btn-full btn-lg">
+                        <span style="font-size: 1.5rem; margin-right: var(--space-3);">💳</span>
+                        Quick Balance Check
+                    </button>
+                    <button class="btn btn-transaction btn-full btn-lg">
+                        <span style="font-size: 1.5rem; margin-right: var(--space-3);">💸</span>
+                        Send Money
+                    </button>
+                    <button class="btn btn-outline btn-full btn-lg">
+                        <span style="font-size: 1.5rem; margin-right: var(--space-3);">📱</span>
+                        Mobile Deposit
+                    </button>
+                    <button class="btn btn-voice btn-full btn-lg" id="mobileVoiceBtn">
+                        <span style="font-size: 1.5rem; margin-right: var(--space-3);">🎤</span>
+                        Voice Commands
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Floating Action Button -->
+        <button class="btn btn-fab btn-primary" title="Quick Help" aria-label="Get quick help">
+            <span style="font-size: 1.25rem;">❓</span>
+        </button>
+    </div>
+
+    <script>
+        // Demo interactions
+        document.getElementById('voiceBtn').addEventListener('click', function() {
+            this.classList.toggle('listening');
+            setTimeout(() => {
+                this.classList.remove('listening');
+            }, 3000);
+        });
+
+        document.getElementById('demoVoiceBtn').addEventListener('click', function() {
+            this.classList.toggle('listening');
+            setTimeout(() => {
+                this.classList.remove('listening');
+            }, 3000);
+        });
+
+        document.getElementById('mobileVoiceBtn').addEventListener('click', function() {
+            this.classList.toggle('listening');
+            setTimeout(() => {
+                this.classList.remove('listening');
+            }, 3000);
+        });
+
+        // Toggle button demo
+        document.querySelector('.btn-toggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+
+        // Loading state demo
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingBtn = document.querySelector('.loading');
+            if (loadingBtn) {
+                setTimeout(() => {
+                    loadingBtn.classList.remove('loading');
+                    loadingBtn.textContent = 'Completed';
+                    loadingBtn.classList.add('btn-success');
+                }, 3000);
+            }
+        });
+
+        // Emergency button demo
+        document.querySelector('.btn-emergency').addEventListener('click', function() {
+            alert('Emergency stop activated! This would halt all transactions.');
+        });
+
+        // Keyboard navigation support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                document.querySelectorAll('.btn:focus').forEach(btn => {
+                    btn.style.outline = '3px solid var(--primary-blue)';
+                    btn.style.outlineOffset = '2px';
+                });
+            }
+        });
+
+        // Accessibility announcements
+        function announceToScreenReader(message) {
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.style.position = 'absolute';
+            announcement.style.left = '-10000px';
+            announcement.textContent = message;
+            document.body.appendChild(announcement);
+            setTimeout(() => announcement.remove(), 2000);
+        }
+
+        // Add click handlers with announcements
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.disabled && !this.classList.contains('loading')) {
+                    announceToScreenReader(`${this.textContent.trim()} button activated`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

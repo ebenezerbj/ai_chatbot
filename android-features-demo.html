@@ -3,340 +3,1015 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AKCB Chatbot - Enhanced Features Demo</title>
+    <title>AKCB Digital Assistant - Enhanced Features</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            color: white;
-            min-height: 100vh;
+        /* HCI Principle: Consistency & Standards */
+        :root {
+            --primary-blue: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a8a;
+            --secondary-gold: #f59e0b;
+            --success-green: #10b981;
+            --error-red: #ef4444;
+            --warning-amber: #f59e0b;
+            --neutral-50: #f9fafb;
+            --neutral-100: #f3f4f6;
+            --neutral-200: #e5e7eb;
+            --neutral-300: #d1d5db;
+            --neutral-400: #9ca3af;
+            --neutral-500: #6b7280;
+            --neutral-600: #4b5563;
+            --neutral-700: #374151;
+            --neutral-800: #1f2937;
+            --neutral-900: #111827;
+            --white: #ffffff;
+            
+            /* Typography Scale */
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            
+            /* Spacing Scale */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            
+            /* Focus States */
+            --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-        
+
+        /* HCI Principle: Accessibility & Universal Design */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px; /* Base for rem calculations */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', system-ui, sans-serif;
+            line-height: 1.6;
+            color: var(--white);
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-light) 100%);
+            min-height: 100vh;
+            padding: var(--space-4);
+            transition: all 0.3s ease;
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background: linear-gradient(135deg, var(--neutral-800) 0%, var(--neutral-700) 100%);
+            color: var(--neutral-100);
+        }
+
+        /* HCI Principle: Visual Hierarchy */
         .container {
-            max-width: 400px;
+            max-width: 28rem;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-lg);
         }
-        
+
+        .dark-mode .container {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Header Section */
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: var(--space-8);
         }
-        
+
         .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: white;
+            width: 5rem;
+            height: 5rem;
+            margin: 0 auto var(--space-5);
+            background: var(--white);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            font-weight: bold;
-            color: #1e40af;
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--primary-blue);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s ease;
         }
-        
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .header h1 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+            color: var(--white);
+        }
+
+        .dark-mode .header h1 {
+            color: var(--neutral-100);
+        }
+
+        .header p {
+            font-size: var(--font-size-base);
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 400;
+        }
+
+        .dark-mode .header p {
+            color: var(--neutral-300);
+        }
+
+        /* Status Panel - HCI Principle: Feedback & System Status */
+        .status-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-6);
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: var(--font-size-sm);
+            line-height: 1.5;
+        }
+
+        .status-panel .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-panel .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .status-value {
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-badge.online {
+            background: var(--success-green);
+            color: var(--white);
+        }
+
+        .status-badge.offline {
+            background: var(--error-red);
+            color: var(--white);
+        }
+
+        /* Feature Grid - HCI Principle: Spatial Organization */
         .feature-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: var(--space-4);
+            margin-bottom: var(--space-8);
         }
-        
+
+        /* Button Design - HCI Principle: Affordances & Signifiers */
         .feature-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 15px;
-            padding: 20px 15px;
-            color: white;
-            font-size: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5) var(--space-4);
+            color: var(--white);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
         }
-        
+
         .feature-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
-        
+
         .feature-btn:active {
             transform: translateY(0);
+            transition: transform 0.1s ease;
         }
-        
+
+        .feature-btn:focus {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+        .feature-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feature-btn:disabled:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: none;
+        }
+
         .feature-icon {
-            display: block;
-            font-size: 24px;
-            margin-bottom: 8px;
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--space-1);
         }
-        
-        .info-panel {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            font-family: monospace;
-            font-size: 12px;
-            line-height: 1.5;
+
+        .feature-label {
+            font-weight: 600;
+            line-height: 1.3;
         }
-        
+
+        .feature-description {
+            font-size: var(--font-size-xs);
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.4;
+            margin-top: var(--space-1);
+        }
+
+        /* Action Buttons - HCI Principle: Clear Call-to-Action */
         .action-btn {
             width: 100%;
-            background: #10b981;
+            background: var(--success-green);
             border: none;
-            border-radius: 12px;
-            padding: 15px;
-            color: white;
-            font-size: 16px;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            color: var(--white);
+            font-size: var(--font-size-base);
             font-weight: 600;
             cursor: pointer;
-            margin-bottom: 10px;
-            transition: background-color 0.3s ease;
+            margin-bottom: var(--space-4);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-3);
+            position: relative;
+            overflow: hidden;
         }
-        
+
         .action-btn:hover {
             background: #059669;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
-        
-        .secondary-btn {
-            background: rgba(255, 255, 255, 0.2);
+
+        .action-btn:active {
+            transform: translateY(0);
         }
-        
-        .secondary-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+
+        .action-btn:focus {
+            outline: none;
+            box-shadow: var(--focus-ring);
         }
-        
-        .dark-mode {
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .dark-mode .container {
-            background: rgba(255, 255, 255, 0.05);
+
+        .action-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Loading States - HCI Principle: Feedback */
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid var(--white);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Toast Notifications - HCI Principle: Error Prevention & Recovery */
+        .toast {
+            position: fixed;
+            bottom: var(--space-6);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: var(--white);
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--radius-lg);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: toastSlideIn 0.3s ease;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                transform: translate(-50%, 100%);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            background: rgba(16, 185, 129, 0.9);
+        }
+
+        .toast.error {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        .toast.warning {
+            background: rgba(245, 158, 11, 0.9);
+        }
+
+        /* Responsive Design - HCI Principle: Device Independence */
+        @media (max-width: 640px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                padding: var(--space-6);
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-3);
+            }
+            
+            .feature-btn {
+                min-height: 4rem;
+                padding: var(--space-4);
+            }
+        }
+
+        /* Accessibility Improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body:not(.light-mode) {
+                background: linear-gradient(135deg, var(--neutral-800) 0%, var(--neutral-700) 100%);
+                color: var(--neutral-100);
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .feature-btn, .action-btn {
+                border-width: 2px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="logo">CB</div>
-            <h1>AKCB Enhanced</h1>
-            <p>Native Android Features Demo</p>
-        </div>
+        <header class="header" role="banner">
+            <div class="logo" aria-label="AKCB Logo">CB</div>
+            <h1>AKCB Digital Assistant</h1>
+            <p>Enhanced Mobile Features</p>
+        </header>
         
-        <div class="info-panel" id="deviceInfo">
-            <div>📱 Loading device information...</div>
-        </div>
+        <section class="status-panel" role="region" aria-labelledby="status-heading">
+            <h2 id="status-heading" class="sr-only">System Status</h2>
+            <div id="deviceInfo" aria-live="polite">
+                <div class="status-item">
+                    <span class="status-label">System Status</span>
+                    <span class="status-badge online">Loading...</span>
+                </div>
+            </div>
+        </section>
         
-        <div class="feature-grid">
-            <button class="feature-btn" onclick="toggleTheme()">
-                <span class="feature-icon">🌙</span>
-                Toggle Theme
+        <section class="feature-grid" role="region" aria-labelledby="features-heading">
+            <h2 id="features-heading" class="sr-only">Available Features</h2>
+            
+            <button class="feature-btn" onclick="toggleTheme()" aria-describedby="theme-desc">
+                <span class="feature-icon" aria-hidden="true">🌙</span>
+                <span class="feature-label">Theme</span>
+                <span class="feature-description" id="theme-desc">Switch between light and dark modes</span>
             </button>
             
-            <button class="feature-btn" onclick="testVibration()">
-                <span class="feature-icon">📳</span>
-                Vibrate
+            <button class="feature-btn" onclick="testVibration()" aria-describedby="vibrate-desc">
+                <span class="feature-icon" aria-hidden="true">📳</span>
+                <span class="feature-label">Haptic</span>
+                <span class="feature-description" id="vibrate-desc">Test device vibration feedback</span>
             </button>
             
-            <button class="feature-btn" onclick="shareApp()">
-                <span class="feature-icon">🔗</span>
-                Share App
+            <button class="feature-btn" onclick="shareApp()" aria-describedby="share-desc">
+                <span class="feature-icon" aria-hidden="true">🔗</span>
+                <span class="feature-label">Share</span>
+                <span class="feature-description" id="share-desc">Share this app with others</span>
             </button>
             
-            <button class="feature-btn" onclick="showToast()">
-                <span class="feature-icon">💬</span>
-                Show Toast
+            <button class="feature-btn" onclick="showToast()" aria-describedby="toast-desc">
+                <span class="feature-icon" aria-hidden="true">💬</span>
+                <span class="feature-label">Notify</span>
+                <span class="feature-description" id="toast-desc">Show system notifications</span>
             </button>
             
-            <button class="feature-btn" onclick="testTTS()">
-                <span class="feature-icon">🔊</span>
-                Test TTS
+            <button class="feature-btn" onclick="testTTS()" aria-describedby="tts-desc">
+                <span class="feature-icon" aria-hidden="true">🔊</span>
+                <span class="feature-label">Voice</span>
+                <span class="feature-description" id="tts-desc">Test text-to-speech system</span>
             </button>
             
-            <button class="feature-btn" onclick="toggleScreenOn()">
-                <span class="feature-icon">💡</span>
-                Keep Screen On
+            <button class="feature-btn" onclick="toggleScreenOn()" aria-describedby="screen-desc">
+                <span class="feature-icon" aria-hidden="true">💡</span>
+                <span class="feature-label">Display</span>
+                <span class="feature-description" id="screen-desc">Control screen wake settings</span>
             </button>
-        </div>
+        </section>
         
-        <button class="action-btn" onclick="openMainChatbot()">
-            🤖 Open Main Chatbot
-        </button>
-        
-        <button class="action-btn secondary-btn" onclick="runAllTests()">
-            🧪 Run All Tests
-        </button>
+        <section class="actions" role="region" aria-labelledby="actions-heading">
+            <h2 id="actions-heading" class="sr-only">Main Actions</h2>
+            
+            <button class="action-btn" onclick="openMainChatbot()" aria-describedby="chatbot-desc">
+                <span aria-hidden="true">🤖</span>
+                <span>Open Digital Assistant</span>
+            </button>
+            <div id="chatbot-desc" class="sr-only">Navigate to the main AKCB chatbot interface</div>
+            
+            <button class="action-btn secondary" onclick="runAllTests()" aria-describedby="test-desc">
+                <span aria-hidden="true">🧪</span>
+                <span>Run System Tests</span>
+            </button>
+            <div id="test-desc" class="sr-only">Test all available features sequentially</div>
+        </section>
+    </div>
+
+    <!-- Screen reader only content -->
+    <div class="sr-only">
+        <style>
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+        </style>
     </div>
 
     <script>
+        // HCI Principle: Error Prevention & User Control
         let screenOnEnabled = false;
+        let isTestRunning = false;
+        let currentTheme = 'light';
         
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            loadDeviceInfo();
-            setupAndroidFeatures();
+            initializeApp();
+            setupAccessibility();
+            detectSystemTheme();
         });
         
+        function initializeApp() {
+            showLoadingState();
+            loadDeviceInfo();
+            setupAndroidFeatures();
+            hideLoadingState();
+        }
+        
+        function setupAccessibility() {
+            // Add keyboard navigation support
+            document.addEventListener('keydown', handleKeyboardNavigation);
+            
+            // Announce page load to screen readers
+            announceToScreenReader('AKCB Digital Assistant features loaded successfully');
+        }
+        
+        function detectSystemTheme() {
+            // Respect user's system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                currentTheme = 'dark';
+                document.body.classList.add('dark-mode');
+            }
+            
+            // Listen for system theme changes
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                    if (e.matches) {
+                        currentTheme = 'dark';
+                        document.body.classList.add('dark-mode');
+                    } else {
+                        currentTheme = 'light';
+                        document.body.classList.remove('dark-mode');
+                    }
+                    updateThemeStatus();
+                });
+            }
+        }
+        
+        function handleKeyboardNavigation(event) {
+            // HCI Principle: Keyboard Accessibility
+            switch(event.key) {
+                case 'Escape':
+                    // Clear any active states
+                    clearActiveStates();
+                    break;
+                case 'Enter':
+                case ' ':
+                    // Activate focused element if it's a button
+                    if (event.target.tagName === 'BUTTON') {
+                        event.preventDefault();
+                        event.target.click();
+                    }
+                    break;
+            }
+        }
+        
+        function showLoadingState() {
+            const statusPanel = document.getElementById('deviceInfo');
+            statusPanel.innerHTML = `
+                <div class="status-item">
+                    <span class="status-label">System Status</span>
+                    <span class="status-badge loading">Initializing...</span>
+                </div>
+            `;
+        }
+        
+        function hideLoadingState() {
+            // Remove loading class after initialization
+            setTimeout(() => {
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.classList.remove('loading');
+                });
+            }, 1000);
+        }
+        
         function loadDeviceInfo() {
+            // HCI Principle: System Status Visibility
+            const statusPanel = document.getElementById('deviceInfo');
+            
             if (window.AndroidFeatures) {
                 try {
                     const info = JSON.parse(window.AndroidFeatures.getDeviceInfo());
-                    document.getElementById('deviceInfo').innerHTML = `
-                        <div><strong>Platform:</strong> ${info.platform}</div>
-                        <div><strong>Android:</strong> ${info.version}</div>
-                        <div><strong>Device:</strong> ${info.manufacturer} ${info.model}</div>
-                        <div><strong>App Version:</strong> ${info.appVersion}</div>
-                        <div><strong>Dark Mode:</strong> ${info.darkMode ? 'Enabled' : 'Disabled'}</div>
-                        <div><strong>TTS:</strong> ${window.AndroidTTS ? 'Available' : 'Not Available'}</div>
+                    statusPanel.innerHTML = `
+                        <div class="status-item">
+                            <span class="status-label">Platform</span>
+                            <span class="status-value">${capitalizeFirst(info.platform)}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Android Version</span>
+                            <span class="status-value">${info.version}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Device</span>
+                            <span class="status-value">${info.manufacturer} ${info.model}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">App Version</span>
+                            <span class="status-value">v${info.appVersion}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Theme</span>
+                            <span class="status-value">${info.darkMode ? 'Dark' : 'Light'} Mode</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Voice System</span>
+                            <span class="status-badge ${window.AndroidTTS ? 'online' : 'offline'}">
+                                ${window.AndroidTTS ? 'Available' : 'Unavailable'}
+                            </span>
+                        </div>
                     `;
                     
-                    // Apply dark mode if enabled
-                    if (info.darkMode) {
+                    // Apply theme based on system status
+                    if (info.darkMode && currentTheme !== 'dark') {
+                        currentTheme = 'dark';
                         document.body.classList.add('dark-mode');
                     }
                 } catch (e) {
+                    showErrorState('Failed to load device information');
                     console.error('Error loading device info:', e);
                 }
             } else {
-                document.getElementById('deviceInfo').innerHTML = `
-                    <div>🌐 Running in web browser</div>
-                    <div>Android features not available</div>
+                // Web browser fallback
+                statusPanel.innerHTML = `
+                    <div class="status-item">
+                        <span class="status-label">Platform</span>
+                        <span class="status-value">Web Browser</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">User Agent</span>
+                        <span class="status-value">${getBrowserInfo()}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Features</span>
+                        <span class="status-badge offline">Limited</span>
+                    </div>
                 `;
             }
+        }
+        
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari')) return 'Safari';
+            if (ua.includes('Edge')) return 'Edge';
+            return 'Unknown';
+        }
+        
+        function showErrorState(message) {
+            const statusPanel = document.getElementById('deviceInfo');
+            statusPanel.innerHTML = `
+                <div class="status-item">
+                    <span class="status-label">Error</span>
+                    <span class="status-badge offline">${message}</span>
+                </div>
+            `;
         }
         
         function setupAndroidFeatures() {
             // Set up theme change listener
             window.onAndroidThemeChanged = function(isDark) {
+                currentTheme = isDark ? 'dark' : 'light';
                 if (isDark) {
                     document.body.classList.add('dark-mode');
                 } else {
                     document.body.classList.remove('dark-mode');
                 }
-                loadDeviceInfo(); // Refresh info panel
+                loadDeviceInfo(); // Refresh status panel
+                announceToScreenReader(`Theme changed to ${isDark ? 'dark' : 'light'} mode`);
             };
         }
         
+        // Feature Functions with Enhanced UX
         function toggleTheme() {
+            // HCI Principle: User Control & Freedom
+            const button = event.target.closest('.feature-btn');
+            button.classList.add('loading');
+            
             if (window.AndroidFeatures) {
                 window.AndroidFeatures.toggleDarkMode();
+                showToast('Theme toggled successfully', 'success');
             } else {
-                // Fallback for web
+                // Web fallback
+                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
                 document.body.classList.toggle('dark-mode');
-                showToast('Theme toggled (web fallback)');
+                updateThemeIcon();
+                showToast(`Switched to ${currentTheme} mode`, 'success');
+                announceToScreenReader(`Theme changed to ${currentTheme} mode`);
             }
+            
+            setTimeout(() => button.classList.remove('loading'), 500);
+        }
+        
+        function updateThemeIcon() {
+            const themeButton = document.querySelector('.feature-btn .feature-icon');
+            if (currentTheme === 'dark') {
+                themeButton.textContent = '☀️';
+            } else {
+                themeButton.textContent = '🌙';
+            }
+        }
+        
+        function updateThemeStatus() {
+            loadDeviceInfo(); // Refresh the status panel
         }
         
         function testVibration() {
+            // HCI Principle: Immediate Feedback
+            const button = event.target.closest('.feature-btn');
+            button.classList.add('loading');
+            
             if (window.AndroidFeatures) {
-                window.AndroidFeatures.vibrate(200);
-                showToast('Vibration activated!');
-            } else {
-                // Web vibration API fallback
-                if (navigator.vibrate) {
-                    navigator.vibrate(200);
-                    showToast('Web vibration activated!');
-                } else {
-                    showToast('Vibration not supported');
+                try {
+                    window.AndroidFeatures.vibrate(200);
+                    showToast('Vibration activated', 'success');
+                    announceToScreenReader('Device vibration activated');
+                } catch (e) {
+                    showToast('Vibration failed', 'error');
                 }
+            } else if (navigator.vibrate) {
+                try {
+                    navigator.vibrate(200);
+                    showToast('Web vibration activated', 'success');
+                } catch (e) {
+                    showToast('Vibration not supported', 'warning');
+                }
+            } else {
+                showToast('Vibration not available', 'warning');
             }
+            
+            setTimeout(() => button.classList.remove('loading'), 300);
         }
         
         function shareApp() {
-            const text = "Check out the AKCB Chatbot - Your digital banking assistant!";
+            // HCI Principle: Match System Conventions
+            const button = event.target.closest('.feature-btn');
+            button.classList.add('loading');
+            
+            const shareData = {
+                title: 'AKCB Digital Assistant',
+                text: 'Experience the enhanced AKCB Digital Assistant - your personal banking companion with advanced voice features and native mobile integration.',
+                url: window.location.href
+            };
             
             if (window.AndroidFeatures) {
-                window.AndroidFeatures.shareText(text);
+                try {
+                    window.AndroidFeatures.shareText(`${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`);
+                    showToast('Share dialog opened', 'success');
+                } catch (e) {
+                    fallbackShare(shareData);
+                }
             } else if (navigator.share) {
-                // Web Share API fallback
-                navigator.share({
-                    title: 'AKCB Chatbot',
-                    text: text,
-                    url: window.location.href
-                });
+                navigator.share(shareData)
+                    .then(() => showToast('Shared successfully', 'success'))
+                    .catch(() => fallbackShare(shareData));
             } else {
-                // Copy to clipboard fallback
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast('Copied to clipboard!');
-                });
+                fallbackShare(shareData);
             }
+            
+            setTimeout(() => button.classList.remove('loading'), 500);
         }
         
-        function showToast(message = 'Hello from AKCB Chatbot!') {
-            if (window.AndroidFeatures) {
-                window.AndroidFeatures.showToast(message);
-            } else {
-                // Web fallback - create custom toast
-                const toast = document.createElement('div');
-                toast.textContent = message;
-                toast.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: rgba(0, 0, 0, 0.8);
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 25px;
-                    z-index: 1000;
-                    font-size: 14px;
-                `;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            }
+        function fallbackShare(data) {
+            // Copy to clipboard as fallback
+            const textToShare = `${data.title}\n\n${data.text}\n\n${data.url}`;
+            navigator.clipboard.writeText(textToShare)
+                .then(() => showToast('Copied to clipboard', 'success'))
+                .catch(() => showToast('Share not available', 'error'));
+        }
+        
+        function showToast(message = 'Hello from AKCB!', type = 'success') {
+            // HCI Principle: Error Prevention & Recovery
+            // Remove existing toasts
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            
+            document.body.appendChild(toast);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+            
+            // Announce to screen readers
+            announceToScreenReader(message);
         }
         
         function testTTS() {
-            const text = "Hello! This is the AKCB Chatbot enhanced with native Android features.";
+            // HCI Principle: Natural Language Interaction
+            const button = event.target.closest('.feature-btn');
+            button.classList.add('loading');
+            
+            const message = "Hello! Welcome to the AKCB Digital Assistant. I'm here to help you with your banking needs using advanced voice technology and native mobile features.";
             
             if (window.AndroidTTS && window.AndroidTTS.isAvailable()) {
-                window.AndroidTTS.speak(text);
-                showToast('Native Android TTS activated!');
-            } else if (window.speechSynthesis) {
-                // Web Speech API fallback
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 0.9;
-                utterance.pitch = 1.1;
-                speechSynthesis.speak(utterance);
-                showToast('Web TTS activated!');
+                try {
+                    // Set optimal voice settings
+                    window.AndroidTTS.setLanguage('female-uk');
+                    window.AndroidTTS.setSpeechRate(0.9);
+                    window.AndroidTTS.setPitch(1.1);
+                    window.AndroidTTS.speak(message);
+                    showToast('Native voice system activated', 'success');
+                } catch (e) {
+                    fallbackTTS(message);
+                }
             } else {
-                showToast('TTS not available');
+                fallbackTTS(message);
+            }
+            
+            setTimeout(() => button.classList.remove('loading'), 1000);
+        }
+        
+        function fallbackTTS(message) {
+            if (window.speechSynthesis) {
+                try {
+                    window.speechSynthesis.cancel(); // Stop any current speech
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1.1;
+                    utterance.volume = 0.8;
+                    
+                    // Try to find a female UK English voice
+                    const voices = speechSynthesis.getVoices();
+                    const preferredVoice = voices.find(voice => 
+                        voice.lang.includes('en-GB') && voice.name.toLowerCase().includes('female')
+                    ) || voices.find(voice => voice.lang.includes('en-GB')) || voices[0];
+                    
+                    if (preferredVoice) utterance.voice = preferredVoice;
+                    
+                    speechSynthesis.speak(utterance);
+                    showToast('Web voice system activated', 'success');
+                } catch (e) {
+                    showToast('Voice system unavailable', 'error');
+                }
+            } else {
+                showToast('Voice features not supported', 'warning');
             }
         }
         
         function toggleScreenOn() {
+            // HCI Principle: Clear System State
+            const button = event.target.closest('.feature-btn');
+            const icon = button.querySelector('.feature-icon');
+            const label = button.querySelector('.feature-label');
+            
             screenOnEnabled = !screenOnEnabled;
             
             if (window.AndroidFeatures) {
-                window.AndroidFeatures.keepScreenOn(screenOnEnabled);
-                showToast(`Screen will ${screenOnEnabled ? 'stay on' : 'turn off normally'}`);
+                try {
+                    window.AndroidFeatures.keepScreenOn(screenOnEnabled);
+                    const status = screenOnEnabled ? 'enabled' : 'disabled';
+                    showToast(`Screen wake ${status}`, 'success');
+                    announceToScreenReader(`Screen will now ${screenOnEnabled ? 'stay awake' : 'sleep normally'}`);
+                } catch (e) {
+                    showToast('Screen control failed', 'error');
+                    screenOnEnabled = !screenOnEnabled; // Revert state
+                }
             } else {
-                showToast('Screen control not available in web browser');
+                const status = screenOnEnabled ? 'enabled' : 'disabled';
+                showToast(`Screen wake ${status} (web mode)`, 'warning');
             }
             
-            // Update button text
-            const btn = event.target.closest('.feature-btn');
-            btn.querySelector('.feature-icon').textContent = screenOnEnabled ? '🔆' : '💡';
+            // Update UI to reflect state
+            icon.textContent = screenOnEnabled ? '🔆' : '💡';
+            label.textContent = screenOnEnabled ? 'Wake On' : 'Display';
+            button.style.background = screenOnEnabled ? 
+                'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.15)';
         }
         
         function openMainChatbot() {
-            window.location.href = 'https://ai-chatbot-1-a596.onrender.com/';
+            // HCI Principle: Clear Navigation
+            const button = event.target.closest('.action-btn');
+            button.classList.add('loading');
+            
+            showToast('Opening main chatbot...', 'success');
+            announceToScreenReader('Navigating to main chatbot interface');
+            
+            setTimeout(() => {
+                window.location.href = 'https://ai-chatbot-1-a596.onrender.com/';
+            }, 1000);
         }
         
         function runAllTests() {
-            showToast('Running all tests...');
+            // HCI Principle: User Control & Batch Operations
+            if (isTestRunning) {
+                showToast('Tests already running', 'warning');
+                return;
+            }
             
-            setTimeout(() => testVibration(), 500);
-            setTimeout(() => testTTS(), 1500);
-            setTimeout(() => loadDeviceInfo(), 2500);
-            setTimeout(() => showToast('All tests completed!'), 3500);
+            isTestRunning = true;
+            const button = event.target.closest('.action-btn');
+            button.classList.add('loading');
+            button.disabled = true;
+            
+            showToast('Starting comprehensive system tests...', 'success');
+            announceToScreenReader('Running all feature tests');
+            
+            const tests = [
+                { name: 'Device Info', fn: () => loadDeviceInfo(), delay: 500 },
+                { name: 'Vibration', fn: () => testVibration(), delay: 1000 },
+                { name: 'Voice System', fn: () => testTTS(), delay: 2000 },
+                { name: 'Share System', fn: () => shareApp(), delay: 1000 },
+                { name: 'Theme Toggle', fn: () => toggleTheme(), delay: 1000 }
+            ];
+            
+            let currentTest = 0;
+            function runNextTest() {
+                if (currentTest < tests.length) {
+                    const test = tests[currentTest];
+                    showToast(`Testing: ${test.name}`, 'success');
+                    test.fn();
+                    currentTest++;
+                    setTimeout(runNextTest, test.delay);
+                } else {
+                    // All tests completed
+                    isTestRunning = false;
+                    button.classList.remove('loading');
+                    button.disabled = false;
+                    showToast('All tests completed successfully!', 'success');
+                    announceToScreenReader('All feature tests completed successfully');
+                }
+            }
+            
+            setTimeout(runNextTest, 500);
+        }
+        
+        // Utility Functions
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        function clearActiveStates() {
+            document.querySelectorAll('.loading').forEach(el => {
+                el.classList.remove('loading');
+            });
+            document.querySelectorAll('button:disabled').forEach(btn => {
+                btn.disabled = false;
+            });
+        }
+        
+        function announceToScreenReader(message) {
+            // Create temporary element for screen reader announcements
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = message;
+            
+            document.body.appendChild(announcement);
+            setTimeout(() => announcement.remove(), 2000);
+        }
+        
+        // Error Handling
+        window.addEventListener('error', function(event) {
+            console.error('Application error:', event.error);
+            showToast('An unexpected error occurred', 'error');
+        });
+        
+        // Service Worker Registration for PWA features
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registered successfully');
+                })
+                .catch(error => {
+                    console.log('ServiceWorker registration failed:', error);
+                });
         }
     </script>
 </body>

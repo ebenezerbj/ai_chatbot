@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chatbot Admin</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; margin: 0; padding: 24px; }
+      .card { max-width: 720px; margin: 0 auto; border: 1px solid #ddd; border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+      h1 { margin: 0 0 4px; font-size: 20px; }
+      .muted { color: #666; font-size: 12px; margin-bottom: 16px; }
+      .row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+      input[type="password"], input[type="text"] { flex: 1; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+      button { padding: 10px 14px; border: 0; border-radius: 8px; background: #3771e0; color: white; font-weight: 600; cursor: pointer; }
+      button:disabled { opacity: .6; cursor: not-allowed; }
+      pre { background: rgba(0,0,0,.05); padding: 12px; border-radius: 8px; overflow: auto; }
+      .ok { color: #0a7a2f; }
+      .err { color: #b00020; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>AI Chatbot Admin</h1>
+      <div class="muted">Token-gated tools for maintenance</div>
+
+      <section>
+        <h3>Reload Knowledge Base</h3>
+        <p class="muted">Calls POST /api/admin/reload-kb to reload a KB JSON file (default <code>data/kb.json</code>).</p>
+        <div class="row">
+          <input id="token" type="password" placeholder="Enter ADMIN_TOKEN" />
+        </div>
+        <div class="row">
+          <input id="filePath" type="text" value="data/kb.json" placeholder="KB file path (e.g., data/kb.json)" />
+          <button id="reloadBtn">Reload KB</button>
+        </div>
+        <div id="status" class="muted">Idle</div>
+        <pre id="output" hidden></pre>
+      </section>
+
+      <hr />
+
+      <section>
+        <h3>Test SMS Notification</h3>
+        <p class="muted">Calls POST /api/notify-test to send a handover SMS.</p>
+        <div class="row">
+          <input id="smsPhone" type="text" value="0243082750" placeholder="Phone number" />
+        </div>
+        <div class="row">
+          <input id="smsMessage" type="text" value="Test SMS from admin dashboard" placeholder="Message" />
+          <button id="smsBtn">Send Test SMS</button>
+        </div>
+        <div id="smsStatus" class="muted">Idle</div>
+        <pre id="smsOutput" hidden></pre>
+      </section>
+    </div>
+
+    <script>
+      const reloadBtn = document.getElementById('reloadBtn');
+      const tokenEl = document.getElementById('token');
+      const fileEl = document.getElementById('filePath');
+      const statusEl = document.getElementById('status');
+      const outEl = document.getElementById('output');
+
+      const smsBtn = document.getElementById('smsBtn');
+      const smsPhoneEl = document.getElementById('smsPhone');
+      const smsMessageEl = document.getElementById('smsMessage');
+      const smsStatusEl = document.getElementById('smsStatus');
+      const smsOutEl = document.getElementById('smsOutput');
+
+      async function reloadKB() {
+        const token = tokenEl.value.trim();
+        if (!token) {
+          statusEl.textContent = 'Provide ADMIN_TOKEN.';
+          statusEl.className = 'err';
+          return;
+        }
+        reloadBtn.disabled = true;
+        statusEl.textContent = 'Reloading...';
+        statusEl.className = '';
+        outEl.hidden = true;
+        outEl.textContent = '';
+        try {
+          const filePath = (fileEl.value || '').trim() || 'data/kb.json';
+          const res = await fetch('/api/admin/reload-kb', {
+            method: 'POST',
+            headers: { 'authorization': `Bearer ${token}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ filePath })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            statusEl.textContent = `Failed (${res.status})`;
+            statusEl.className = 'err';
+            outEl.hidden = false;
+            outEl.textContent = JSON.stringify(data || { error: 'Unknown error' }, null, 2);
+            return;
+          }
+          statusEl.textContent = 'Reloaded successfully';
+          statusEl.className = 'ok';
+          outEl.hidden = false;
+          outEl.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          statusEl.textContent = 'Network error';
+          statusEl.className = 'err';
+          outEl.hidden = false;
+          outEl.textContent = String(e);
+        } finally {
+          reloadBtn.disabled = false;
+        }
+      }
+
+      async function testSms() {
+        const token = tokenEl.value.trim();
+        if (!token) {
+          smsStatusEl.textContent = 'Provide ADMIN_TOKEN.';
+          smsStatusEl.className = 'err';
+          return;
+        }
+        smsBtn.disabled = true;
+        smsStatusEl.textContent = 'Sending...';
+        smsStatusEl.className = '';
+        smsOutEl.hidden = true;
+        smsOutEl.textContent = '';
+        try {
+          const phone = (smsPhoneEl.value || '').trim();
+          const message = (smsMessageEl.value || '').trim();
+          const res = await fetch('/api/notify-test', {
+            method: 'POST',
+            headers: { 'x-admin-token': token, 'content-type': 'application/json' },
+            body: JSON.stringify({ type: 'handover', phone, message, name: 'Admin Test' })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            smsStatusEl.textContent = `Failed (${res.status})`;
+            smsStatusEl.className = 'err';
+            smsOutEl.hidden = false;
+            smsOutEl.textContent = JSON.stringify(data || { error: 'Unknown error' }, null, 2);
+            return;
+          }
+          smsStatusEl.textContent = 'SMS request sent successfully';
+          smsStatusEl.className = 'ok';
+          smsOutEl.hidden = false;
+          smsOutEl.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          smsStatusEl.textContent = 'Network error';
+          smsStatusEl.className = 'err';
+          smsOutEl.hidden = false;
+          smsOutEl.textContent = String(e);
+        } finally {
+          smsBtn.disabled = false;
+        }
+      }
+
+      reloadBtn.addEventListener('click', reloadKB);
+      smsBtn.addEventListener('click', testSms);
+    </script>
+  </body>
+</html>
