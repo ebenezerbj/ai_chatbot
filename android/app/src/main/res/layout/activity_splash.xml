@@ -12,9 +12,10 @@
         android:id="@+id/logoImageView"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:src="@drawable/ic_chatbot_logo"
+        android:src="@drawable/ic_launcher_logo"
         android:contentDescription="@string/app_name"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="24dp"
+        android:scaleType="centerInside" />
 
     <TextView
         android:id="@+id/appNameTextView"

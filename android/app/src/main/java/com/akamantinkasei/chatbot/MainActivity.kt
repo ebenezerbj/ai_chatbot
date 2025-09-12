@@ -2,7 +2,9 @@ package com.akamantinkasei.chatbot
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.webkit.*
 import android.widget.Toast
@@ -59,7 +61,76 @@ class MainActivity : AppCompatActivity() {
             
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    return false // Let WebView handle all URLs
+                    val url = request?.url?.toString() ?: return false
+                    
+                    return when {
+                        // Handle phone calls
+                        url.startsWith("tel:") -> {
+                            try {
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse(url))
+                                startActivity(intent)
+                                true
+                            } catch (e: Exception) {
+                                Toast.makeText(this@MainActivity, "Cannot open phone dialer", Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                        }
+                        
+                        // Handle WhatsApp
+                        url.startsWith("whatsapp:") || url.startsWith("https://wa.me/") || url.startsWith("https://api.whatsapp.com/") -> {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                startActivity(intent)
+                                true
+                            } catch (e: Exception) {
+                                Toast.makeText(this@MainActivity, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                        }
+                        
+                        // Handle SMS
+                        url.startsWith("sms:") -> {
+                            try {
+                                val intent = Intent(Intent.ACTION_SENDTO, Uri.parse(url))
+                                startActivity(intent)
+                                true
+                            } catch (e: Exception) {
+                                Toast.makeText(this@MainActivity, "Cannot open SMS app", Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                        }
+                        
+                        // Handle email
+                        url.startsWith("mailto:") -> {
+                            try {
+                                val intent = Intent(Intent.ACTION_SENDTO, Uri.parse(url))
+                                startActivity(intent)
+                                true
+                            } catch (e: Exception) {
+                                Toast.makeText(this@MainActivity, "Cannot open email app", Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                        }
+                        
+                        // Handle external URLs that should open in browser
+                        url.startsWith("http://") || url.startsWith("https://") -> {
+                            // Only allow the chatbot domain to load in WebView
+                            if (url.contains("ai-chatbot-1-a596.onrender.com") || url.contains("localhost")) {
+                                false // Let WebView handle it
+                            } else {
+                                // Open external URLs in browser
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                    startActivity(intent)
+                                    true
+                                } catch (e: Exception) {
+                                    false // Fallback to WebView
+                                }
+                            }
+                        }
+                        
+                        else -> false // Let WebView handle other URLs
+                    }
                 }
                 
                 override fun onPageFinished(view: WebView?, url: String?) {
