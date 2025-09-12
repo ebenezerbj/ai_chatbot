@@ -6,17 +6,21 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.webkit.*
+import android.webkit.JavascriptInterface
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.akamantinkasei.chatbot.databinding.ActivityMainBinding
+import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     
     private lateinit var binding: ActivityMainBinding
+    private var textToSpeech: TextToSpeech? = null
     private val CHATBOT_URL = "https://ai-chatbot-1-a596.onrender.com/"
     private val LOCATION_PERMISSION_REQUEST = 1001
     private val AUDIO_PERMISSION_REQUEST = 1002
@@ -26,6 +30,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Initialize Text-to-Speech
+        textToSpeech = TextToSpeech(this, this)
         
         setupWebView()
         setupSwipeRefresh()
@@ -51,13 +58,21 @@ class MainActivity : AppCompatActivity() {
                 cacheMode = WebSettings.LOAD_DEFAULT
                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 
-                // Enable media playback
+                // Enable media playback and audio features
                 mediaPlaybackRequiresUserGesture = false
                 
                 // Modern web features
                 setSupportMultipleWindows(false)
                 setGeolocationEnabled(true)
+                
+                // Enable JavaScript interfaces for better API support
+                javaScriptCanOpenWindowsAutomatically = true
+                allowFileAccessFromFileURLs = true
+                allowUniversalAccessFromFileURLs = true
             }
+            
+            // Add JavaScript interface for TTS fallback
+            addJavascriptInterface(TTSJavaScriptInterface(), "AndroidTTS")
             
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -136,6 +151,57 @@ class MainActivity : AppCompatActivity() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     binding.swipeRefresh.isRefreshing = false
+                    
+                    // Inject JavaScript to enhance TTS support
+                    view?.evaluateJavascript("""
+                        (function() {
+                            // Check if Speech Synthesis API is available
+                            if (!window.speechSynthesis) {
+                                console.log('Speech Synthesis API not available, setting up fallback');
+                                
+                                // Create fallback speechSynthesis object
+                                window.speechSynthesis = {
+                                    speak: function(utterance) {
+                                        if (window.AndroidTTS && utterance.text) {
+                                            AndroidTTS.speak(utterance.text);
+                                        }
+                                    },
+                                    cancel: function() {
+                                        if (window.AndroidTTS) {
+                                            AndroidTTS.stop();
+                                        }
+                                    },
+                                    getVoices: function() {
+                                        return [];
+                                    }
+                                };
+                                
+                                // Create SpeechSynthesisUtterance constructor
+                                window.SpeechSynthesisUtterance = function(text) {
+                                    this.text = text || '';
+                                    this.voice = null;
+                                    this.volume = 1;
+                                    this.rate = 1;
+                                    this.pitch = 1;
+                                };
+                            } else {
+                                console.log('Speech Synthesis API is available');
+                            }
+                            
+                            // Add debug function for testing TTS
+                            window.testTTS = function(text) {
+                                text = text || 'Hello, this is a test of text to speech functionality.';
+                                if (window.speechSynthesis) {
+                                    var utterance = new SpeechSynthesisUtterance(text);
+                                    window.speechSynthesis.speak(utterance);
+                                } else if (window.AndroidTTS) {
+                                    AndroidTTS.speak(text);
+                                }
+                            };
+                            
+                            console.log('TTS enhancement script loaded');
+                        })();
+                    """.trimIndent(), null)
                 }
                 
                 override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
@@ -147,7 +213,7 @@ class MainActivity : AppCompatActivity() {
             
             webChromeClient = object : WebChromeClient() {
                 override fun onPermissionRequest(request: PermissionRequest?) {
-                    // Grant permissions for microphone, camera, location
+                    // Grant permissions for microphone, camera, location, and audio
                     request?.grant(request.resources)
                 }
                 
@@ -160,8 +226,15 @@ class MainActivity : AppCompatActivity() {
                 
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
                     consoleMessage?.let {
-                        println("WebView Console: ${it.message()}")
+                        println("WebView Console [${it.messageLevel()}]: ${it.message()} at ${it.sourceId()}:${it.lineNumber()}")
                     }
+                    return true
+                }
+                
+                override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+                    // Handle JavaScript alerts that might be related to TTS errors
+                    Toast.makeText(this@MainActivity, message ?: "JavaScript Alert", Toast.LENGTH_SHORT).show()
+                    result?.confirm()
                     return true
                 }
             }
@@ -236,7 +309,43 @@ class MainActivity : AppCompatActivity() {
     }
     
     override fun onDestroy() {
+        textToSpeech?.let {
+            it.stop()
+            it.shutdown()
+        }
         binding.webView.destroy()
         super.onDestroy()
+    }
+    
+    // TextToSpeech.OnInitListener implementation
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            textToSpeech?.let { tts ->
+                val result = tts.setLanguage(Locale.US)
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Toast.makeText(this, "TTS Language not supported", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(this, "TTS Initialization failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    // JavaScript Interface for TTS fallback
+    inner class TTSJavaScriptInterface {
+        @JavascriptInterface
+        fun speak(text: String) {
+            textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+        
+        @JavascriptInterface
+        fun stop() {
+            textToSpeech?.stop()
+        }
+        
+        @JavascriptInterface
+        fun isAvailable(): Boolean {
+            return textToSpeech != null
+        }
     }
 }
