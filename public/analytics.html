@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot Analytics Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 2em; }
+    h1 { color: #333; }
+    .metrics { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 2em; max-width: 600px; margin: auto; }
+    .metric { margin-bottom: 1em; }
+    .metric span { font-weight: bold; color: #0077cc; }
+    .provider-list { margin-top: 1em; }
+    .provider-list li { margin-bottom: 0.5em; }
+    .latency { color: #666; font-size: 0.95em; }
+    .auth { margin-bottom: 2em; }
+  </style>
+</head>
+<body>
+  <h1>Chatbot Analytics Dashboard</h1>
+  <div class="auth">
+    <label for="token">Admin Token:</label>
+    <input type="password" id="token" placeholder="Enter admin token">
+    <button onclick="loadAnalytics()">Load Analytics</button>
+  </div>
+  <div class="metrics" id="metrics">
+    <p>Enter your admin token and click "Load Analytics".</p>
+  </div>
+  <script>
+    async function loadAnalytics() {
+      const token = document.getElementById('token').value;
+      const metricsDiv = document.getElementById('metrics');
+      metricsDiv.innerHTML = '<p>Loading...</p>';
+      try {
+        const res = await fetch('/api/analytics', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) {
+          metricsDiv.innerHTML = '<p style="color:red;">Unauthorized or error loading analytics.</p>';
+          return;
+        }
+        const data = await res.json();
+        metricsDiv.innerHTML = `
+          <div class="metric">Total Conversations: <span>${data.totalConversations}</span></div>
+          <div class="metric">Total Messages: <span>${data.totalMessages}</span></div>
+          <div class="metric">RAG Queries: <span>${data.ragQueries}</span></div>
+          <div class="metric">RAG Matches: <span>${data.ragMatches}</span></div>
+          <div class="metric">Handovers Suggested: <span>${data.handoversSuggested}</span></div>
+          <div class="metric">Handovers Completed: <span>${data.handoversCompleted}</span></div>
+          <div class="metric latency">Avg Latency (ms): <span>${avgLatency(data.latencies)}</span></div>
+          <div class="metric">LLM Provider Usage:</div>
+          <ul class="provider-list">
+            ${Object.entries(data.providerCounts).map(([name, count]) => `<li>${name}: <span>${count}</span></li>`).join('')}
+          </ul>
+        `;
+      } catch (e) {
+        metricsDiv.innerHTML = '<p style="color:red;">Error loading analytics.</p>';
+      }
+    }
+    function avgLatency(arr) {
+      if (!arr || !arr.length) return 'N/A';
+      return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+    }
+  </script>
+</body>
+</html>

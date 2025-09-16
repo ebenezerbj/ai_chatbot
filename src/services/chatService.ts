@@ -4,11 +4,11 @@ import { SYSTEM_PERSONA } from '../hci/persona';
 import { escalationHint, postProcessAssistant, safetyGuardUserInput } from '../hci/safety';
 import { adviceDisclaimer, securityReminder } from '../hci/templates';
 import { retrieveKB } from '../knowledge/kb';
+import { analyticsService } from './analyticsService';
 
 export class ChatService {
   private provider: LLMProvider;
   private sessions: Map<string, Session> = new Map();
-  private metrics = { totalTurns: 0, lastLatencyMs: 0 };
 
   constructor(provider: LLMProvider) {
     this.provider = provider;
@@ -22,6 +22,7 @@ export class ChatService {
       history: []
     });
     this.sessions.set(session.id, session);
+    analyticsService.increment('totalConversations');
     return session;
   }
 
@@ -32,6 +33,9 @@ export class ChatService {
   async sendMessage(sessionId: string, userText: string): Promise<{ reply: string; session: Session; suggestHandover?: boolean }>{
     const session = this.sessions.get(sessionId);
     if (!session) throw new Error('Session not found');
+
+    analyticsService.increment('totalMessages');
+    analyticsService.trackProvider(this.provider);
 
     const guard = safetyGuardUserInput(userText);
     const userMsg: Message = {
@@ -45,7 +49,11 @@ export class ChatService {
   const messages = session.history.map((m: Message) => ({ role: m.role, content: m.content }));
 
     // Retrieve optional product snippets for grounding
+    analyticsService.increment('ragQueries');
     const snippets = retrieveKB(userText);
+    if (snippets.length > 0) {
+      analyticsService.increment('ragMatches', snippets.length);
+    }
     console.log(`[DEBUG] Query: "${userText}", Found ${snippets.length} KB matches:`, snippets.map(s => s.id));
     const kbContext = snippets.length
       ? (
@@ -70,6 +78,7 @@ export class ChatService {
     });
   } catch (error: any) {
     console.log('[ChatService] Provider error, triggering handover:', error?.message || error);
+    analyticsService.increment('handoversSuggested');
     // If the AI provider fails, immediately suggest handover
     const assistantMsg: Message = {
       id: uuidv4(),
@@ -86,8 +95,7 @@ export class ChatService {
     };
   }
   const t1 = Date.now();
-  this.metrics.totalTurns += 1;
-  this.metrics.lastLatencyMs = t1 - t0;
+  analyticsService.trackLatency(t1 - t0);
 
   const processed = postProcessAssistant(response);
 
@@ -167,16 +175,13 @@ export class ChatService {
   
   let reply;
   if (isRespondingYesToHandover) {
-    // User said yes to handover - acknowledge and let frontend handle it
     reply = "Perfect! I'll connect you with a customer representative right away.";
   } else if (isRespondingNoToHandover) {
-    // User said no to handover - acknowledge and offer continued assistance
     reply = "No problem! I'm here to help with any questions about our products, services, branch locations, and hours. Feel free to ask me anything else, or you can always request to speak with a representative later if needed.";
   } else if (suggestHandover && !alreadyAskedHandover && !lastWasHandover) {
-    // Suggest handover for unresolved queries
+    analyticsService.increment('handoversSuggested');
     reply = `I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?`;
   } else {
-    // Normal response - use original text with any extras
     reply = [processed.text, ...extra].join('\n\n');
   }
 
@@ -184,6 +189,6 @@ export class ChatService {
   }
 
   getMetrics() {
-    return { ...this.metrics };
+    return analyticsService.getAnalytics();
   }
 }

@@ -21,6 +21,9 @@ import { join } from 'path';
 import * as https from 'https';
 import { ChatRequestSchema, NearestBranchSchema } from './core/validation';
 import { resolvePlusCode, findNearestBranch, mapsUrlFromLatLng } from './geo/branches';
+import { getRagResponse } from './chat/ragChain';
+import { createProvider } from './providers/providerFactory';
+import { analyticsService } from './services/analyticsService';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -110,7 +113,6 @@ app.use(helmet({
 }));
 app.use(pinoHttp({
   logger,
-  genReqId: (req: any) => (req.headers['x-request-id'] as string) || undefined,
   customLogLevel: (_req: any, res: any, err: any) => (err || res.statusCode >= 500 ? 'error' : 'info'),
   customSuccessMessage: (req: any, res: any) => `${req.method} ${req.url} ${res.statusCode}`
 }));
@@ -131,14 +133,8 @@ const handoverLimiter = rateLimit({
 });
 
 // Choose provider
-let provider;
-if (process.env.OPENAI_API_KEY) {
-  provider = new OpenAIProvider(process.env.OPENAI_API_KEY);
-  logger.info('Using OpenAI provider');
-} else {
-  provider = new MockProvider();
-  logger.warn('OPENAI_API_KEY not set, using Mock provider');
-}
+const provider = createProvider();
+logger.info(`Using ${provider.name} provider`);
 
 const chat = new ChatService(provider);
 // Optional TTS client (OpenAI)
@@ -211,6 +207,13 @@ app.post('/api/chat', async (req: Request, res: any) => {
       return res.status(400).json({ error: 'Invalid request' });
     }
     const { sessionId, message } = parsed.data;
+
+    // Simple keyword detection to decide if we should use RAG
+    if (message.toLowerCase().includes("product")) {
+        const ragResponse = await getRagResponse(message);
+        return res.json({ reply: ragResponse, suggestHandover: false });
+    }
+
   // Basic structured logging
   try { (req as any).log?.info({ sessionId, msgLen: message.length }, 'chat:request'); } catch {}
     const result = await chat.sendMessage(sessionId, message);
@@ -451,6 +454,7 @@ function escapeForSSML(s: string): string {
   return s.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' } as any)[ch]);
 }
 
+    analyticsService.increment('handoversCompleted');
 // Try local keyless TTS with espeak-ng / espeak (WAV output)
 async function tryEspeakTTS(text: string, langHint?: string): Promise<Buffer | null> {
   const hint = (langHint || '').toLowerCase();
@@ -506,6 +510,16 @@ app.get('/api/metrics', (_req: Request, res: any) => {
   });
 });
 
+// Admin: analytics endpoint
+app.get('/api/analytics', (req: Request, res: any) => {
+  const auth = ((req.headers as any)['authorization'] as string) || '';
+  const token = (process.env.ADMIN_TOKEN as string) || '';
+  if (!token || !auth.startsWith('Bearer ') || auth.slice(7) !== token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  res.json(analyticsService.getAnalytics());
+});
+
 // Admin: reload KB from JSON file
 // Body: { filePath: string }
 // Security: simple bearer token via ADMIN_TOKEN env
@@ -528,6 +542,11 @@ app.post('/api/admin/reload-kb', async (req: Request, res: any) => {
 });
 
 app.use(express.static('public'));
+// Serve analytics dashboard HTML at /analytics
+// (Already imported Request, Response at top)
+app.get('/analytics', (_req: any, res: any) => {
+  res.sendFile(require('path').join(__dirname, '../public/analytics.html'));
+});
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
