@@ -113,6 +113,7 @@ app.use(helmet({
 }));
 app.use(pinoHttp({
   logger,
+  genReqId: (req: any) => (req.headers['x-request-id'] as string) || undefined,
   customLogLevel: (_req: any, res: any, err: any) => (err || res.statusCode >= 500 ? 'error' : 'info'),
   customSuccessMessage: (req: any, res: any) => `${req.method} ${req.url} ${res.statusCode}`
 }));
@@ -542,11 +543,6 @@ app.post('/api/admin/reload-kb', async (req: Request, res: any) => {
 });
 
 app.use(express.static('public'));
-// Serve analytics dashboard HTML at /analytics
-// (Already imported Request, Response at top)
-app.get('/analytics', (_req: any, res: any) => {
-  res.sendFile(require('path').join(__dirname, '../public/analytics.html'));
-});
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
