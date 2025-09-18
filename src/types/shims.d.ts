@@ -5,7 +5,6 @@ declare module 'zod';
 declare module 'openai';
 declare module 'openai/resources/chat/completions';
 declare module 'uuid';
-declare module 'express';
 declare module 'cors';
 declare module 'helmet';
 declare module 'express-rate-limit';

@@ -1,11 +1,11 @@
-import { MilvusClient, DataType, InsertReq } from '@zilliz/milvus2-sdk-node';
+import { MilvusClient, DataType, InsertReq, DeleteReq } from '@zilliz/milvus2-sdk-node';
 
 const milvus = new MilvusClient({
-  address: 'localhost:19530',
+  address: process.env.MILVUS_ADDRESS || 'localhost:19530',
 });
 
-const COLLECTION_NAME = 'kb_embeddings';
-const VECTOR_DIM = 768; // Adjust based on your embedding model
+const COLLECTION_NAME = process.env.MILVUS_KB_COLLECTION || 'kb_embeddings';
+const VECTOR_DIM = Number(process.env.EMBEDDING_DIM || 768); // Adjust based on your embedding model
 
 async function createKBCollection() {
   // Define schema: id, embedding vector, and optional metadata
@@ -28,6 +28,12 @@ async function createKBCollection() {
       description: 'KB text content',
       data_type: DataType.VarChar,
       type_params: { max_length: '1024' },
+    },
+    {
+      name: 'kb_id',
+      description: 'KB entry id (as string)',
+      data_type: DataType.VarChar,
+      type_params: { max_length: '64' },
     },
   ];
 
@@ -66,6 +72,7 @@ async function insertKBEntries(entries: KBEntry[]): Promise<void> {
     collection_name: COLLECTION_NAME,
     fields_data: entries.map(entry => ({
       content: entry.content,
+      kb_id: (entry as any).kb_id,
       embedding: entry.embedding,
     })),
   };
@@ -73,6 +80,41 @@ async function insertKBEntries(entries: KBEntry[]): Promise<void> {
   const res = await milvus.insert(insertData);
   console.log('Inserted entries successfully');
 }
+
+async function upsertKBEntry(kbId: string, content: string, embedding: number[]): Promise<void> {
+  // Delete existing entries with same kb_id (safe upsert)
+  try {
+  await milvus.delete({ collection_name: COLLECTION_NAME, filter: `kb_id == "${kbId}"` } as any);
+  } catch (e) {
+    // ignore if delete fails (e.g., none exist)
+  }
+
+  const insertData: InsertReq = {
+    collection_name: COLLECTION_NAME,
+    fields_data: [
+      {
+        content,
+        kb_id: kbId,
+        embedding,
+      },
+    ],
+  };
+
+  await milvus.insert(insertData);
+  // flush to make data queryable
+  await milvus.flush({ collection_names: [COLLECTION_NAME] });
+}
+
+async function deleteKBEntriesByKbId(kbId: string): Promise<void> {
+  try {
+  await milvus.delete({ collection_name: COLLECTION_NAME, filter: `kb_id == "${kbId}"` } as any);
+    await milvus.flush({ collection_names: [COLLECTION_NAME] });
+  } catch (e) {
+    console.warn('Milvus delete failed', e);
+  }
+}
+
+export { createKBCollection, insertKBEntries, searchSimilarContent, upsertKBEntry, deleteKBEntriesByKbId };
 
 async function searchSimilarContent(queryEmbedding: number[], limit: number = 5): Promise<Array<{ content: string; similarity: number }>> {
   const searchRes = await milvus.search({

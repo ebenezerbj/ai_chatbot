@@ -3,6 +3,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { connectDB } from './config/db';
+import kbRoutes from './routes/kb';
 import nodemailer from 'nodemailer';
 import { notifyEscalation, notifyHandover, getHandoverRecipientCount, getSmsProvider, previewHandoverRecipients } from './notifications';
 import pino from 'pino';
@@ -60,6 +62,12 @@ try {
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: '*'}));
+
+// Connect to MongoDB
+connectDB().catch(console.error);
+
+// KB management routes
+app.use('/api/kb', kbRoutes);
 
 // Configure which sites may embed this app in an <iframe>
 // Provide a comma-separated list in FRAME_ANCESTORS env (e.g., "https://example.com, https://www.example.org")
