@@ -451,6 +451,18 @@
     "answer": "Our Board Chairman is Richard Owusu Afriyie (as noted at the 2023 AGM)."
   },
   {
+    "id": "ejura_branch_coordinates",
+    "product": "Branch",
+    "patterns": [
+      "ejura.*(coordinates|gps|latitude|longitude|location|position)",
+      "(coordinates|gps|latitude|longitude|location|position).*ejura",
+      "where.*ejura.*exactly",
+      "ejura.*7\\.38384|7\\.38384.*ejura",
+      "ejura.*-1\\.35578|-1\\.35578.*ejura"
+    ],
+    "answer": "Ejura Branch GPS Coordinates:\n- **Latitude**: 7.38384\n- **Longitude**: -1.35578\n- **Address**: Ejura, Ashanti Region\n- **Phone**: +233 20 205 5172\n\nYou can use these coordinates to navigate directly to our Ejura branch location for banking services and customer support."
+  },
+  {
     "id": "concise_generic",
     "product": "General",
     "patterns": ["who", "what", "where", "when", "how", "tell me about", "info", "details", "explain", "summary", "overview", "general", "faq", "help", "support", "assist", "question", "ask"],

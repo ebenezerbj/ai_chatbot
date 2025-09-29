@@ -166,6 +166,20 @@ app.get('/api/health', (_req: Request, res: any) => {
   res.json({ status: 'ok', provider: provider.name });
 });
 
+// Simple test endpoint for debugging connectivity
+app.get('/api/test', (_req: Request, res: any) => {
+  res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });
+});
+
+// Test KB endpoint without authentication for debugging
+app.post('/api/test-kb', async (req: any, res: any) => {
+  try {
+    res.json({ message: 'KB endpoint accessible', body: req.body, timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ error: 'Test KB endpoint failed' });
+  }
+});
+
 // Lightweight diagnostics endpoint to test notifications
 // If ADMIN_TOKEN is set, require header x-admin-token to match
 app.all('/api/notify-test', async (req: any, res: any) => {
@@ -553,6 +567,26 @@ app.post('/api/admin/reload-kb', async (req: Request, res: any) => {
 app.use(express.static('public'));
 
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => {
+
+// Add better error handling for server startup
+const server = app.listen(port, () => {
   logger.info(`Server listening on http://localhost:${port}`);
+  logger.info('Server startup complete');
+}).on('error', (err: any) => {
+  logger.error({ err }, 'Server failed to start');
+  process.exit(1);
+});
+
+// Handle uncaught exceptions and rejections
+process.on('uncaughtException', (err: any) => {
+  logger.error({ err }, 'Uncaught exception');
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+process.on('unhandledRejection', (reason: any, promise: any) => {
+  logger.error({ reason, promise }, 'Unhandled rejection');
+  // Don't exit on unhandled rejection - just log it
+  // This will prevent Milvus connection errors from crashing the server
 });

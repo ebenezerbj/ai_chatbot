@@ -1,8 +1,16 @@
 import { MilvusClient, DataType, InsertReq, DeleteReq } from '@zilliz/milvus2-sdk-node';
 
-const milvus = new MilvusClient({
-  address: process.env.MILVUS_ADDRESS || 'localhost:19530',
-});
+let milvus: MilvusClient | null = null;
+
+// Lazy initialization of Milvus client
+function getMilvusClient(): MilvusClient {
+  if (!milvus) {
+    milvus = new MilvusClient({
+      address: process.env.MILVUS_ADDRESS || 'localhost:19530',
+    });
+  }
+  return milvus;
+}
 
 const COLLECTION_NAME = process.env.MILVUS_KB_COLLECTION || 'kb_embeddings';
 const VECTOR_DIM = Number(process.env.EMBEDDING_DIM || 768); // Adjust based on your embedding model
@@ -37,14 +45,15 @@ async function createKBCollection() {
     },
   ];
 
+  const client = getMilvusClient();
   // Create collection
-  const res = await milvus.createCollection({
+  const res = await client.createCollection({
     collection_name: COLLECTION_NAME,
     fields,
   });
 
   // Create index for vector field
-  await milvus.createIndex({
+  await client.createIndex({
     collection_name: COLLECTION_NAME,
     field_name: 'embedding',
     params: {
@@ -55,7 +64,7 @@ async function createKBCollection() {
   });
 
   // Load collection into memory
-  await milvus.loadCollection({
+  await client.loadCollection({
     collection_name: COLLECTION_NAME,
   });
 
@@ -68,6 +77,7 @@ interface KBEntry {
 }
 
 async function insertKBEntries(entries: KBEntry[]): Promise<void> {
+  const client = getMilvusClient();
   const insertData: InsertReq = {
     collection_name: COLLECTION_NAME,
     fields_data: entries.map(entry => ({
@@ -77,14 +87,15 @@ async function insertKBEntries(entries: KBEntry[]): Promise<void> {
     })),
   };
 
-  const res = await milvus.insert(insertData);
+  const res = await client.insert(insertData);
   console.log('Inserted entries successfully');
 }
 
 async function upsertKBEntry(kbId: string, content: string, embedding: number[]): Promise<void> {
+  const client = getMilvusClient();
   // Delete existing entries with same kb_id (safe upsert)
   try {
-  await milvus.delete({ collection_name: COLLECTION_NAME, filter: `kb_id == "${kbId}"` } as any);
+    await client.delete({ collection_name: COLLECTION_NAME, filter: `kb_id == "${kbId}"` } as any);
   } catch (e) {
     // ignore if delete fails (e.g., none exist)
   }
@@ -100,15 +111,16 @@ async function upsertKBEntry(kbId: string, content: string, embedding: number[])
     ],
   };
 
-  await milvus.insert(insertData);
+  await client.insert(insertData);
   // flush to make data queryable
-  await milvus.flush({ collection_names: [COLLECTION_NAME] });
+  await client.flush({ collection_names: [COLLECTION_NAME] });
 }
 
 async function deleteKBEntriesByKbId(kbId: string): Promise<void> {
+  const client = getMilvusClient();
   try {
-  await milvus.delete({ collection_name: COLLECTION_NAME, filter: `kb_id == "${kbId}"` } as any);
-    await milvus.flush({ collection_names: [COLLECTION_NAME] });
+    await client.delete({ collection_name: COLLECTION_NAME, filter: `kb_id == "${kbId}"` } as any);
+    await client.flush({ collection_names: [COLLECTION_NAME] });
   } catch (e) {
     console.warn('Milvus delete failed', e);
   }
@@ -117,7 +129,8 @@ async function deleteKBEntriesByKbId(kbId: string): Promise<void> {
 export { createKBCollection, insertKBEntries, searchSimilarContent, upsertKBEntry, deleteKBEntriesByKbId };
 
 async function searchSimilarContent(queryEmbedding: number[], limit: number = 5): Promise<Array<{ content: string; similarity: number }>> {
-  const searchRes = await milvus.search({
+  const client = getMilvusClient();
+  const searchRes = await client.search({
     collection_name: COLLECTION_NAME,
     vector: queryEmbedding,
     limit,
