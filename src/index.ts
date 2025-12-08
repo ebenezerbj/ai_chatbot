@@ -194,6 +194,13 @@ app.post('/api/chat', async (req: Request, res: Response) => {
   }
 });
 
+// Session endpoint - for frontend compatibility
+app.post('/api/session', (req: Request, res: Response) => {
+  console.log('[Session] Creating session');
+  const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  res.json({ sessionId });
+});
+
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
   console.log('[Health] Request received');
