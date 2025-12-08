@@ -21,7 +21,7 @@ app.use(express.static(publicPath));
 // API info endpoint
 app.get('/api', (req: Request, res: Response) => {
   res.json({
-    name: 'AK Commerzbank Chatbot',
+    name: 'AKCB Chatbot - Amantin and Kasei Community Bank PLC',
     status: 'running',
     version: '1.0.0',
     endpoints: {
@@ -178,7 +178,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         {
           model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'You are a helpful banking assistant for AK Commerzbank.' },
+            { role: 'system', content: 'You are a helpful banking assistant for Amantin and Kasei Community Bank PLC (AKCB), a community bank in Ghana.' },
             { role: 'user', content: message }
           ],
           max_tokens: 150,
