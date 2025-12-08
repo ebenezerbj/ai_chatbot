@@ -1663,6 +1663,8 @@
           data = await makeCall();
         }
         hideTyping();
+        console.log('[DEBUG] Response data:', JSON.stringify(data));
+        console.log('[DEBUG] data?.reply:', data?.reply);
         if (data?.reply) {
           addMsg('assistant', data.reply);
           try {
