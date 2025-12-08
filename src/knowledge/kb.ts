@@ -377,5 +377,7 @@ export async function loadKBFromFile(filePath: string) {
     questionPatterns: d.patterns.map((p) => new RegExp(p, 'i')),
     answer: d.answer
   }));
+  console.log(`[KB] Loaded ${loaded.length} KB entries from ${filePath}`);
   setKB(loaded);
+  console.log(`[KB] Current KB now has ${currentKB.length} entries`);
 }

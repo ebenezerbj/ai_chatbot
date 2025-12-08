@@ -175,5 +175,5 @@ async function example() {
   }
 }
 
-// Run example
-example().catch(console.error);
+// Run example (commented out to prevent auto-connection at module load)
+// example().catch(console.error);
