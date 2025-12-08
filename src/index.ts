@@ -163,8 +163,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       });
     }
 
-    // No KB match, try OpenAI
-    console.log('[Chat] No KB match, trying OpenAI...');
+    // No KB match, try OpenAI with KB context
+    console.log('[Chat] No KB match, trying OpenAI with KB context...');
 
     // Try OpenAI if configured
     const apiKey = process.env.OPENAI_API_KEY;
@@ -175,18 +175,38 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       });
     }
 
-    // Call OpenAI
+    // Build KB context summary for OpenAI
+    const kbContext = kb.map(entry => {
+      const patterns = Array.isArray(entry.patterns) ? entry.patterns.join(', ') : entry.pattern || '';
+      return `Topic: ${entry.product}\nInfo: ${entry.answer || entry.response || ''}`;
+    }).join('\n\n');
+
+    // Call OpenAI with KB context
     try {
+      const systemPrompt = `You are Ama, a helpful banking assistant for AKCB - Amantin and Kasei Community Bank PLC, a community bank in Ghana.
+
+IMPORTANT: Use the knowledge base below to answer questions. If the user asks about staff, branches, products, or services listed in the KB, provide that specific information.
+
+KNOWLEDGE BASE:
+${kbContext}
+
+Instructions:
+- Always use information from the knowledge base when relevant
+- Be concise and helpful
+- If asked about someone by name (like "Debrah Michael" or "Eric Nanjor"), check if they're in the KB and provide their role
+- For queries about "head of [department]", "CEO", or staff positions, use the KB information
+- If information isn't in the KB, politely say you don't have that specific information and suggest contacting the bank`;
+
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
           model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'You are a helpful banking assistant for Amantin and Kasei Community Bank PLC (AKCB), a community bank in Ghana.' },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: message }
           ],
-          max_tokens: 150,
-          temperature: 0.7
+          max_tokens: 300,
+          temperature: 0.3
         },
         {
           headers: {
