@@ -13,10 +13,14 @@ const port = Number(process.env.PORT || 4000);
 // Middleware
 app.use(express.json());
 
-// Knowledge Base interface
+// KB Entry interface
 interface KBEntry {
-  pattern: string;
-  response: string;
+  id?: string;
+  product?: string;
+  patterns?: string[];
+  answer?: string;
+  response?: string; // fallback
+  pattern?: string; // fallback
 }
 
 let kb: KBEntry[] = [];
@@ -35,37 +39,80 @@ function loadKB() {
 }
 
 // Retrieve KB matches
-function retrieveKB(query: string): string[] {
+function retrieveKB(query: string | undefined): string[] {
   const matches: string[] = [];
+  console.log(`[KB] retrieveKB called with: query="${query}", type=${typeof query}`);
+  if (!query) {
+    console.log('[KB] Query is undefined/falsy, returning empty');
+    return [];
+  }
   const lowerQuery = query.toLowerCase();
   
   for (const entry of kb) {
-    const patternLower = entry.pattern.toLowerCase();
-    if (lowerQuery.includes(patternLower) || patternLower.includes(lowerQuery)) {
-      matches.push(entry.response);
+    // Handle both formats: patterns array and single pattern string
+    let entryPatterns: string[] = [];
+    
+    if (Array.isArray(entry.patterns)) {
+      entryPatterns = entry.patterns;
+    } else if (typeof entry.pattern === 'string') {
+      entryPatterns = [entry.pattern];
+    }
+    
+    // Check if any pattern matches
+    for (const pattern of entryPatterns) {
+      const patternLower = pattern.toLowerCase();
+      if (lowerQuery.includes(patternLower) || patternLower.includes(lowerQuery)) {
+        const response = entry.answer || entry.response || '';
+        if (response) {
+          matches.push(response);
+        }
+        break; // Found a match in this entry, move to next entry
+      }
     }
   }
   
+  console.log(`[KB] Found ${matches.length} matches`);
   return matches;
 }
 
 // Chat endpoint
 app.post('/api/chat', async (req: Request, res: Response) => {
   try {
-    const { message } = req.body;
+    // Handle both req.body and raw body parsing
+    let message: string | undefined;
     
-    console.log(`[Chat] Request received for message: "${message}"`);
+    if (typeof req.body === 'string') {
+      try {
+        const parsed = JSON.parse(req.body);
+        message = parsed.message;
+      } catch (e) {
+        message = req.body;
+      }
+    } else if (req.body && typeof req.body === 'object') {
+      message = (req.body as any).message;
+    }
+    
+    console.log('[Chat] Received message:', message);
     
     if (!message) {
+      console.log('[Chat] No message provided, returning 400');
       return res.status(400).json({ error: 'Message required' });
     }
     
     // Get KB context
-    const kbMatches = retrieveKB(message);
-    console.log(`[Chat] KB matches: ${kbMatches.length}`);
+    let kbMatches: string[] = [];
+    console.log(`[Chat] Before KB check - message="${message}", typeof=${typeof message}, truthy=${!!message}`);
+    if (message) {
+      console.log('[Chat] Calling retrieveKB...');
+      kbMatches = retrieveKB(message);
+      console.log(`[Chat] KB matches found: ${kbMatches.length}`);
+    } else {
+      console.log('[Chat] Message is falsy, skipping KB');
+    }
 
-    // If KB has matches, use those
+    // If KB has matches, return those
     if (kbMatches.length > 0) {
+      console.log('[Chat] Returning KB response');
       const response = kbMatches[0];
       return res.json({ 
         response,
@@ -73,6 +120,9 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         kbMatches: kbMatches.length
       });
     }
+
+    // No KB match, try OpenAI
+    console.log('[Chat] No KB match, trying OpenAI...');
 
     // Try OpenAI if configured
     const apiKey = process.env.OPENAI_API_KEY;
@@ -120,6 +170,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     }
   } catch (err: any) {
     console.error('[Chat] Error:', err.message);
+    console.error('[Chat] Stack:', err.stack);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
