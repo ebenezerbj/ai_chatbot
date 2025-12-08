@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "rm -rf dist 2>/dev/null; tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "echo 'No linter configured yet'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
