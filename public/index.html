@@ -2004,6 +2004,7 @@
 
     // Hide "Send" text on smaller screens
     function adjustSendButton() {
+        if (!sendButtonText) return; // Guard against null
         if (window.innerWidth <= 768) {
             sendButtonText.style.display = 'none';
         } else {
