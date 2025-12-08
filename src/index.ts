@@ -13,6 +13,20 @@ const port = Number(process.env.PORT || 4000);
 // Middleware
 app.use(express.json());
 
+// Root endpoint
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    name: 'AK Commerzbank Chatbot',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      chat: 'POST /api/chat',
+      health: 'GET /api/health'
+    },
+    message: 'Send a POST request to /api/chat with {"message": "your question"}'
+  });
+});
+
 // KB Entry interface
 interface KBEntry {
   id?: string;
