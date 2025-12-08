@@ -220,6 +220,51 @@ app.post('/api/session', (req: Request, res: Response) => {
   res.json({ sessionId });
 });
 
+// OpenAI Text-to-Speech endpoint
+app.post('/api/tts', async (req: Request, res: Response) => {
+  try {
+    const { text } = req.body;
+    
+    if (!text) {
+      return res.status(400).json({ error: 'Text required' });
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: 'TTS service not configured' });
+    }
+
+    console.log('[TTS] Generating speech for text:', text.substring(0, 50));
+
+    // Call OpenAI TTS API
+    const response = await axios.post(
+      'https://api.openai.com/v1/audio/speech',
+      {
+        model: 'tts-1',
+        voice: 'nova', // Female voice, can be: alloy, echo, fable, onyx, nova, shimmer
+        input: text,
+        speed: 1.0
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        responseType: 'arraybuffer'
+      }
+    );
+
+    console.log('[TTS] Speech generated successfully');
+    
+    // Return the audio file
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(Buffer.from(response.data));
+  } catch (error: any) {
+    console.error('[TTS] Error:', error.message);
+    res.status(500).json({ error: 'Failed to generate speech' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
   console.log('[Health] Request received');

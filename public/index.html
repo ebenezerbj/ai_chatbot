@@ -1237,10 +1237,35 @@
           await audio.play();
           return;
         } catch (e) {
-          // Fallback to browser TTS
+          console.error('Server TTS failed:', e);
         }
       }
-      // Browser TTS path
+      
+      // Use OpenAI TTS via backend
+      try {
+        stopSpeaking();
+        const resp = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: clean })
+        });
+        
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          audio.onerror = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          currentUtterance = { kind: 'audio', audio };
+          updateTTSButtons();
+          await audio.play();
+          return;
+        }
+      } catch (e) {
+        console.error('OpenAI TTS failed:', e);
+      }
+      
+      // Last resort: browser TTS fallback
       stopSpeaking();
       const utter = new SpeechSynthesisUtterance(clean);
       const v = pickVoice();

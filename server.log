@@ -1,0 +1,35 @@
+[KB] Loaded 59 entries
+✓ Server listening on http://localhost:4000
+✓ KB: 59 entries loaded
+✓ OpenAI: Configured
+[Chat] Received message: what are your branch locations
+[Chat] Before KB check - message="what are your branch locations", typeof=string, truthy=true
+[Chat] Calling retrieveKB...
+[KB] retrieveKB called with: query="what are your branch locations", type=string
+[KB] Found 1 matches
+[Chat] KB matches found: 1
+[Chat] Returning KB response
+[Chat] Received message: what is the capital of France
+[Chat] Before KB check - message="what is the capital of France", typeof=string, truthy=true
+[Chat] Calling retrieveKB...
+[KB] retrieveKB called with: query="what is the capital of France", type=string
+[KB] Found 1 matches
+[Chat] KB matches found: 1
+[Chat] Returning KB response
+[Chat] Received message: tell me a funny joke about banking
+[Chat] Before KB check - message="tell me a funny joke about banking", typeof=string, truthy=true
+[Chat] Calling retrieveKB...
+[KB] retrieveKB called with: query="tell me a funny joke about banking", type=string
+[KB] Found 0 matches
+[Chat] KB matches found: 0
+[Chat] No KB match, trying OpenAI...
+[Chat] OpenAI response: Why did the banker switch careers?
+
+Because he lost interest!
+[Chat] Received message: how do I open a savings account
+[Chat] Before KB check - message="how do I open a savings account", typeof=string, truthy=true
+[Chat] Calling retrieveKB...
+[KB] retrieveKB called with: query="how do I open a savings account", type=string
+[KB] Found 2 matches
+[Chat] KB matches found: 2
+[Chat] Returning KB response
