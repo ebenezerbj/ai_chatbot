@@ -3,9 +3,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI only if API key is provided
+let openai: InstanceType<typeof OpenAI> | null = null;
+if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+    });
+}
 
 export class EmbeddingService {
     private static instance: EmbeddingService;
@@ -43,7 +47,7 @@ export class EmbeddingService {
     }
 
     public async generateEmbedding(text: string): Promise<number[]> {
-        if (this.useMockEmbeddings) {
+        if (this.useMockEmbeddings || !openai) {
             return this.generateMockEmbedding(text);
         }
 
@@ -56,7 +60,8 @@ export class EmbeddingService {
             return response.data[0].embedding;
         } catch (error) {
             console.error('Error generating embedding:', error);
-            throw error;
+            // Fall back to mock embeddings on error
+            return this.generateMockEmbedding(text);
         }
     }
 
