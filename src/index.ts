@@ -80,7 +80,26 @@ function retrieveKB(query: string | undefined): string[] {
     // Check if any pattern matches
     for (const pattern of entryPatterns) {
       const patternLower = pattern.toLowerCase();
-      if (lowerQuery.includes(patternLower) || patternLower.includes(lowerQuery)) {
+      
+      // Use regex if pattern looks like a regex (contains special chars like .*)
+      // Otherwise use word boundary matching to avoid partial matches
+      let isMatch = false;
+      
+      if (patternLower.includes('.*') || patternLower.includes('|')) {
+        // Treat as regex pattern
+        try {
+          const regex = new RegExp(patternLower, 'i');
+          isMatch = regex.test(lowerQuery);
+        } catch (e) {
+          // Invalid regex, fall back to simple includes
+          isMatch = lowerQuery.includes(patternLower);
+        }
+      } else {
+        // Simple keyword matching - check if query contains the pattern as a word/phrase
+        isMatch = lowerQuery.includes(patternLower);
+      }
+      
+      if (isMatch) {
         const response = entry.answer || entry.response || '';
         if (response) {
           matches.push(response);
