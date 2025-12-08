@@ -204,8 +204,8 @@
   {
     "id": "contact",
     "product": "Contact",
-    "patterns": ["contact", "phone", "call", "email", "reach", "address", "gps", "telephone", "contact.*info", "how.*reach", "how.*contact"],
-    "answer": "You can reach us at 0202055171 or info@amankacombank.com. Our main branch GPS is BA-08182-6721 (Amantin)."
+    "patterns": ["contact", "phone", "call", "email", "reach", "address", "gps", "telephone", "contact.*info", "how.*reach", "how.*contact", "talk.*agent", "speak.*human", "talk.*someone", "real.*person", "customer.*service", "support.*agent"],
+    "answer": "I'm here to help! For direct assistance:\n- Call: **0202055171**\n- Email: info@amankacombank.com\n- Visit our Head Office at Amantin (GPS: BA-08182-6721)\n\nWhat banking question can I help you with right now?"
   },
   {
     "id": "hours",
@@ -246,8 +246,8 @@
   {
     "id": "accounts_overview",
     "product": "Deposit",
-    "patterns": ["accounts?", "deposit.*service", "account.*types", "open.*account", "create.*account", "types.*account"],
-    "answer": "We have Current, Salary, Savings, and Susu accounts. Ask about a specific account for more info."
+    "patterns": ["accounts?", "deposit.*service", "account.*types", "open.*account", "create.*account", "types.*account", "\\bproducts?\\b", "\\bservices?\\b", "what.*offer", "what.*provide"],
+    "answer": "We offer various banking products and services:\n\n**Deposit Accounts:** Current, Salary, Savings, and Susu accounts\n**Loans:** Agric, Business, Funeral, Group, Salary, Susu, Staff, and Inventory loans\n**Investments:** Fixed Deposits, Christmas Accounts, Sala Accounts, Woba Daakye\n**Smart Banking:** Ghana Pay (*707#), Mobile Banking\n\nAsk about any specific product for more details!"
   },
   {
     "id": "savings_account_requirements",
@@ -256,9 +256,12 @@
       "savings?.*(open|opening|require|document|need)",
       "(open|opening).*savings?",
       "what.*need.*savings\\s*account",
-      "requirements?.*savings\\s*account"
+      "requirements?.*savings\\s*account",
+      "\\bsavings?\\b",
+      "save.*money",
+      "savings?.*account"
     ],
-    "answer": "Savings Account – opening requirements\n- Valid Ghana Card (national ID)\n- Two passport-size photos\n- Proof of address (utility bill or GhanaPost GPS)\n- Initial deposit (minimum opening balance)"
+    "answer": "Our **Savings Account** helps you save securely!\n\n**Opening Requirements:**\n- Valid Ghana Card (national ID)\n- Two passport-size photos\n- Proof of address (utility bill or GhanaPost GPS)\n- Initial deposit (minimum opening balance)\n\nVisit any branch to open your account today!"
   },
   {
     "id": "salary_account_requirements",
@@ -404,7 +407,7 @@
   {
     "id": "head_of_operations",
     "product": "Head of Operations",
-    "patterns": ["head.*operations", "operations head", "head.*of.*operations", "who.*operations", "eric.*nanjor", "nanjor.*janja", "eric nanjor janja"],
+    "patterns": ["head.*operations", "operations head", "head.*of.*operations", "who.*operations", "eric.*nanjor", "nanjor.*janja", "eric nanjor janja", "\\beric\\b", "nanjor", "janja"],
     "answer": "**ERIC NANJOR JANJA** is our Head of Operations."
   },
   {
@@ -422,7 +425,7 @@
   {
     "id": "unit_head_marketing",
     "product": "Unit Head (Marketing)",
-    "patterns": ["head.*marketing", "marketing head", "unit head.*marketing"],
+    "patterns": ["head.*marketing", "marketing head", "unit head.*marketing", "daniel.*opoku", "opoku.*daniel", "\\bopoku\\b", "\\bdaniel\\b"],
     "answer": "**DANIEL OPOKU** is our Unit Head (Marketing)."
   },
   {
