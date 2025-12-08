@@ -8,6 +8,8 @@ export async function connectDB() {
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    process.exit(1);
+    console.warn('MongoDB is unavailable. The app will continue without database persistence. KB data will be loaded from files only.');
+    // Don't exit - allow app to continue without MongoDB
+    // This is useful for development and for deployments without a MongoDB service
   }
 }
