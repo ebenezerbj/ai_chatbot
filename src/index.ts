@@ -134,7 +134,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       console.log('[Chat] Returning KB response');
       const response = kbMatches[0];
       return res.json({ 
-        response,
+        reply: response,
         source: 'kb',
         kbMatches: kbMatches.length
       });
@@ -147,7 +147,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return res.json({ 
-        response: 'I can help with banking questions. Please ask about our services, fees, or products.',
+        reply: 'I can help with banking questions. Please ask about our services, fees, or products.',
         source: 'default'
       });
     }
@@ -177,13 +177,13 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       console.log(`[Chat] OpenAI response: ${reply}`);
       
       return res.json({ 
-        response: reply,
+        reply: reply,
         source: 'openai'
       });
     } catch (error: any) {
       console.error('[OpenAI] Error:', error.message);
       return res.json({ 
-        response: 'I encountered an issue processing your request. Please try again.',
+        reply: 'I encountered an issue processing your request. Please try again.',
         source: 'error'
       });
     }
