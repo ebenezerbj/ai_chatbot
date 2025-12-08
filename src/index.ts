@@ -81,18 +81,21 @@ function retrieveKB(query: string | undefined): string[] {
     for (const pattern of entryPatterns) {
       const patternLower = pattern.toLowerCase();
       
-      // Use regex if pattern looks like a regex (contains special chars like .*)
-      // Otherwise use word boundary matching to avoid partial matches
+      // Determine if pattern should be treated as regex
       let isMatch = false;
       
-      if (patternLower.includes('.*') || patternLower.includes('|')) {
+      // Check if pattern contains regex special characters
+      const hasRegexChars = /[.*+?^${}()|[\]\\]/.test(patternLower);
+      
+      if (hasRegexChars) {
         // Treat as regex pattern
         try {
           const regex = new RegExp(patternLower, 'i');
           isMatch = regex.test(lowerQuery);
         } catch (e) {
+          console.log(`[KB] Invalid regex pattern: ${patternLower}`);
           // Invalid regex, fall back to simple includes
-          isMatch = lowerQuery.includes(patternLower);
+          isMatch = lowerQuery.includes(patternLower.replace(/[.*+?^${}()|[\]\\]/g, ''));
         }
       } else {
         // Simple keyword matching - check if query contains the pattern as a word/phrase
@@ -100,6 +103,7 @@ function retrieveKB(query: string | undefined): string[] {
       }
       
       if (isMatch) {
+        console.log(`[KB] Matched pattern "${pattern}" for entry "${entry.id}"`);
         const response = entry.answer || entry.response || '';
         if (response) {
           matches.push(response);
