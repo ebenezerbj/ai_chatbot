@@ -368,19 +368,19 @@
   {
     "id": "ceo",
     "product": "CEO",
-    "patterns": ["who.*ceo", "chief executive officer"],
+    "patterns": ["\\bceo\\b", "chief executive officer", "who.*ceo", "executive officer"],
     "answer": "Our Chief Executive Officer is **MICHAEL WILBERFORCE OSAE**."
   },
   {
     "id": "head_of_audit",
     "product": "Head of Audit",
-    "patterns": ["head.*audit", "audit head"],
+    "patterns": ["head.*audit", "audit head", "head.*of.*audit", "who.*audit"],
     "answer": "**STEVE TAKYI SARPONG JUNIOR** is our Head of Audit."
   },
   {
     "id": "head_of_credit",
     "product": "Head of Credit",
-    "patterns": ["head.*credit", "credit head"],
+    "patterns": ["head.*credit", "credit head", "head.*of.*credit", "who.*credit", "debrah", "bempong", "michael.*debrah"],
     "answer": "**MICHAEL DEBRAH BEMPONG** is our Head of Credit."
   },
   {
@@ -392,7 +392,7 @@
   {
     "id": "head_of_it",
     "product": "Head of IT",
-  "patterns": ["head.*it", "it head", "head.*information\\s*technology"],
+  "patterns": ["head.*it", "it head", "head.*information\\s*technology", "head.*of.*it", "who.*\\bit\\b", "mark ernest", "mark.*ernest"],
     "answer": "**MARK ERNEST** is our Head of IT."
   },
   {
@@ -404,8 +404,20 @@
   {
     "id": "head_of_operations",
     "product": "Head of Operations",
-    "patterns": ["head.*operations", "operations head"],
+    "patterns": ["head.*operations", "operations head", "head.*of.*operations", "who.*operations", "eric.*nanjor", "nanjor.*janja", "eric nanjor janja"],
     "answer": "**ERIC NANJOR JANJA** is our Head of Operations."
+  },
+  {
+    "id": "head_of_finance",
+    "product": "Head of Finance",
+    "patterns": ["head.*finance", "finance head", "head.*of.*finance", "who.*finance", "\\bcfo\\b", "chief financial officer"],
+    "answer": "For information about our Head of Finance or CFO, please contact our main office at 0202055171 or visit our Amantin Head Office."
+  },
+  {
+    "id": "head_of_departments",
+    "product": "Department Heads",
+    "patterns": ["head.*of.*department", "department.*head", "heads.*of.*department", "all.*heads", "who.*head.*department"],
+    "answer": "Our Department Heads and Unit Heads are:\\n- **MICHAEL WILBERFORCE OSAE** (CEO)\\n- **STEVE TAKYI SARPONG JUNIOR** (Head of Audit)\\n- **MICHAEL DEBRAH BEMPONG** (Head of Credit)\\n- **GEOFFERY OWUSU BOATENG** (Head of AML, Risk & Compliance)\\n- **MARK ERNEST** (Head of IT)\\n- **MR. SAMUEL ACHEAMPONG** (Head of Administration & HR)\\n- **ERIC NANJOR JANJA** (Head of Operations)\\n- **DANIEL OPOKU** (Unit Head, Marketing)"
   },
   {
     "id": "unit_head_marketing",
@@ -416,7 +428,7 @@
   {
     "id": "management_team",
     "product": "Management",
-    "patterns": ["management", "leadership", "team", "who.*runs", "executives", "senior.*staff"],
+    "patterns": ["management", "leadership", "\\bteam\\b", "who.*runs", "executives", "senior.*staff", "senior.*management"],
     "answer": "Our senior management includes Michael Wilberforce Osae (CEO), Steve Takyi Sarpong Junior (Head of Audit), and Michael Debrah Bempong (Head of Credit). For a full list, please ask for the 'full management team'."
   },
   {
