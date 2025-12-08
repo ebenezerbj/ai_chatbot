@@ -566,11 +566,11 @@ app.post('/api/admin/reload-kb', async (req: Request, res: any) => {
 
 app.use(express.static('public'));
 
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT || 3001);
 
 // Add better error handling for server startup
-const server = app.listen(port, () => {
-  logger.info(`Server listening on http://localhost:${port}`);
+const server = app.listen(port, '0.0.0.0', () => {
+  logger.info(`Server listening on http://0.0.0.0:${port}`);
   logger.info('Server startup complete');
 }).on('error', (err: any) => {
   logger.error({ err }, 'Server failed to start');
