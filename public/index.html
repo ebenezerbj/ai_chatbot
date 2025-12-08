@@ -1107,9 +1107,10 @@
         // Append Listen button and optionally auto-speak
         try {
           addSpeakAction(content, processed);
-          if (ttsEnabled && isTTSSupported() && hasUserInteracted()) {
-            speak(processed);
-          }
+          // Disabled auto-speak to prevent double voices - user clicks Listen button instead
+          // if (ttsEnabled && isTTSSupported() && hasUserInteracted()) {
+          //   speak(processed);
+          // }
         } catch (e) { /* non-fatal */ }
       } else {
         content.textContent = processed;
