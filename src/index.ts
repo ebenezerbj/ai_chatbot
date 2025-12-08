@@ -13,8 +13,13 @@ const port = Number(process.env.PORT || 4000);
 // Middleware
 app.use(express.json());
 
-// Root endpoint
-app.get('/', (req: Request, res: Response) => {
+// Serve static files from public directory
+const publicPath = path.join(process.cwd(), 'public');
+console.log('[Static] Serving static files from:', publicPath);
+app.use(express.static(publicPath));
+
+// API info endpoint
+app.get('/api', (req: Request, res: Response) => {
   res.json({
     name: 'AK Commerzbank Chatbot',
     status: 'running',
@@ -200,14 +205,26 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 // Load KB on startup
+console.log('[Startup] About to load KB...');
 loadKB();
 
-// Start server
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`✓ Server listening on http://localhost:${port}`);
-  console.log(`✓ KB: ${kb.length} entries loaded`);
-  console.log(`✓ OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
-}).on('error', (err: any) => {
+// Start server - bind to 0.0.0.0 for Render deployment
+console.log(`[Startup] Starting server on port ${port}...`);
+const server = process.env.RENDER 
+  ? app.listen(port, '0.0.0.0', () => {
+      console.log(`[Startup] Server callback fired`);
+      console.log(`✓ Server listening on http://0.0.0.0:${port}`);
+      console.log(`✓ KB: ${kb.length} entries loaded`);
+      console.log(`✓ OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
+    })
+  : app.listen(port, () => {
+      console.log(`[Startup] Server callback fired`);
+      console.log(`✓ Server listening on http://localhost:${port}`);
+      console.log(`✓ KB: ${kb.length} entries loaded`);
+      console.log(`✓ OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
+    });
+
+server.on('error', (err: any) => {
   console.error('✗ Server error:', err.message);
   console.error('✗ Full error:', err);
   process.exit(1);
