@@ -2,13 +2,13 @@
   {
     "id": "branches",
     "product": "Branch",
-    "patterns": ["branches?", "locations?", "nearest"],
+    "patterns": ["branches?", "locations?", "list.*branch", "show.*branch", "all.*branch", "how many.*branch", "branch.*list"],
   "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 20 205 5170\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso**: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji**: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "nearest_branch_stub",
     "product": "Nearest Branch",
-    "patterns": ["nearest|near me|closest|nearby"],
+    "patterns": ["nearest", "near me", "closest", "nearby", "which.*branch.*close"],
     "answer": "Nearest branch: If you share your GPS (GhanaPost or phone location), I can suggest the closest branch and provide directions. For now, please tell me your area or ZIP/plus code."
   },
   {
@@ -112,7 +112,7 @@
   {
     "id": "branch_managers_list",
     "product": "Branch Managers",
-    "patterns": ["branch\\s*managers", "managers\\s*list", "list\\s*of\\s*branch\\s*managers"],
+    "patterns": ["branch\\s*managers", "managers\\s*list", "list\\s*of\\s*branch\\s*managers", "all.*managers", "who.*manages.*branches"],
     "answer": "List of Branch Managers:\n- **AGNES QUAYE** — Branch Manageress, Ejura\n- **ABDUL-RAHMAN ABUBAKAR** — Branch Manager, Ahwiaa\n- **ALI SONDONG IBRAHIM** — Officer-in-Charge, Kejetia\n- **BENJAMIN AYISI** — Branch Manager, Yeji\n- **OSEI-KISSI JOHN** — Branch Manager, Kwame Danso\n- **EMMANUEL OFORI-ATTA** — Branch Manager, Amantin\n- **OTENG ABRAHAM L** — Branch Manager, Atebubu\n- **ROBERT SARFO** — Branch Manager, Kajaji"
   },
   {
@@ -204,49 +204,49 @@
   {
     "id": "contact",
     "product": "Contact",
-    "patterns": ["contact", "phone", "call", "email", "reach", "address", "gps"],
+    "patterns": ["contact", "phone", "call", "email", "reach", "address", "gps", "telephone", "contact.*info", "how.*reach", "how.*contact"],
     "answer": "You can reach us at 0202055171 or info@amankacombank.com. Our main branch GPS is BA-08182-6721 (Amantin)."
   },
   {
     "id": "hours",
     "product": "Hours",
-    "patterns": ["hours", "open", "opening", "closing", "time"],
+    "patterns": ["hours", "open", "opening", "closing", "time", "when.*open", "business.*hours", "operating.*hours", "work.*hours"],
     "answer": "Our branches are open Monday to Friday, from 8:00 AM to 4:00 PM."
   },
   {
     "id": "mobile_banking_ussd",
     "product": "Smart Banking",
-    "patterns": ["mobile.*bank", "ussd", "\\*992#", "short.*992", "code.*992"],
+    "patterns": ["mobile.*bank", "ussd", "\\*992#", "992", "short.*code.*992", "dial.*992"],
     "answer": "Mobile Banking USSD short code: *992#"
   },
   {
     "id": "ghana_pay_app",
     "product": "Smart Banking",
-    "patterns": ["ghana\\s*pay", "\\*707#", "short.*707", "code.*707", "ghana pay app"],
+    "patterns": ["ghana\\s*pay", "\\*707#", "707", "short.*code.*707", "dial.*707", "ghana pay app"],
     "answer": "Ghana Pay short code: *707#\\nDownload Ghana Pay on the Play Store (Android) and App Store (iOS).\\n\\nSelf-onboarding steps:\\n1. Select Bank\\n2. Input referral code\\n3. Input Ghana Card Number\\n4. Take Selfie\\n5. Validate\\n6. On success, some details auto-populate\\n7. Provide remaining details:\\n   - Bank branch\\n   - Email\\n   - Secret question and answer\\n   - Occupation\\n   - Annual income\\n   - Source of Funds\\n   - Next of Kin name and contact"
   },
   {
     "id": "smart_banking",
     "product": "Smart Banking",
-    "patterns": ["smart", "atm", "gh-?link", "e-?zwich", "apex", "inter-?bank", "ach", "interoperability"],
+    "patterns": ["smart.*bank", "atm", "gh-?link", "e-?zwich", "apex", "inter-?bank", "ach", "interoperability", "digital.*service"],
     "answer": "We offer GH-Link ATM, Apex Transfers, E-zwich, ACH Inter-Bank Transfers, and Interoperability Services."
   },
   {
     "id": "loans_overview",
     "product": "Loan",
-    "patterns": ["loans?", "credit", "advance"],
+    "patterns": ["loans?", "credit", "advance", "borrow", "loan.*types", "what.*loan", "which.*loan"],
     "answer": "We offer various loans, including Agric, Business, Funeral, Group, Salary, Susu, Staff, and Inventory. Ask about a specific one for details."
   },
   {
     "id": "investments_overview",
     "product": "Investment",
-    "patterns": ["invest(ment)?s?", "fixed deposit", "christmas account", "sala account", "woba"],
+    "patterns": ["invest(ment)?s?", "fixed deposit", "christmas account", "sala account", "woba", "save.*money", "grow.*money"],
     "answer": "Our investment options include Fixed Deposits, Christmas Accounts, Sala Accounts, and Woba Daakye."
   },
   {
     "id": "accounts_overview",
     "product": "Deposit",
-    "patterns": ["accounts?", "deposit services", "account.*types"],
+    "patterns": ["accounts?", "deposit.*service", "account.*types", "open.*account", "create.*account", "types.*account"],
     "answer": "We have Current, Salary, Savings, and Susu accounts. Ask about a specific account for more info."
   },
   {
@@ -416,7 +416,7 @@
   {
     "id": "management_team",
     "product": "Management",
-    "patterns": ["management", "leadership", "team", "who.*runs"],
+    "patterns": ["management", "leadership", "team", "who.*runs", "executives", "senior.*staff"],
     "answer": "Our senior management includes Michael Wilberforce Osae (CEO), Steve Takyi Sarpong Junior (Head of Audit), and Michael Debrah Bempong (Head of Credit). For a full list, please ask for the 'full management team'."
   },
   {
@@ -428,7 +428,7 @@
   {
     "id": "products_and_services",
     "product": "Products & Services",
-    "patterns": ["products?", "services?", "offerings?"],
+    "patterns": ["products?", "services?", "offerings?", "what.*offer", "what.*provide", "what.*available"],
     "answer": "We offer a range of services including Deposit Accounts, Loans, Smart Banking, and Investments. Ask about a specific product for more details."
   },
   {
@@ -437,7 +437,11 @@
     "patterns": [
       "when.*founded",
       "what.*year.*(start|begin|founded)",
-      "history|background|origins"
+      "history",
+      "background",
+      "origins",
+      "when.*established",
+      "how.*started"
     ],
     "answer": "Amantin and Kasei Community Bank Ltd. began in the mid-1990s in Kasei, with operations commencing around 1996/1997. The Head Office later moved to Amantin. Over the years the bank expanded across Bono East and Ashanti regions, including opening a Kejetia mobilization centre in Kumasi in 2020. By 2023 the bank had grown its customer base and deposits significantly, and in 2024 focused on capital strengthening with a five-year plan while sustaining community support (CSR)."
   },
@@ -465,7 +469,7 @@
   {
     "id": "concise_generic",
     "product": "General",
-    "patterns": ["who", "what", "where", "when", "how", "tell me about", "info", "details", "explain", "summary", "overview", "general", "faq", "help", "support", "assist", "question", "ask"],
-    "answer": "I can provide concise answers about our products and services. Please ask me a specific question about what you need."
+    "patterns": ["^(hi|hello|hey|greetings)$", "^(help|assist)$", "^(faq|support)$"],
+    "answer": "Hello! I'm here to help you with information about AKCB - Amantin and Kasei Community Bank PLC. You can ask me about branches, accounts, loans, investments, management, or any banking services."
   }
 ]
