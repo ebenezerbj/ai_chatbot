@@ -184,13 +184,13 @@
                         <td><?php echo $row['year'] ?></td>
                         <td><img src="siteimages/pdf.png" style="width:80px; height:80px"></td>
                         <td>
-                          <a href="view_pdf.php?file=<?php echo $row['document'] ?>" 
+                          <a href="view1.php?path=sitedoc/<?php echo $row['document'] ?>" 
                              target="_blank" 
                              class="btn btn-primary btn-sm" 
                              style="margin-right: 5px;">
                             <i class="fa fa-eye"></i> View
                           </a>
-                          <a href="download_pdf.php?file=<?php echo $row['document'] ?>" 
+                          <a href="download1.php?path=sitedoc/<?php echo $row['document'] ?>" 
                              class="btn btn-success btn-sm">
                             <i class="fa fa-download"></i> Download
                           </a>
