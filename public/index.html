@@ -1711,11 +1711,35 @@
           const blob = await resp.blob();
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
+          
+          // Mobile playback fixes
+          audio.setAttribute('playsinline', '');
+          audio.setAttribute('webkit-playsinline', '');
+          audio.preload = 'auto';
+          
           audio.onended = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
-          audio.onerror = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          audio.onerror = (err) => { 
+            console.error('Audio playback error:', err);
+            currentUtterance = null; 
+            updateTTSButtons(); 
+            URL.revokeObjectURL(url); 
+          };
           currentUtterance = { kind: 'audio', audio };
           updateTTSButtons();
-          await audio.play();
+          
+          // Handle play promise for mobile
+          try {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              await playPromise.catch(err => {
+                console.error('Play failed:', err);
+                // If autoplay is blocked, we can't do much about it
+                // User needs to click the listen button manually
+              });
+            }
+          } catch (playErr) {
+            console.error('Play exception:', playErr);
+          }
           return;
         } catch (e) {
           console.error('Server TTS failed:', e);
@@ -1735,11 +1759,35 @@
           const blob = await resp.blob();
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
+          
+          // Mobile playback fixes
+          audio.setAttribute('playsinline', '');
+          audio.setAttribute('webkit-playsinline', '');
+          audio.preload = 'auto';
+          
           audio.onended = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
-          audio.onerror = () => { currentUtterance = null; updateTTSButtons(); URL.revokeObjectURL(url); };
+          audio.onerror = (err) => { 
+            console.error('Audio playback error:', err);
+            currentUtterance = null; 
+            updateTTSButtons(); 
+            URL.revokeObjectURL(url); 
+          };
           currentUtterance = { kind: 'audio', audio };
           updateTTSButtons();
-          await audio.play();
+          
+          // Handle play promise for mobile
+          try {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              await playPromise.catch(err => {
+                console.error('Play failed:', err);
+                // If autoplay is blocked, we can't do much about it
+                // User needs to click the listen button manually
+              });
+            }
+          } catch (playErr) {
+            console.error('Play exception:', playErr);
+          }
           return;
         }
       } catch (e) {
@@ -1795,7 +1843,18 @@
       btn.className = 'msg-action-btn';
       btn.setAttribute('aria-label', 'Listen to message');
       btn.innerHTML = `<i class="fa fa-play" aria-hidden="true"></i><span>Listen</span>`;
-      btn.addEventListener('click', () => speak(text));
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Enable TTS if not already enabled
+        if (!ttsEnabled) {
+          ttsEnabled = true;
+          localStorage.setItem('ttsEnabled', JSON.stringify(true));
+          updateTTSButtons();
+        }
+        // Speak the text
+        await speak(text);
+      }, { passive: false });
       row.prepend(btn);
     }
 
@@ -1845,8 +1904,28 @@
       if (isTTSSupported()) {
         try { window.speechSynthesis.onvoiceschanged = () => { refreshCombinedTTSOptions(); updateTTSButtons(); }; } catch { /* ignore */ }
       }
+      
+      // Mobile audio context unlock - initialize audio on first user interaction
+      let audioUnlocked = false;
+      const unlockAudio = () => {
+        if (audioUnlocked) return;
+        // Create a silent audio to unlock audio playback on iOS/Android
+        const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+        silentAudio.play().then(() => {
+          audioUnlocked = true;
+          console.log('Audio unlocked for mobile');
+        }).catch(() => {
+          // Silently fail - will try again on next interaction
+        });
+      };
+      
+      // Unlock audio on any user interaction (for mobile)
+      document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+      document.addEventListener('click', unlockAudio, { once: true, passive: true });
+      
       // Wire header buttons
       ttsToggleBtn?.addEventListener('click', () => {
+        unlockAudio(); // Ensure audio is unlocked
         ttsEnabled = !ttsEnabled;
         localStorage.setItem('ttsEnabled', JSON.stringify(!!ttsEnabled));
         updateTTSButtons();
