@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0F4C81">
+  <meta name="format-detection" content="telephone=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -107,6 +109,7 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      -webkit-touch-callout: none;
     }
 
     html {
@@ -114,16 +117,20 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       scroll-behavior: smooth;
+      height: 100%;
+      height: -webkit-fill-available;
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, system-ui, sans-serif;
       background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
       min-height: 100vh;
+      min-height: -webkit-fill-available;
       color: var(--gray-800);
       line-height: 1.65;
       overscroll-behavior: none;
       touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
     }
 
     .app-container {
@@ -357,9 +364,12 @@
     .chat-messages {
       flex: 1;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 2rem 1.5rem;
       background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
       scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     .message {
@@ -848,30 +858,95 @@
       border-color: #16a34a;
     }
 
-    @media (max-width: 1024px) {
+    /* Tablet optimizations (portrait and landscape) */
+    @media (min-width: 768px) and (max-width: 1024px) {
       .main-content {
         flex-direction: column;
+        padding: 1.5rem;
+        max-width: 100%;
+      }
+      
+      .chat-container {
+        min-height: calc(100vh - 250px);
       }
       
       .sidebar {
         width: 100%;
         flex-direction: row;
         overflow-x: auto;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
       }
 
       .info-card {
-        min-width: 280px;
+        min-width: 300px;
+        max-width: 300px;
+        flex-shrink: 0;
+        scroll-snap-align: start;
+      }
+
+      .user .msg-content,
+      .assistant .msg-content {
+        max-width: 75%;
+        font-size: 0.95rem;
+      }
+
+      .input-container {
+        padding: 1.25rem;
+      }
+
+      .message-input {
+        font-size: 16px; /* Prevent zoom on Android */
+        min-height: 52px;
+      }
+
+      .send-button {
+        min-height: 48px;
+        padding: 1rem 2rem;
       }
     }
 
-    /* Mobile-first approach - Enhanced responsiveness for smaller screens */
-    @media screen and (max-width: 768px) {
+    /* Tablet landscape specific (wider screens) */
+    @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+      .main-content {
+        flex-direction: row;
+        gap: 1.5rem;
+      }
+
+      .chat-container {
+        flex: 1;
+        min-height: calc(100vh - 180px);
+      }
+
+      .sidebar {
+        width: 320px;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .info-card {
+        width: 100%;
+        max-width: 100%;
+        min-width: auto;
+      }
+    }
+
+    /* Mobile phones - Android & iOS optimized */
+    @media screen and (max-width: 767px) {
       body {
         font-size: 14px;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
 
       .header {
         padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
       }
 
       .header-content {
@@ -899,13 +974,16 @@
         width: 100%;
         justify-content: center;
         margin-left: 0;
+        gap: 0.5rem;
       }
 
       .header-action-btn {
         padding: 0.6rem 1rem;
         font-size: 0.85rem;
-        min-height: 40px;
+        min-height: 44px;
         border-radius: 10px;
+        flex: 1;
+        max-width: 150px;
       }
 
       .main-content {
@@ -917,13 +995,16 @@
 
       .chat-container {
         flex: 1;
-        min-height: calc(100vh - 200px);
+        min-height: calc(100vh - 220px);
+        min-height: calc(100dvh - 220px); /* Dynamic viewport height for mobile browsers */
         order: 2;
         border-radius: 16px;
       }
 
       .chat-messages {
-        padding: 1rem;
+        padding: 1rem 0.75rem;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
       }
 
       .sidebar {
@@ -931,23 +1012,27 @@
         width: 100%;
         flex-direction: row;
         overflow-x: auto;
+        overflow-y: hidden;
         gap: 0.75rem;
         padding: 0;
         -ms-overflow-style: none;
         scrollbar-width: none;
         scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
       }
 
       .sidebar::-webkit-scrollbar {
         display: none;
+        height: 0;
       }
 
       .info-card {
-        min-width: 260px;
-        max-width: 260px;
+        min-width: 270px;
+        max-width: 270px;
         flex-shrink: 0;
         padding: 1rem;
         scroll-snap-align: start;
+        scroll-snap-stop: always;
       }
 
       .info-card-title {
@@ -962,6 +1047,7 @@
       .user .msg-content {
         max-width: 85%;
         font-size: 0.9rem;
+        line-height: 1.5;
         padding: 0.875rem 1.125rem;
         border-radius: 18px 18px 4px 18px;
       }
@@ -974,6 +1060,7 @@
       .assistant .msg-content {
         max-width: 90%;
         font-size: 0.9rem;
+        line-height: 1.5;
         padding: 0.875rem 1.125rem;
         border-radius: 18px 18px 18px 4px;
       }
@@ -987,8 +1074,10 @@
         padding: 0.875rem;
         position: sticky;
         bottom: 0;
-        background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.98) 100%);
+        background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.98) 100%);
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 10;
       }
 
       .input-wrapper {
@@ -997,10 +1086,12 @@
 
       .message-input {
         padding: 0.875rem 1rem;
-        font-size: 16px; /* Prevents iOS zoom on focus */
-        min-height: 48px;
+        font-size: 16px; /* Prevents zoom on iOS and Android */
+        min-height: 50px;
         max-height: 120px;
         border-radius: 12px;
+        -webkit-appearance: none;
+        appearance: none;
       }
 
       .message-input::placeholder {
@@ -1010,9 +1101,10 @@
       .send-button {
         padding: 0.75rem 1.25rem;
         font-size: 0.9rem;
-        min-height: 48px;
+        min-height: 50px;
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(15, 76, 129, 0.25);
+        -webkit-tap-highlight-color: transparent;
       }
 
       .send-text {
@@ -1026,7 +1118,7 @@
 
       .msg-actions {
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.5rem;
       }
 
       .msg-action-btn {
@@ -1034,6 +1126,7 @@
         justify-content: center;
         padding: 0.6rem 1rem;
         font-size: 0.875rem;
+        min-height: 44px;
       }
 
       .message {
@@ -1041,8 +1134,8 @@
       }
     }
 
-    /* Extra small devices (phones in portrait, less than 375px) */
-    @media screen and (max-width: 375px) {
+    /* Extra small devices - Compact phones (≤414px) */
+    @media screen and (max-width: 414px) {
       .header-content {
         padding: 0 0.75rem;
       }
@@ -1051,12 +1144,21 @@
         font-size: 1rem;
       }
 
+      .header-action-btn {
+        font-size: 0.8rem;
+        padding: 0.55rem 0.85rem;
+        min-height: 42px;
+        flex: 1;
+        max-width: 120px;
+      }
+
       .header-action-btn .label {
-        display: none;
+        font-size: 0.75rem;
       }
 
       .chat-container {
-        min-height: calc(100vh - 180px);
+        min-height: calc(100vh - 200px);
+        min-height: calc(100dvh - 200px);
       }
 
       .chat-messages {
@@ -1065,69 +1167,178 @@
 
       .user .msg-content,
       .assistant .msg-content {
-        font-size: 0.85rem;
+        font-size: 0.875rem;
         padding: 0.75rem 1rem;
-        max-width: 92%;
+        max-width: 88%;
       }
 
       .info-card {
-        min-width: 240px;
-        max-width: 240px;
+        min-width: 250px;
+        max-width: 250px;
         padding: 0.875rem;
       }
 
+      .info-card-title {
+        font-size: 0.85rem;
+      }
+
+      .info-item {
+        font-size: 0.75rem;
+      }
+
       .input-container {
-        padding: 0.75rem;
+        padding: 0.75rem 0.5rem;
       }
 
       .message-input {
         padding: 0.75rem 0.875rem;
         font-size: 16px;
+        min-height: 48px;
       }
 
       .send-button {
         padding: 0.75rem 1rem;
-        min-width: 60px;
+        min-width: 70px;
+        min-height: 48px;
+      }
+
+      .send-text {
+        font-size: 0.85rem;
+      }
+
+      .msg-action-btn {
+        font-size: 0.8rem;
+        padding: 0.55rem 0.85rem;
+        min-height: 42px;
+      }
+    }
+
+    /* Very small devices - Older/compact Android phones (≤360px) */
+    @media screen and (max-width: 360px) {
+      .header-action-btn .label {
+        display: none;
+      }
+
+      .header-action-btn {
+        min-width: 44px;
+        padding: 0.6rem;
+      }
+
+      .info-card {
+        min-width: 230px;
+        max-width: 230px;
       }
 
       .send-text {
         display: none;
       }
 
+      .send-button {
+        min-width: 50px;
+        padding: 0.75rem;
+      }
+
       .send-button i {
         margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .user .msg-content,
+      .assistant .msg-content {
+        max-width: 90%;
+        font-size: 0.85rem;
       }
     }
 
-    /* Landscape mobile optimization */
+    /* Mobile landscape optimization - All devices */
     @media screen and (max-height: 500px) and (orientation: landscape) {
       .header {
-        padding: 0.75rem 0;
+        padding: 0.5rem 0;
+        position: sticky;
+        top: 0;
+      }
+
+      .header-content {
+        padding: 0 1rem;
+        gap: 0.5rem;
+      }
+
+      .logo {
+        font-size: 0.95rem;
+      }
+
+      .logo-icon {
+        width: 1.75rem;
+        height: 1.75rem;
+      }
+
+      .header-actions {
+        gap: 0.25rem;
+      }
+
+      .header-action-btn {
+        padding: 0.5rem 0.75rem;
+        min-height: 38px;
+        font-size: 0.8rem;
       }
 
       .main-content {
         padding: 0.5rem;
+        gap: 0.5rem;
       }
 
       .chat-container {
-        min-height: calc(100vh - 150px);
+        min-height: calc(100vh - 120px);
+        min-height: calc(100dvh - 120px);
       }
 
       .chat-messages {
-        padding: 0.75rem;
+        padding: 0.5rem 0.75rem;
       }
 
       .sidebar {
-        display: none; /* Hide sidebar in landscape to maximize chat space */
+        display: none; /* Maximize chat space in landscape */
       }
 
       .input-container {
-        padding: 0.75rem;
+        padding: 0.5rem;
       }
 
       .message-input {
-        min-height: 42px;
-        max-height: 80px;
+        min-height: 40px;
+        max-height: 60px;
+        padding: 0.6rem 0.875rem;
+        font-size: 15px;
+      }
+
+      .send-button {
+        min-height: 40px;
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+      }
+
+      .user .msg-content,
+      .assistant .msg-content {
+        font-size: 0.85rem;
+        padding: 0.65rem 0.9rem;
+      }
+
+      .message {
+        margin-bottom: 0.75rem;
+      }
+
+      .msg-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      .msg-action-btn {
+        width: auto;
+        flex: 1;
+        min-width: 120px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        min-height: 38px;
       }
     }
 
