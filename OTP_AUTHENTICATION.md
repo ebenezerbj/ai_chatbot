@@ -45,20 +45,20 @@ Bot: "Your current balance is GHS 5,320.50 (Available: GHS 5,320.50)"
 Add these to your `.env` file:
 
 ```env
-# Twilio SMS Configuration
-TWILIO_ACCOUNT_SID=your_account_sid_here
-TWILIO_AUTH_TOKEN=your_auth_token_here
-TWILIO_PHONE_NUMBER=+1234567890
+# SMS Online Ghana Configuration
+SMS_ONLINE_API_KEY=your_api_key_here
+SMS_ONLINE_SENDER=AKCB
 ```
 
-### Getting Twilio Credentials
-1. Sign up at https://console.twilio.com
-2. Get your Account SID and Auth Token from the dashboard
-3. Purchase a phone number from Twilio
-4. Add credentials to `.env` file
+### Getting SMS Online Ghana Credentials
+1. Sign up at https://www.smsonlinegh.com
+2. Navigate to your account dashboard
+3. Generate an API key from the API section
+4. Register your sender name (e.g., "AKCB") under SMS Messaging menu
+5. Add credentials to `.env` file
 
 ### Development Mode
-If Twilio is not configured, the OTP will be logged to the console:
+If SMS Online Ghana is not configured, the OTP will be logged to the console:
 ```
 [OTP DEV MODE] Phone: 0242123456, OTP: 123456
 ```
@@ -86,6 +86,13 @@ Phone numbers are masked in responses for security:
 Hello [Name], your AKCB verification code is: [OTP]. 
 Valid for 5 minutes. Do not share this code with anyone.
 ```
+
+**SMS API Details:**
+- **Provider**: SMS Online Ghana
+- **Endpoint**: https://api.smsonlinegh.com/v5/message/sms/send
+- **Method**: POST
+- **Encoding**: GSM default (type: 0)
+- **Format**: 233XXXXXXXXX (Ghana format)
 
 ## Supported Input Formats
 
@@ -115,6 +122,8 @@ Valid for 5 minutes. Do not share this code with anyone.
 
 ### SMS Errors
 - **SMS delivery failed**: "Unable to send verification code at this time. Please try again later."
+- **Sender not registered**: Check that sender name exists in SMS Online Ghana account
+- **Invalid API key**: Verify SMS_ONLINE_API_KEY in .env file
 
 ## Database Schema
 The system uses the existing `customers` table:
@@ -143,26 +152,29 @@ Use this account from the sample data:
 ## Production Deployment
 
 ### Checklist
-- [ ] Set up Twilio account
-- [ ] Purchase phone number with SMS capability
-- [ ] Add Twilio credentials to production `.env`
-- [ ] Configure Twilio webhook for delivery status (optional)
+- [ ] Set up SMS Online Ghana account
+- [ ] Generate API key from dashboard
+- [ ] Register sender name (e.g., "AKCB") in account
+- [ ] Add credentials to production `.env`
+- [ ] Test SMS delivery to Ghana numbers
 - [ ] Set up rate limiting for OTP requests
 - [ ] Monitor SMS costs and usage
 - [ ] Consider Redis for session storage (replace in-memory)
 
 ### Cost Optimization
-- **Twilio SMS pricing**: ~$0.0075 per SMS (Ghana)
-- **Expected usage**: ~2 SMS per customer authentication
-- **Monthly estimate**: (authentications × 2 × $0.0075)
+- **SMS Online Ghana pricing**: Check current rates at https://www.smsonlinegh.com/pricing
+- **Expected usage**: ~1 SMS per customer authentication
+- **Monthly estimate**: (authentications × 1 × per-SMS cost)
+- **No setup fees**: Pay-as-you-go pricing
 
 ### Monitoring
 Monitor these metrics:
 - OTP generation rate
 - OTP verification success rate
-- SMS delivery failures
+- SMS delivery failures (check API response)
 - Average authentication time
 - Session timeout rate
+- API response handshake status (HSHK_OK)
 
 ## API Response Format
 
@@ -205,6 +217,7 @@ Monitor these metrics:
 ## Support
 For issues or questions:
 - **Technical**: Review console logs for OTP codes (dev mode)
-- **Twilio**: Check Twilio console for SMS delivery logs
+- **SMS Online Ghana**: Check dashboard at https://www.smsonlinegh.com/login
+- **API Documentation**: https://www.smsonlinegh.com/developers/http-api/v5
 - **Database**: Verify customer phone numbers in database
 - **Contact**: +233 20 205 5170

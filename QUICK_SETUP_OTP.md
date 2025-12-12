@@ -33,7 +33,7 @@ Bot: "Your current balance is GHS 5,320.50"
 
 ## Setup for Development
 
-### Option 1: Development Mode (No Twilio)
+### Option 1: Development Mode (No SMS Service)
 Just run the server - OTP will be logged to console:
 ```bash
 npm run build
@@ -45,25 +45,29 @@ Look for this in console:
 [OTP DEV MODE] Phone: 0242123456, OTP: 123456
 ```
 
-### Option 2: Production Mode (With Twilio)
+### Option 2: Production Mode (With SMS Online Ghana)
 
-1. **Sign up for Twilio**
-   - Visit: https://console.twilio.com
-   - Sign up for a free account ($15 credit)
+1. **Sign up for SMS Online Ghana**
+   - Visit: https://www.smsonlinegh.com
+   - Create an account
 
-2. **Get Credentials**
-   - Account SID: Found on dashboard
-   - Auth Token: Found on dashboard
-   - Phone Number: Purchase one with SMS capability
+2. **Get API Key**
+   - Log in to your dashboard
+   - Navigate to API section
+   - Generate a new API key
 
-3. **Configure .env**
+3. **Register Sender Name**
+   - Go to SMS Messaging menu
+   - Add sender name (e.g., "AKCB")
+   - Wait for approval (usually quick)
+
+4. **Configure .env**
    ```env
-   TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxx
-   TWILIO_AUTH_TOKEN=your_auth_token
-   TWILIO_PHONE_NUMBER=+1234567890
+   SMS_ONLINE_API_KEY=your_api_key_here
+   SMS_ONLINE_SENDER=AKCB
    ```
 
-4. **Restart Server**
+5. **Restart Server**
    ```bash
    npm run build
    npm start
@@ -96,12 +100,13 @@ Look for this in console:
 
 ### Already Installed
 ✅ mysql2 (database)  
-✅ twilio (SMS service)  
+✅ axios (HTTP client for SMS API)  
 ✅ All other dependencies
 
 ### To Configure
-- [ ] Twilio account (optional for dev)
-- [ ] Twilio credentials in .env (optional for dev)
+- [ ] SMS Online Ghana account (optional for dev)
+- [ ] API key in .env (optional for dev)
+- [ ] Registered sender name (optional for dev)
 
 ## Files Modified
 - ✅ `src/otpService.ts` - OTP generation and SMS sending
@@ -119,23 +124,26 @@ Look for this in console:
 4. Verify authentication works
 
 ### For Production
-1. Set up Twilio account
-2. Add credentials to `.env`
-3. Test SMS delivery
-4. Deploy to Render (will auto-deploy from GitHub)
+1. Set up SMS Online Ghana account
+2. Generate API key
+3. Register sender name (e.g., "AKCB")
+4. Add credentials to `.env`
+5. Test SMS delivery
+6. Deploy to Render (will auto-deploy from GitHub)
 
 ## Troubleshooting
 
 ### OTP Not Appearing in Console
-- Check that Twilio variables are NOT set in .env
+- Check that SMS_ONLINE_API_KEY is NOT set in .env
 - Look for: `[OTP DEV MODE]` in console output
 - Verify server restarted after code changes
 
 ### SMS Not Sending (Production)
-- Verify Twilio credentials are correct
-- Check Twilio console for errors
-- Ensure phone number has SMS capability
-- Check Twilio account balance
+- Verify API key is correct in .env
+- Check that sender name is registered and approved
+- Verify phone numbers are in Ghana format (233XXXXXXXXX)
+- Check SMS Online Ghana dashboard for delivery status
+- Ensure account has sufficient credits
 
 ### Database Connection Issues
 - Run `setup-database.bat` if not done yet
@@ -144,17 +152,21 @@ Look for this in console:
 
 ## Cost Estimate (Production)
 
-**Twilio SMS Pricing (Ghana):**
-- Cost per SMS: ~$0.0075
+**SMS Online Ghana Pricing:**
+- Visit https://www.smsonlinegh.com/pricing for current rates
+- Pay-as-you-go model (no monthly fees)
+- Cost per SMS: Check dashboard for Ghana rates
 - OTP per auth: 1 SMS
-- Example: 1000 authentications = $7.50
+- Example: Competitive rates for Ghana destinations
 
-**Free Trial:**
-- Twilio provides $15 credit
-- Approximately 2000 SMS messages
+**Top-Up Options:**
+- Mobile Money (MTN, Vodafone, AirtelTigo)
+- Credit/Debit Card
+- Bank Transfer
 
 ## Support
 - **Development**: Check console logs
-- **Twilio**: https://console.twilio.com
+- **SMS Online Ghana**: https://www.smsonlinegh.com/login
+- **API Docs**: https://www.smsonlinegh.com/developers/http-api/v5
 - **Database**: Verify `customers` table
 - **Contact**: +233 20 205 5170

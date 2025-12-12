@@ -1,9 +1,9 @@
 /**
  * OTP Service Module
- * Handles SMS OTP generation and verification using Twilio
+ * Handles SMS OTP generation and verification using SMS Online Ghana
  */
 
-import twilio from 'twilio';
+import axios from 'axios';
 
 // OTP Configuration
 const OTP_LENGTH = 6;
@@ -31,41 +31,70 @@ function generateOTP(): string {
 }
 
 /**
- * Send OTP via Twilio SMS
+ * Send OTP via SMS Online Ghana
  */
 async function sendSMS(phoneNumber: string, message: string): Promise<boolean> {
   try {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+    const apiKey = process.env.SMS_ONLINE_API_KEY;
+    const senderName = process.env.SMS_ONLINE_SENDER || 'AKCB';
 
-    if (!accountSid || !authToken || !fromNumber) {
-      console.warn('[OTP] Twilio not configured. OTP:', message.match(/\d{6}/)?.[0]);
+    if (!apiKey) {
+      console.warn('[OTP] SMS Online Ghana not configured. OTP:', message.match(/\d{6}/)?.[0]);
       // In development, log OTP to console
       console.log(`[OTP DEV MODE] Phone: ${phoneNumber}, OTP: ${message.match(/\d{6}/)?.[0]}`);
       return true;
     }
 
-    const client = twilio(accountSid, authToken);
-    
-    // Format phone number for Twilio (ensure +233 format)
+    // Format phone number for SMS Online Ghana (233XXXXXXXXX format)
     let formattedPhone = phoneNumber;
     if (phoneNumber.startsWith('0')) {
-      formattedPhone = '+233' + phoneNumber.substring(1);
-    } else if (!phoneNumber.startsWith('+')) {
-      formattedPhone = '+233' + phoneNumber;
+      formattedPhone = '233' + phoneNumber.substring(1);
+    } else if (phoneNumber.startsWith('+233')) {
+      formattedPhone = phoneNumber.substring(1);
+    } else if (!phoneNumber.startsWith('233')) {
+      formattedPhone = '233' + phoneNumber;
     }
 
-    await client.messages.create({
-      body: message,
-      from: fromNumber,
-      to: formattedPhone
-    });
+    // Prepare SMS request data
+    const smsData = {
+      text: message,
+      type: 0, // GSM default encoding
+      sender: senderName,
+      destinations: [formattedPhone]
+    };
 
-    console.log(`[OTP] SMS sent successfully to ${formattedPhone}`);
-    return true;
+    // Send SMS via SMS Online Ghana API
+    const response = await axios.post(
+      'https://api.smsonlinegh.com/v5/message/sms/send',
+      smsData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Host': 'api.smsonlinegh.com',
+          'Authorization': `key ${apiKey}`
+        }
+      }
+    );
+
+    // Check response status
+    if (response.status === 200 && response.data.handshake?.id === 0) {
+      console.log(`[OTP] SMS sent successfully to ${formattedPhone}`);
+      
+      // Log delivery status for each destination
+      if (response.data.data?.destinations) {
+        response.data.data.destinations.forEach((dest: any) => {
+          console.log(`[OTP] Destination ${dest.to}: ${dest.status.label} (${dest.status.id})`);
+        });
+      }
+      
+      return true;
+    } else {
+      console.error('[OTP] SMS API returned non-success status:', response.data);
+      return false;
+    }
   } catch (error: any) {
-    console.error('[OTP] Failed to send SMS:', error.message);
+    console.error('[OTP] Failed to send SMS:', error.response?.data || error.message);
     return false;
   }
 }
