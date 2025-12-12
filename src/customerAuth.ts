@@ -1,10 +1,11 @@
 /**
  * Customer Authentication Module
  * Handles customer identification and session management for account inquiries
- * Integrated with MySQL database
+ * Integrated with MySQL database and OTP verification
  */
 
 import { executeQuery, querySingle } from './database';
+import * as otpService from './otpService';
 
 export interface CustomerSession {
   sessionId: string;
@@ -17,6 +18,9 @@ export interface CustomerSession {
   expiresAt: Date;
   attempts: number;
   conversationContext: string[];
+  otpSessionKey?: string;
+  awaitingOTP?: boolean;
+  customerName?: string;
 }
 
 // In-memory session store (for production, use Redis or database)
@@ -82,8 +86,24 @@ export function extractAuthDetails(message: string): {
   accountNumber?: string;
   phoneNumber?: string;
   dateOfBirth?: string;
+  otp?: string;
 } {
   const details: any = {};
+  
+  // OTP patterns (6 digits)
+  // Handles: "OTP: 123456", "Code: 123456", "123456"
+  let otpMatch = message.match(/(?:otp|code|verification|pin)\s*[:=]?\s*(\d{6})\b/i);
+  if (otpMatch) {
+    details.otp = otpMatch[1];
+  } else {
+    // Try plain 6-digit match if no prefix found (and message is short)
+    if (message.length <= 20) {
+      otpMatch = message.match(/\b\d{6}\b/);
+      if (otpMatch) {
+        details.otp = otpMatch[0];
+      }
+    }
+  }
   
   // Account number patterns (various formats)
   // Handles: "Account: 1234567890", "Account 1234567890", "Acct: 1234567890", "1234567890"
@@ -130,21 +150,19 @@ export function extractAuthDetails(message: string): {
 
 /**
  * Validate customer credentials against database
- * Queries the customers table to verify account details
+ * Queries the customers table to verify account and phone number only
  */
 export async function validateCredentials(
   accountNumber: string,
-  phoneNumber?: string,
-  dateOfBirth?: string
-): Promise<{ valid: boolean; reason?: string; customerName?: string }> {
+  phoneNumber?: string
+): Promise<{ valid: boolean; reason?: string; customerName?: string; phoneNumber?: string }> {
   try {
-    // Build query based on provided information
+    // Build query to verify account number and phone number
     let query = `
       SELECT 
         account_number, 
         account_name, 
         phone_number,
-        date_of_birth,
         account_type,
         status
       FROM customers 
@@ -158,12 +176,6 @@ export async function validateCredentials(
       params.push(phoneNumber);
     }
     
-    // Add DOB verification if provided
-    if (dateOfBirth) {
-      query += ' AND DATE_FORMAT(date_of_birth, "%d/%m/%Y") = ?';
-      params.push(dateOfBirth);
-    }
-    
     const customer = await querySingle<any>(query, params);
     
     if (!customer) {
@@ -171,8 +183,7 @@ export async function validateCredentials(
       return {
         valid: false,
         reason: "Invalid account details. Please verify your account number" + 
-                (phoneNumber ? " and phone number" : "") + 
-                (dateOfBirth ? " and date of birth" : "") + "."
+                (phoneNumber ? " and phone number" : "") + "."
       };
     }
     
@@ -188,7 +199,8 @@ export async function validateCredentials(
     console.log('[Auth] Customer validated successfully:', customer.account_name);
     return {
       valid: true,
-      customerName: customer.account_name
+      customerName: customer.account_name,
+      phoneNumber: customer.phone_number
     };
   } catch (error: any) {
     console.error('[Auth] Database error during validation:', error.message);
@@ -212,39 +224,66 @@ export function generateAuthPrompt(session: CustomerSession): string {
     missing.push("registered phone number");
   }
   
-  if (missing.length === 0) {
-    return "Please confirm your date of birth (DD/MM/YYYY) to proceed.";
-  }
-  
   if (missing.length === 2) {
     return "To check your account information, I need to verify your identity. Please provide your account number and registered phone number.";
   }
   
-  return `Please provide your ${missing[0]} to continue.`;
+  if (missing.length === 1) {
+    return `Please provide your ${missing[0]} to continue.`;
+  }
+  
+  return "Please provide your account number and phone number.";
 }
 
 /**
- * Attempt to authenticate customer
+ * Attempt to authenticate customer with OTP flow
  */
 export async function authenticateCustomer(
   sessionId: string,
   accountNumber?: string,
   phoneNumber?: string,
-  dateOfBirth?: string
-): Promise<{ success: boolean; message: string; session: CustomerSession }> {
+  otp?: string
+): Promise<{ success: boolean; message: string; session: CustomerSession; awaitingOTP?: boolean }> {
   const session = getOrCreateSession(sessionId);
+  
+  // If OTP is provided, verify it
+  if (otp && session.otpSessionKey) {
+    const verification = otpService.verifyOTP(session.otpSessionKey, otp);
+    
+    if (verification.success) {
+      session.isAuthenticated = true;
+      session.authenticatedAt = new Date();
+      session.expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
+      session.awaitingOTP = false;
+      sessions.set(sessionId, session);
+      
+      return {
+        success: true,
+        message: `Welcome back${session.customerName ? ', ' + session.customerName.split(' ')[0] : ''}! Your identity has been verified. How can I help you with your account today?`,
+        session,
+        awaitingOTP: false
+      };
+    } else {
+      return {
+        success: false,
+        message: verification.message,
+        session,
+        awaitingOTP: true
+      };
+    }
+  }
   
   // Update session with provided details
   if (accountNumber) session.accountNumber = accountNumber;
   if (phoneNumber) session.phoneNumber = phoneNumber;
-  if (dateOfBirth) session.dateOfBirth = dateOfBirth;
   
-  // Check if we have minimum required info
-  if (!session.accountNumber) {
+  // Check if we have minimum required info (account number and phone)
+  if (!session.accountNumber || !session.phoneNumber) {
     return {
       success: false,
       message: generateAuthPrompt(session),
-      session
+      session,
+      awaitingOTP: false
     };
   }
   
@@ -255,34 +294,52 @@ export async function authenticateCustomer(
     return {
       success: false,
       message: "Maximum authentication attempts exceeded. Please visit any branch or call +233 20 205 5170 for assistance.",
-      session
+      session,
+      awaitingOTP: false
     };
   }
   
-  // Validate credentials
+  // Validate credentials (account number + phone number)
   const validation = await validateCredentials(
     session.accountNumber,
-    session.phoneNumber,
-    session.dateOfBirth
+    session.phoneNumber
   );
   
   if (validation.valid) {
-    session.isAuthenticated = true;
-    session.authenticatedAt = new Date();
-    session.expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
-    sessions.set(sessionId, session);
+    // Send OTP
+    session.customerName = validation.customerName;
+    const otpResult = await otpService.generateAndSendOTP(
+      session.accountNumber,
+      validation.phoneNumber || session.phoneNumber,
+      validation.customerName
+    );
     
-    return {
-      success: true,
-      message: `Welcome back! I've verified your identity. How can I help you with your account today?`,
-      session
-    };
+    if (otpResult.success) {
+      session.otpSessionKey = otpResult.sessionKey;
+      session.awaitingOTP = true;
+      sessions.set(sessionId, session);
+      
+      return {
+        success: false,
+        message: otpResult.message,
+        session,
+        awaitingOTP: true
+      };
+    } else {
+      return {
+        success: false,
+        message: otpResult.message,
+        session,
+        awaitingOTP: false
+      };
+    }
   }
   
   return {
     success: false,
-    message: validation.reason || "Unable to verify your details. Please try again or contact customer service at +233 20 205 5170.",
-    session
+    message: validation.reason || "Unable to verify your details. Please check your account number and phone number.",
+    session,
+    awaitingOTP: false
   };
 }
 

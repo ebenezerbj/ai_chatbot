@@ -189,21 +189,47 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         }
       }
       
-      // Not authenticated - attempt authentication
+      // Not authenticated - attempt authentication with OTP flow
       const authDetails = customerAuth.extractAuthDetails(message);
       const authResult = await customerAuth.authenticateCustomer(
         effectiveSessionId,
         authDetails.accountNumber,
         authDetails.phoneNumber,
-        authDetails.dateOfBirth
+        authDetails.otp
       );
       
       return res.json({ 
         reply: authResult.message,
         source: 'authentication',
         sessionId: effectiveSessionId,
-        requiresAuth: !authResult.success
+        requiresAuth: !authResult.success,
+        awaitingOTP: authResult.awaitingOTP || false
       });
+    }
+    
+    // Check if user is sending OTP when session is awaiting verification
+    const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const session = customerAuth.getOrCreateSession(effectiveSessionId);
+    
+    if (session.awaitingOTP) {
+      const authDetails = customerAuth.extractAuthDetails(message);
+      
+      if (authDetails.otp) {
+        const authResult = await customerAuth.authenticateCustomer(
+          effectiveSessionId,
+          undefined,
+          undefined,
+          authDetails.otp
+        );
+        
+        return res.json({ 
+          reply: authResult.message,
+          source: 'authentication',
+          sessionId: effectiveSessionId,
+          requiresAuth: !authResult.success,
+          awaitingOTP: authResult.awaitingOTP || false
+        });
+      }
     }
     
     // Get KB context
