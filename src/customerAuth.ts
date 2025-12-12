@@ -149,15 +149,46 @@ export function extractAuthDetails(message: string): {
 }
 
 /**
+ * Normalize phone number for flexible database matching
+ * Handles: 0242123456, 233242123456, +233242123456, 2335013368 (partial)
+ * Returns: Last 9 digits for flexible matching
+ */
+function normalizePhoneForMatching(phone: string): string {
+  // Remove all non-numeric characters
+  let cleaned = phone.replace(/\D/g, '');
+  
+  // Remove leading 233 if present
+  if (cleaned.startsWith('233')) {
+    cleaned = cleaned.substring(3);
+  }
+  
+  // Remove leading 0 if present
+  if (cleaned.startsWith('0')) {
+    cleaned = cleaned.substring(1);
+  }
+  
+  // Return last 9 digits
+  return cleaned.slice(-9);
+}
+
+/**
  * Validate customer credentials against database
- * Queries the customers table to verify account and phone number only
+ * Queries the customers table to verify either account number OR phone number
  */
 export async function validateCredentials(
-  accountNumber: string,
+  accountNumber?: string,
   phoneNumber?: string
-): Promise<{ valid: boolean; reason?: string; customerName?: string; phoneNumber?: string }> {
+): Promise<{ valid: boolean; reason?: string; customerName?: string; phoneNumber?: string; accountNumber?: string }> {
   try {
-    // Build query to verify account number and phone number
+    // Must have at least one identifier
+    if (!accountNumber && !phoneNumber) {
+      return {
+        valid: false,
+        reason: "Please provide either your account number or phone number."
+      };
+    }
+
+    // Build query to verify either account number OR phone number
     let query = `
       SELECT 
         account_number, 
@@ -166,24 +197,34 @@ export async function validateCredentials(
         account_type,
         status
       FROM customers 
-      WHERE account_number = ?
-    `;
-    const params: any[] = [accountNumber];
+      WHERE `;
+    const params: any[] = [];
+    const conditions: string[] = [];
     
-    // Add phone verification if provided
-    if (phoneNumber) {
-      query += ' AND phone_number = ?';
-      params.push(phoneNumber);
+    // Add account number condition if provided
+    if (accountNumber) {
+      conditions.push('account_number = ?');
+      params.push(accountNumber);
     }
+    
+    // Add phone number condition if provided
+    if (phoneNumber) {
+      // Normalize phone for flexible matching (last 9 digits)
+      const normalizedPhone = normalizePhoneForMatching(phoneNumber);
+      conditions.push('(phone_number = ? OR RIGHT(phone_number, 9) = ? OR RIGHT(REPLACE(phone_number, "233", ""), 9) = ?)');
+      params.push(phoneNumber, normalizedPhone, normalizedPhone);
+    }
+    
+    query += conditions.join(' OR ');
     
     const customer = await querySingle<any>(query, params);
     
     if (!customer) {
       console.log('[Auth] No customer found with provided credentials');
+      const identifier = accountNumber ? 'account number' : 'phone number';
       return {
         valid: false,
-        reason: "Invalid account details. Please verify your account number" + 
-                (phoneNumber ? " and phone number" : "") + "."
+        reason: `No account found with the provided ${identifier}. Please verify your details.`
       };
     }
     
@@ -200,7 +241,8 @@ export async function validateCredentials(
     return {
       valid: true,
       customerName: customer.account_name,
-      phoneNumber: customer.phone_number
+      phoneNumber: customer.phone_number,
+      accountNumber: customer.account_number
     };
   } catch (error: any) {
     console.error('[Auth] Database error during validation:', error.message);
@@ -215,24 +257,12 @@ export async function validateCredentials(
  * Generate authentication prompt based on what's missing
  */
 export function generateAuthPrompt(session: CustomerSession): string {
-  const missing: string[] = [];
-  
-  if (!session.accountNumber) {
-    missing.push("account number");
-  }
-  if (!session.phoneNumber) {
-    missing.push("registered phone number");
+  if (!session.accountNumber && !session.phoneNumber) {
+    return "To check your account information, I need to verify your identity. Please provide either your account number or registered phone number.";
   }
   
-  if (missing.length === 2) {
-    return "To check your account information, I need to verify your identity. Please provide your account number and registered phone number.";
-  }
-  
-  if (missing.length === 1) {
-    return `Please provide your ${missing[0]} to continue.`;
-  }
-  
-  return "Please provide your account number and phone number.";
+  // If they provided something, we're validating it
+  return "Verifying your details...";
 }
 
 /**
@@ -277,8 +307,8 @@ export async function authenticateCustomer(
   if (accountNumber) session.accountNumber = accountNumber;
   if (phoneNumber) session.phoneNumber = phoneNumber;
   
-  // Check if we have minimum required info (account number and phone)
-  if (!session.accountNumber || !session.phoneNumber) {
+  // Check if we have minimum required info (either account number OR phone)
+  if (!session.accountNumber && !session.phoneNumber) {
     return {
       success: false,
       message: generateAuthPrompt(session),
@@ -299,18 +329,22 @@ export async function authenticateCustomer(
     };
   }
   
-  // Validate credentials (account number + phone number)
+  // Validate credentials (either account number OR phone number)
   const validation = await validateCredentials(
     session.accountNumber,
     session.phoneNumber
   );
   
   if (validation.valid) {
-    // Send OTP
+    // Update session with complete details from database
+    session.accountNumber = validation.accountNumber;
+    session.phoneNumber = validation.phoneNumber;
     session.customerName = validation.customerName;
+    
+    // Send OTP to the registered phone number
     const otpResult = await otpService.generateAndSendOTP(
-      session.accountNumber,
-      validation.phoneNumber || session.phoneNumber,
+      validation.accountNumber!,
+      validation.phoneNumber!,
       validation.customerName
     );
     
@@ -337,7 +371,7 @@ export async function authenticateCustomer(
   
   return {
     success: false,
-    message: validation.reason || "Unable to verify your details. Please check your account number and phone number.",
+    message: validation.reason || "Unable to verify your details. Please check your account number or phone number.",
     session,
     awaitingOTP: false
   };
