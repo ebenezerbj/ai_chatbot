@@ -2,24 +2,38 @@
   {
     "id": "branches",
     "product": "Branch",
-    "patterns": ["branches?", "locations?", "list.*branch", "show.*branch", "all.*branch", "how many.*branch", "branch.*list"],
-  "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 20 205 5170\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso**: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji**: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
+    "patterns": [
+      "branches?",
+      "locations?",
+      "list.*branch",
+      "show.*branch",
+      "all.*branch",
+      "how many.*branch",
+      "branch.*list"
+    ],
+    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 20 205 5170\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso**: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji**: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "nearest_branch_stub",
     "product": "Nearest Branch",
-    "patterns": ["nearest", "near me", "closest", "nearby", "which.*branch.*close"],
+    "patterns": [
+      "nearest",
+      "near me",
+      "closest",
+      "nearby",
+      "which.*branch.*close"
+    ],
     "answer": "Nearest branch: If you share your GPS (GhanaPost or phone location), I can suggest the closest branch and provide directions. For now, please tell me your area or ZIP/plus code."
   },
   {
     "id": "branch_location_amantin",
     "product": "Branch",
     "patterns": [
-  "amantin.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*amantin",
-  "where.*amantin.*branch",
-  "locate.*amantin",
-  "find.*amantin.*branch"
+      "amantin.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*amantin",
+      "where.*amantin.*branch",
+      "locate.*amantin",
+      "find.*amantin.*branch"
     ],
     "answer": "Amantin (Head Office): Amantin High Street. Phone: +233 20 205 5170"
   },
@@ -27,11 +41,11 @@
     "id": "branch_location_atebubu",
     "product": "Branch",
     "patterns": [
-  "atebubu.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*atebubu",
-  "where.*atebubu.*branch",
-  "locate.*atebubu",
-  "find.*atebubu.*branch"
+      "atebubu.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*atebubu",
+      "where.*atebubu.*branch",
+      "locate.*atebubu",
+      "find.*atebubu.*branch"
     ],
     "answer": "Atebubu: Phone: +233 20 205 5173"
   },
@@ -39,59 +53,59 @@
     "id": "branch_location_kajaji",
     "product": "Branch",
     "patterns": [
-  "kajaji.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*kajaji",
-  "where.*kajaji.*branch",
-  "locate.*kajaji",
-  "find.*kajaji.*branch"
+      "kajaji.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*kajaji",
+      "where.*kajaji.*branch",
+      "locate.*kajaji",
+      "find.*kajaji.*branch"
     ],
-  "answer": "Kajaji: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372"
+    "answer": "Kajaji: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372"
   },
   {
     "id": "branch_location_kwame_danso",
     "product": "Branch",
     "patterns": [
-  "kwame\\s*danso.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*kwame\\s*danso",
-  "where.*kwame\\s*danso.*branch",
-  "locate.*kwame\\s*danso",
-  "find.*kwame\\s*danso.*branch"
+      "kwame\\s*danso.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*kwame\\s*danso",
+      "where.*kwame\\s*danso.*branch",
+      "locate.*kwame\\s*danso",
+      "find.*kwame\\s*danso.*branch"
     ],
-  "answer": "Kwame Danso: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174"
+    "answer": "Kwame Danso: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174"
   },
   {
     "id": "branch_location_yeji",
     "product": "Branch",
     "patterns": [
-  "yeji.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*yeji",
-  "where.*yeji.*branch",
-  "locate.*yeji",
-  "find.*yeji.*branch"
+      "yeji.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*yeji",
+      "where.*yeji.*branch",
+      "locate.*yeji",
+      "find.*yeji.*branch"
     ],
-  "answer": "Yeji: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175"
+    "answer": "Yeji: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175"
   },
   {
     "id": "branch_location_ahwiaa",
     "product": "Branch",
     "patterns": [
-  "ahwiaa.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*ahwiaa",
-  "where.*ahwiaa.*branch",
-  "locate.*ahwiaa",
-  "find.*ahwiaa.*branch"
+      "ahwiaa.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*ahwiaa",
+      "where.*ahwiaa.*branch",
+      "locate.*ahwiaa",
+      "find.*ahwiaa.*branch"
     ],
-  "answer": "Ahwiaa: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931"
+    "answer": "Ahwiaa: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931"
   },
   {
     "id": "branch_location_ejura",
     "product": "Branch",
     "patterns": [
-  "ejura.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*ejura",
-  "where.*ejura.*branch",
-  "locate.*ejura",
-  "find.*ejura.*branch"
+      "ejura.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*ejura",
+      "where.*ejura.*branch",
+      "locate.*ejura",
+      "find.*ejura.*branch"
     ],
     "answer": "Ejura: Ejura. Phone: +233 20 205 5172"
   },
@@ -99,26 +113,36 @@
     "id": "branch_location_kejetia",
     "product": "Branch",
     "patterns": [
-  "kejetia.*(address|location|gps|where|phone|number)",
-  "(address|location|gps|phone|number).*kejetia",
-  "where.*kejetia.*branch",
-  "where.*kejetia",
-  "locate.*kejetia",
-  "find.*kejetia.*branch",
-  "kejetia.*branch"
+      "kejetia.*(address|location|gps|where|phone|number)",
+      "(address|location|gps|phone|number).*kejetia",
+      "where.*kejetia.*branch",
+      "where.*kejetia",
+      "locate.*kejetia",
+      "find.*kejetia.*branch",
+      "kejetia.*branch"
     ],
-  "answer": "Kumasi (Kejetia market): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
+    "answer": "Kumasi (Kejetia market): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "branch_managers_list",
     "product": "Branch Managers",
-    "patterns": ["branch\\s*managers", "managers\\s*list", "list\\s*of\\s*branch\\s*managers", "all.*managers", "who.*manages.*branches"],
+    "patterns": [
+      "branch\\s*managers",
+      "managers\\s*list",
+      "list\\s*of\\s*branch\\s*managers",
+      "all.*managers",
+      "who.*manages.*branches"
+    ],
     "answer": "List of Branch Managers:\n- **AGNES QUAYE** — Branch Manageress, Ejura\n- **ABDUL-RAHMAN ABUBAKAR** — Branch Manager, Ahwiaa\n- **ALI SONDONG IBRAHIM** — Officer-in-Charge, Kejetia\n- **BENJAMIN AYISI** — Branch Manager, Yeji\n- **OSEI-KISSI JOHN** — Branch Manager, Kwame Danso\n- **EMMANUEL OFORI-ATTA** — Branch Manager, Amantin\n- **OTENG ABRAHAM L** — Branch Manager, Atebubu\n- **ROBERT SARFO** — Branch Manager, Kajaji"
   },
   {
     "id": "branch_manager_single",
     "product": "Branch Manager",
-    "patterns": ["branch\\s*manager", "manageress", "officer-?in-?charge"],
+    "patterns": [
+      "branch\\s*manager",
+      "manageress",
+      "officer-?in-?charge"
+    ],
     "answer": "Branch Managers by location:\n- Ejura — **AGNES QUAYE** (Branch Manageress)\n- Ahwiaa — **ABDUL-RAHMAN ABUBAKAR** (Branch Manager)\n- Kejetia — **ALI SONDONG IBRAHIM** (Officer-in-Charge)\n- Yeji — **BENJAMIN AYISI** (Branch Manager)\n- Kwame Danso — **OSEI-KISSI JOHN** (Branch Manager)\n- Amantin — **EMMANUEL OFORI-ATTA** (Branch Manager)\n- Atebubu — **OTENG ABRAHAM L** (Branch Manager)\n- Kajaji — **ROBERT SARFO** (Branch Manager)"
   },
   {
@@ -204,49 +228,128 @@
   {
     "id": "contact",
     "product": "Contact",
-    "patterns": ["contact", "phone", "call", "email", "reach", "address", "gps", "telephone", "contact.*info", "how.*reach", "how.*contact", "talk.*agent", "speak.*human", "talk.*someone", "real.*person", "customer.*service", "support.*agent"],
+    "patterns": [
+      "contact",
+      "phone",
+      "call",
+      "email",
+      "reach",
+      "address",
+      "gps",
+      "telephone",
+      "contact.*info",
+      "how.*reach",
+      "how.*contact",
+      "talk.*agent",
+      "speak.*human",
+      "talk.*someone",
+      "real.*person",
+      "customer.*service",
+      "support.*agent"
+    ],
     "answer": "I'm here to help! For direct assistance:\n- Call: **0202055171**\n- Email: info@amankacombank.com\n- Visit our Head Office at Amantin (GPS: BA-08182-6721)\n\nWhat banking question can I help you with right now?"
   },
   {
     "id": "hours",
     "product": "Hours",
-    "patterns": ["hours", "open", "opening", "closing", "time", "when.*open", "business.*hours", "operating.*hours", "work.*hours"],
+    "patterns": [
+      "hours",
+      "open",
+      "opening",
+      "closing",
+      "time",
+      "when.*open",
+      "business.*hours",
+      "operating.*hours",
+      "work.*hours"
+    ],
     "answer": "Our branches are open Monday to Friday, from 8:00 AM to 4:00 PM."
   },
   {
     "id": "mobile_banking_ussd",
     "product": "Smart Banking",
-    "patterns": ["mobile.*bank", "ussd", "\\*992#", "992", "short.*code.*992", "dial.*992"],
+    "patterns": [
+      "mobile.*bank",
+      "ussd",
+      "\\*992#",
+      "992",
+      "short.*code.*992",
+      "dial.*992"
+    ],
     "answer": "Mobile Banking USSD short code: *992#"
   },
   {
     "id": "ghana_pay_app",
     "product": "Smart Banking",
-    "patterns": ["ghana\\s*pay", "\\*707#", "707", "short.*code.*707", "dial.*707", "ghana pay app"],
+    "patterns": [
+      "ghana\\s*pay",
+      "\\*707#",
+      "707",
+      "short.*code.*707",
+      "dial.*707",
+      "ghana pay app"
+    ],
     "answer": "Ghana Pay short code: *707#\\nDownload Ghana Pay on the Play Store (Android) and App Store (iOS).\\n\\nSelf-onboarding steps:\\n1. Select Bank\\n2. Input referral code\\n3. Input Ghana Card Number\\n4. Take Selfie\\n5. Validate\\n6. On success, some details auto-populate\\n7. Provide remaining details:\\n   - Bank branch\\n   - Email\\n   - Secret question and answer\\n   - Occupation\\n   - Annual income\\n   - Source of Funds\\n   - Next of Kin name and contact"
   },
   {
     "id": "smart_banking",
     "product": "Smart Banking",
-    "patterns": ["smart.*bank", "atm", "gh-?link", "e-?zwich", "apex", "inter-?bank", "ach", "interoperability", "digital.*service"],
+    "patterns": [
+      "smart.*bank",
+      "atm",
+      "gh-?link",
+      "e-?zwich",
+      "apex",
+      "inter-?bank",
+      "ach",
+      "interoperability",
+      "digital.*service"
+    ],
     "answer": "We offer GH-Link ATM, Apex Transfers, E-zwich, ACH Inter-Bank Transfers, and Interoperability Services."
   },
   {
     "id": "loans_overview",
     "product": "Loan",
-    "patterns": ["loans?", "credit", "advance", "borrow", "loan.*types", "what.*loan", "which.*loan"],
+    "patterns": [
+      "loans?",
+      "credit",
+      "advance",
+      "borrow",
+      "loan.*types",
+      "what.*loan",
+      "which.*loan"
+    ],
     "answer": "We offer various loans, including Agric, Business, Funeral, Group, Salary, Susu, Staff, and Inventory. Ask about a specific one for details."
   },
   {
     "id": "investments_overview",
     "product": "Investment",
-    "patterns": ["invest(ment)?s?", "fixed deposit", "christmas account", "sala account", "woba", "save.*money", "grow.*money"],
+    "patterns": [
+      "invest(ment)?s?",
+      "fixed deposit",
+      "christmas account",
+      "sala account",
+      "woba",
+      "save.*money",
+      "grow.*money"
+    ],
     "answer": "Our investment options include Fixed Deposits, Christmas Accounts, Sala Accounts, and Woba Daakye."
   },
   {
     "id": "accounts_overview",
     "product": "Deposit",
-    "patterns": ["accounts?", "deposit.*service", "account.*types", "open.*account", "create.*account", "types.*account", "\\bproducts?\\b", "\\bservices?\\b", "what.*offer", "what.*provide"],
+    "patterns": [
+      "accounts?",
+      "deposit.*service",
+      "account.*types",
+      "open.*account",
+      "create.*account",
+      "types.*account",
+      "\\bproducts?\\b",
+      "\\bservices?\\b",
+      "what.*offer",
+      "what.*provide"
+    ],
     "answer": "We offer various banking products and services:\n\n**Deposit Accounts:** Current, Salary, Savings, and Susu accounts\n**Loans:** Agric, Business, Funeral, Group, Salary, Susu, Staff, and Inventory loans\n**Investments:** Fixed Deposits, Christmas Accounts, Sala Accounts, Woba Daakye\n**Smart Banking:** Ghana Pay (*707#), Mobile Banking\n\nAsk about any specific product for more details!"
   },
   {
@@ -288,61 +391,91 @@
   {
     "id": "loan_requirements",
     "product": "Loan",
-    "patterns": ["loan.*(require|document|need)", "(require|document|need).*loan"],
-  "answer": "Loan – general requirements (may vary by product)\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Two passport-size photos\n- Proof of income (payslips or bank statements) or business records\n- Guarantor(s) where applicable\n- Collateral where applicable\n- Recent utility bill or GhanaPost GPS (address)\n\nFinal approval is subject to assessment. Visit a branch for a tailored checklist."
+    "patterns": [
+      "loan.*(require|document|need)",
+      "(require|document|need).*loan"
+    ],
+    "answer": "Loan – general requirements (may vary by product)\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Two passport-size photos\n- Proof of income (payslips or bank statements) or business records\n- Guarantor(s) where applicable\n- Collateral where applicable\n- Recent utility bill or GhanaPost GPS (address)\n\nFinal approval is subject to assessment. Visit a branch for a tailored checklist."
   },
   {
     "id": "agric_loan_requirements",
     "product": "Loan",
-    "patterns": ["agric.*(require|document|need)", "(require|document|need).*agric"],
+    "patterns": [
+      "agric.*(require|document|need)",
+      "(require|document|need).*agric"
+    ],
     "answer": "Agric Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Farm or agri-business records (e.g., production plan)\n- Proof of land use/tenure where applicable\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "business_loan_requirements",
     "product": "Loan",
-    "patterns": ["business.*loan.*(require|document|need)", "(require|document|need).*business.*loan"],
+    "patterns": [
+      "business.*loan.*(require|document|need)",
+      "(require|document|need).*business.*loan"
+    ],
     "answer": "Business Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Business registration documents (where applicable)\n- Recent bank statements and/or sales records\n- Collateral and/or guarantor(s) as required\n- Tax Identification Number (if available)\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "funeral_loan_requirements",
     "product": "Loan",
-    "patterns": ["funeral.*loan.*(require|document|need)", "(require|document|need).*funeral.*loan"],
+    "patterns": [
+      "funeral.*loan.*(require|document|need)",
+      "(require|document|need).*funeral.*loan"
+    ],
     "answer": "Funeral Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Proof of income or repayment capacity\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "group_loan_requirements",
     "product": "Loan",
-    "patterns": ["group.*loan.*(require|document|need)", "(require|document|need).*group.*loan"],
+    "patterns": [
+      "group.*loan.*(require|document|need)",
+      "(require|document|need).*group.*loan"
+    ],
     "answer": "Group Loan – requirements\n- Valid Ghana Card (national ID) for each group member\n- Completed group loan application forms\n- Group constitution or agreement (if applicable)\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "salary_loan_requirements",
     "product": "Loan",
-    "patterns": ["salary.*loan.*(require|document|need)", "(require|document|need).*salary.*loan"],
+    "patterns": [
+      "salary.*loan.*(require|document|need)",
+      "(require|document|need).*salary.*loan"
+    ],
     "answer": "Salary Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Employer introduction/undertaking letter\n- Recent payslips and account statements\n- Guarantor(s) as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "susu_loan_requirements",
     "product": "Loan",
-    "patterns": ["susu.*loan.*(require|document|need)", "(require|document|need).*susu.*loan"],
+    "patterns": [
+      "susu.*loan.*(require|document|need)",
+      "(require|document|need).*susu.*loan"
+    ],
     "answer": "Susu Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Susu contribution history\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "staff_loan_requirements",
     "product": "Loan",
-    "patterns": ["staff.*loan.*(require|document|need)", "(require|document|need).*staff.*loan"],
+    "patterns": [
+      "staff.*loan.*(require|document|need)",
+      "(require|document|need).*staff.*loan"
+    ],
     "answer": "Staff Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Employment verification\n- Guarantor(s) and/or collateral as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "inventory_loan_requirements",
     "product": "Loan",
-    "patterns": ["inventory.*loan.*(require|document|need)", "(require|document|need).*inventory.*loan"],
+    "patterns": [
+      "inventory.*loan.*(require|document|need)",
+      "(require|document|need).*inventory.*loan"
+    ],
     "answer": "Inventory Loan – requirements\n- Valid Ghana Card (national ID)\n- Completed loan application form\n- Inventory list and purchase invoices/quotes\n- Collateral and/or guarantor(s) as required\n- Recent utility bill or GhanaPost GPS (address)"
   },
   {
     "id": "account_requirements",
     "product": "Deposit",
-    "patterns": ["account.*(require|document|need)", "(open|opening).*account"],
+    "patterns": [
+      "account.*(require|document|need)",
+      "(open|opening).*account"
+    ],
     "answer": "To open an account, you generally need a valid ID, passport photos, and proof of address. Requirements may vary slightly by account type."
   },
   {
@@ -351,99 +484,188 @@
     "patterns": [
       "current.*(open|opening|require|document|need)",
       "(open|opening).*current",
-  "what.*need.*current\\s*account",
-  "requirements?.*current\\s*account"
+      "what.*need.*current\\s*account",
+      "requirements?.*current\\s*account"
     ],
     "answer": "Current Account – opening requirements\n- Valid Ghana Card (national ID)\n- Two passport-size photos\n- Proof of address (utility bill or GhanaPost GPS)\n- TIN (if available)\n- Two referees (existing current account holders)\n- Proof of employment/occupation (or business registration for businesses)\n- Initial deposit (minimum opening balance)"
   },
   {
     "id": "loan_rates",
     "product": "Loan Rates",
-    "patterns": ["loan.*(rate|interest|%)", "rate.*loan"],
+    "patterns": [
+      "loan.*(rate|interest|%)",
+      "rate.*loan"
+    ],
     "answer": "Loan rates vary by product (e.g., Salary Loan at 31% p.a.). Rates are subject to change and a final assessment. Please visit a branch for a personalized quote."
   },
   {
     "id": "savings_rates",
     "product": "Savings Rates",
-    "patterns": ["savings.*(rate|interest|%)", "rate.*savings"],
+    "patterns": [
+      "savings.*(rate|interest|%)",
+      "rate.*savings"
+    ],
     "answer": "Savings rates are variable (e.g., Savings Account at 8-12% p.a.). Rates are subject to change. Please visit a branch for current details."
   },
   {
     "id": "ceo",
     "product": "CEO",
-    "patterns": ["\\bceo\\b", "chief executive officer", "who.*ceo", "executive officer"],
+    "patterns": [
+      "\\bceo\\b",
+      "chief executive officer",
+      "who.*ceo",
+      "executive officer"
+    ],
     "answer": "Our Chief Executive Officer is **MICHAEL WILBERFORCE OSAE**."
   },
   {
     "id": "head_of_audit",
     "product": "Head of Audit",
-    "patterns": ["head.*audit", "audit head", "head.*of.*audit", "who.*audit"],
+    "patterns": [
+      "head.*audit",
+      "audit head",
+      "head.*of.*audit",
+      "who.*audit"
+    ],
     "answer": "**STEVE TAKYI SARPONG JUNIOR** is our Head of Audit."
   },
   {
     "id": "head_of_credit",
     "product": "Head of Credit",
-    "patterns": ["head.*credit", "credit head", "head.*of.*credit", "who.*credit", "debrah", "bempong", "michael.*debrah"],
+    "patterns": [
+      "head.*credit",
+      "credit head",
+      "head.*of.*credit",
+      "who.*credit",
+      "debrah",
+      "bempong",
+      "michael.*debrah"
+    ],
     "answer": "**MICHAEL DEBRAH BEMPONG** is our Head of Credit."
   },
   {
     "id": "head_of_aml_risk_compliance",
     "product": "Head of AML, Risk & Compliance",
-  "patterns": ["(anti-?money\\s?laundering|aml)", "head.*(risk|compliance)", "risk.*compliance"],
+    "patterns": [
+      "(anti-?money\\s?laundering|aml)",
+      "head.*(risk|compliance)",
+      "risk.*compliance"
+    ],
     "answer": "**GEOFFERY OWUSU BOATENG** is our Head of Anti-Money Laundering, Risk and Compliance."
   },
   {
     "id": "head_of_it",
     "product": "Head of IT",
-  "patterns": ["head.*it", "it head", "head.*information\\s*technology", "head.*of.*it", "who.*\\bit\\b", "mark ernest", "mark.*ernest"],
+    "patterns": [
+      "head.*it",
+      "it head",
+      "head.*information\\s*technology",
+      "head.*of.*it",
+      "who.*\\bit\\b",
+      "mark ernest",
+      "mark.*ernest"
+    ],
     "answer": "**MARK ERNEST** is our Head of IT."
   },
   {
     "id": "head_of_admin_hr",
     "product": "Head of Administration & HR",
-  "patterns": ["head.*admin(istration)?", "head.*hr", "admin(istration)?\\s*&?\\s*hr"],
+    "patterns": [
+      "head.*admin(istration)?",
+      "head.*hr",
+      "admin(istration)?\\s*&?\\s*hr"
+    ],
     "answer": "**MR. SAMUEL ACHEAMPONG** is our Head of Administration & HR."
   },
   {
     "id": "head_of_operations",
     "product": "Head of Operations",
-    "patterns": ["head.*operations", "operations head", "head.*of.*operations", "who.*operations", "eric.*nanjor", "nanjor.*janja", "eric nanjor janja", "\\beric\\b", "nanjor", "janja"],
+    "patterns": [
+      "head.*operations",
+      "operations head",
+      "head.*of.*operations",
+      "who.*operations",
+      "eric.*nanjor",
+      "nanjor.*janja",
+      "eric nanjor janja",
+      "\\beric\\b",
+      "nanjor",
+      "janja"
+    ],
     "answer": "**ERIC NANJOR JANJA** is our Head of Operations."
   },
   {
     "id": "head_of_finance",
     "product": "Head of Finance",
-    "patterns": ["head.*finance", "finance head", "head.*of.*finance", "who.*finance", "\\bcfo\\b", "chief financial officer"],
+    "patterns": [
+      "head.*finance",
+      "finance head",
+      "head.*of.*finance",
+      "who.*finance",
+      "\\bcfo\\b",
+      "chief financial officer"
+    ],
     "answer": "For information about our Head of Finance or CFO, please contact our main office at 0202055171 or visit our Amantin Head Office."
   },
   {
     "id": "head_of_departments",
     "product": "Department Heads",
-    "patterns": ["head.*of.*department", "department.*head", "heads.*of.*department", "all.*heads", "who.*head.*department"],
+    "patterns": [
+      "head.*of.*department",
+      "department.*head",
+      "heads.*of.*department",
+      "all.*heads",
+      "who.*head.*department"
+    ],
     "answer": "Our Department Heads and Unit Heads are:\\n- **MICHAEL WILBERFORCE OSAE** (CEO)\\n- **STEVE TAKYI SARPONG JUNIOR** (Head of Audit)\\n- **MICHAEL DEBRAH BEMPONG** (Head of Credit)\\n- **GEOFFERY OWUSU BOATENG** (Head of AML, Risk & Compliance)\\n- **MARK ERNEST** (Head of IT)\\n- **MR. SAMUEL ACHEAMPONG** (Head of Administration & HR)\\n- **ERIC NANJOR JANJA** (Head of Operations)\\n- **DANIEL OPOKU** (Unit Head, Marketing)"
   },
   {
     "id": "unit_head_marketing",
     "product": "Unit Head (Marketing)",
-    "patterns": ["head.*marketing", "marketing head", "unit head.*marketing", "daniel.*opoku", "opoku.*daniel", "\\bopoku\\b", "\\bdaniel\\b"],
+    "patterns": [
+      "head.*marketing",
+      "marketing head",
+      "unit head.*marketing",
+      "daniel.*opoku",
+      "opoku.*daniel",
+      "\\bopoku\\b",
+      "\\bdaniel\\b"
+    ],
     "answer": "**DANIEL OPOKU** is our Unit Head (Marketing)."
   },
   {
     "id": "management_team",
     "product": "Management",
-    "patterns": ["management", "leadership", "\\bteam\\b", "who.*runs", "executives", "senior.*staff", "senior.*management"],
+    "patterns": [
+      "management",
+      "leadership",
+      "\\bteam\\b",
+      "who.*runs",
+      "executives",
+      "senior.*staff",
+      "senior.*management"
+    ],
     "answer": "Our senior management includes Michael Wilberforce Osae (CEO), Steve Takyi Sarpong Junior (Head of Audit), and Michael Debrah Bempong (Head of Credit). For a full list, please ask for the 'full management team'."
   },
   {
     "id": "management_team_full",
     "product": "Management",
-    "patterns": ["full management team"],
+    "patterns": [
+      "full management team"
+    ],
     "answer": "Our Senior Management & Unit Heads are:\\n- **MICHAEL WILBERFORCE OSAE** (CEO)\\n- **STEVE TAKYI SARPONG JUNIOR** (Head of Audit)\\n- **MICHAEL DEBRAH BEMPONG** (Head of Credit)\\n- **GEOFFERY OWUSU BOATENG** (Head of AML, Risk & Compliance)\\n- **MARK ERNEST** (Head of IT)\\n- **MR. SAMUEL ACHEAMPONG** (Head of Administration & HR)\\n- **ERIC NANJOR JANJA** (Head of Operations)\\n- **DANIEL OPOKU** (Unit Head, Marketing)"
   },
   {
     "id": "products_and_services",
     "product": "Products & Services",
-    "patterns": ["products?", "services?", "offerings?", "what.*offer", "what.*provide", "what.*available"],
+    "patterns": [
+      "products?",
+      "services?",
+      "offerings?",
+      "what.*offer",
+      "what.*provide",
+      "what.*available"
+    ],
     "answer": "We offer a range of services including Deposit Accounts, Loans, Smart Banking, and Investments. Ask about a specific product for more details."
   },
   {
@@ -464,8 +686,8 @@
     "id": "board_chairman",
     "product": "Board Chairman",
     "patterns": [
-  "who.*board\\s*chair(man)?",
-  "board\\s*chairman"
+      "who.*board\\s*chair(man)?",
+      "board\\s*chairman"
     ],
     "answer": "Our Board Chairman is Richard Owusu Afriyie (as noted at the 2023 AGM)."
   },
@@ -484,7 +706,493 @@
   {
     "id": "concise_generic",
     "product": "General",
-    "patterns": ["^(hi|hello|hey|greetings)$", "^(help|assist)$", "^(faq|support)$"],
+    "patterns": [
+      "^(hi|hello|hey|greetings)$",
+      "^(help|assist)$",
+      "^(faq|support)$"
+    ],
     "answer": "Hello! I'm here to help you with information about AKCB - Amantin and Kasei Community Bank PLC. You can ask me about branches, accounts, loans, investments, management, or any banking services."
+  },
+  {
+    "id": "check_balance",
+    "product": "account_information",
+    "patterns": [
+      "what is account balance",
+      "show available balance",
+      "how much money do i have",
+      "check balance for me",
+      "what is in account right now",
+      "how much do i have left",
+      "tell me ledger balance",
+      "view account balance",
+      "balance enquiry",
+      "how much funds are available"
+    ],
+    "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 20 205 5170 for assistance."
+  },
+  {
+    "id": "view_recent_transactions",
+    "product": "account_information",
+    "patterns": [
+      "show last transactions",
+      "i want mini statement",
+      "list recent transactions",
+      "show debit and credit history",
+      "display activity for past week",
+      "what are latest transactions",
+      "show me what happened on account today",
+      "any recent withdrawals",
+      "provide recent account history",
+      "show recent activity"
+    ],
+    "answer": "Retrieve recent transactions / mini-statement.\n\nTo retrieve recent transactions / mini-statement, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 20 205 5170 for assistance."
+  },
+  {
+    "id": "account_details",
+    "product": "account_information",
+    "patterns": [
+      "type"
+    ],
+    "answer": "\"Provide account details (number.\n\nTo \"provide account details (number, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 20 205 5170 for assistance."
+  },
+  {
+    "id": "make_transfer",
+    "product": "transfers_payments",
+    "patterns": [
+      "i want to send money",
+      "help me make transfer",
+      "transfer 500 to savings account",
+      "how do i transfer funds",
+      "send money to another bank",
+      "make payment for me",
+      "i want to move funds",
+      "initiate bank transfer",
+      "guide me to transfer cash",
+      "send funds to this account"
+    ],
+    "answer": "Initiate or guide a funds transfer.\n\nFor initiate or guide a funds transfer, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+  },
+  {
+    "id": "transfer_status",
+    "product": "transfers_payments",
+    "patterns": [
+      "why is transfer pending",
+      "did transfer go through",
+      "check transfer status",
+      "is transaction successful",
+      "track transaction",
+      "has recipient received money",
+      "was transfer completed",
+      "check payment status",
+      "is transfer delayed",
+      "did bank receive transfer request"
+    ],
+    "answer": "Check status of a transfer.\n\nFor check status of a transfer, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+  },
+  {
+    "id": "transfer_fees",
+    "product": "transfers_payments",
+    "patterns": [
+      "what are transfer charges",
+      "how much is bank transfer fee",
+      "do you charge for transfers",
+      "what is interbank transfer fee",
+      "how much to send money",
+      "are transfers free",
+      "explain transfer fees",
+      "what charges apply for transactions",
+      "what is cost for sending funds",
+      "tell me transfer pricing"
+    ],
+    "answer": "Query transfer fees and charges.\n\nFor query transfer fees and charges, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+  },
+  {
+    "id": "international_transfer",
+    "product": "transfers_payments",
+    "patterns": [
+      "how do i send money abroad",
+      "what is swift code",
+      "what are today's exchange rates",
+      "help me make international transfer",
+      "what charges apply for overseas transfers",
+      "ci transfer funds overseas",
+      "what is foreign transfer process",
+      "show me international transfer steps",
+      "provide swift or routing code",
+      "how much does it cost to send money internationally"
+    ],
+    "answer": "Cross-border transfers and SWIFT details.\n\nFor cross-border transfers and swift details, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+  },
+  {
+    "id": "block_card",
+    "product": "card_management",
+    "patterns": [
+      "i lost atm card",
+      "block card immediately",
+      "card was stolen",
+      "freeze card now",
+      "disable debit card",
+      "stop card from being used",
+      "someone took card—block it",
+      "card is missing",
+      "deactivate card",
+      "prevent unauthorized use of card"
+    ],
+    "answer": "Block lost or stolen card immediately.\n\nFor block lost or stolen card immediately, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+  },
+  {
+    "id": "request_new_card",
+    "product": "card_management",
+    "patterns": [
+      "i want new atm card",
+      "replace damaged card",
+      "how do i request new card",
+      "order replacement card",
+      "card is broken; give me new one",
+      "apply for new debit card",
+      "i want fresh bank card",
+      "how long does new card take",
+      "request for new atm card",
+      "send me new debit card"
+    ],
+    "answer": "Request a replacement or new card.\n\nFor request a replacement or new card, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+  },
+  {
+    "id": "card_not_working",
+    "product": "card_management",
+    "patterns": [
+      "card isn't working",
+      "why was card declined",
+      "i can’t withdraw money with card",
+      "card keeps failing",
+      "atm rejected card",
+      "pos payment did not go through",
+      "card won't swipe",
+      "why can't i use card",
+      "card malfunction—help me",
+      "card error at atm"
+    ],
+    "answer": "Troubleshoot declined or failing card.\n\nFor troubleshoot declined or failing card, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+  },
+  {
+    "id": "pin_reset",
+    "product": "card_management",
+    "patterns": [
+      "help me reset pin",
+      "i forgot pin",
+      "how do i change card pin",
+      "reset atm pin",
+      "i want to update pin",
+      "pin not working—help",
+      "set new card pin",
+      "guide me to reset pin",
+      "pin is blocked",
+      "unlock pin"
+    ],
+    "answer": "Reset or change card PIN.\n\nFor reset or change card pin, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+  },
+  {
+    "id": "card_activation",
+    "product": "card_management",
+    "patterns": [
+      "activate new card",
+      "card needs activation",
+      "how do i activate card",
+      "new card isn’t working",
+      "activate atm card",
+      "enable debit card",
+      "start using new card",
+      "card activation help",
+      "why is new card inactive",
+      "help activate card"
+    ],
+    "answer": "Activate a new card.\n\nFor activate a new card, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+  },
+  {
+    "id": "password_reset",
+    "product": "digital_banking",
+    "patterns": [
+      "i forgot password",
+      "reset online banking password",
+      "i can't log in",
+      "password is not working",
+      "help me recover password",
+      "how do i change login password",
+      "unlock online account",
+      "i am locked out—reset password",
+      "forgot login credentials",
+      "send password reset instructions"
+    ],
+    "answer": "Reset online banking password or help logging in.\n\nTo reset online banking password or help logging in, please use our mobile banking app or contact customer service at +233 20 205 5170. For security reasons, some actions may require identity verification."
+  },
+  {
+    "id": "profile_update",
+    "product": "digital_banking",
+    "patterns": [
+      "email)\""
+    ],
+    "answer": "\"Update customer profile (phone.\n\nTo \"update customer profile (phone, please use our mobile banking app or contact customer service at +233 20 205 5170. For security reasons, some actions may require identity verification."
+  },
+  {
+    "id": "mobile_app_support",
+    "product": "digital_banking",
+    "patterns": [
+      "app crashes on startup",
+      "how do i enable biometric login",
+      "mobile app not sending otps",
+      "app won't update",
+      "can't receive otp on phone",
+      "app is slow and keeps freezing",
+      "how to clear app cache",
+      "biometric login failing—help",
+      "app login failing after update",
+      "why can't i access certain features on app"
+    ],
+    "answer": "Troubleshoot mobile app issues.\n\nTo troubleshoot mobile app issues, please use our mobile banking app or contact customer service at +233 20 205 5170. For security reasons, some actions may require identity verification."
+  },
+  {
+    "id": "loan_products",
+    "product": "loans_credit",
+    "patterns": [
+      "what loans do you offer",
+      "show me personal looptions",
+      "do you have business loproducts",
+      "tell me about mortgage options",
+      "what are eligibility criterifor loans",
+      "do you offer student loans",
+      "what is lotenure range",
+      "are there special loans for smes",
+      "show lointerest rates by product",
+      "what documents are needed to apply for loan"
+    ],
+    "answer": "Provide loan product information.\n\nFor information about provide loan product information, please visit any branch or call +233 20 205 5170. Our loan officers will be happy to discuss options and eligibility requirements."
+  },
+  {
+    "id": "loan_application",
+    "product": "loans_credit",
+    "patterns": [
+      "how do i apply for loan",
+      "what documents are required for loapplication",
+      "start loapplication for me",
+      "ci apply for loonline",
+      "help me check loeligibility",
+      "what is process to apply for mortgage",
+      "how long does loapproval take",
+      "ci save loapplication and continue later",
+      "i need help filling loform"
+    ],
+    "answer": "Assist with loan applications.\n\nFor information about assist with loan applications, please visit any branch or call +233 20 205 5170. Our loan officers will be happy to discuss options and eligibility requirements."
+  },
+  {
+    "id": "loan_balance",
+    "product": "loans_credit",
+    "patterns": [
+      "what is lobalance",
+      "when is next lorepayment due",
+      "show repayment schedule",
+      "how much principal is outstanding",
+      "when will lobe fully paid",
+      "what is monthly emi",
+      "show loamortization for loan",
+      "provide details for loaccount 445566"
+    ],
+    "answer": "Retrieve loan balance and repayment schedule.\n\nFor information about retrieve loan balance and repayment schedule, please visit any branch or call +233 20 205 5170. Our loan officers will be happy to discuss options and eligibility requirements."
+  },
+  {
+    "id": "loan_interest",
+    "product": "loans_credit",
+    "patterns": [
+      "what is interest rate on personal loans",
+      "show current mortgage rates",
+      "what is apr for loproducts",
+      "are interest rates fixed or variable",
+      "when were lorates last updated",
+      "what rate do first-time borrowers get"
+    ],
+    "answer": "Provide current interest rates for loans.\n\nFor information about provide current interest rates for loans, please visit any branch or call +233 20 205 5170. Our loan officers will be happy to discuss options and eligibility requirements."
+  },
+  {
+    "id": "savings_info",
+    "product": "savings_investments",
+    "patterns": [
+      "what is interest rate on savings accounts",
+      "how does savings account work",
+      "do you have youth savings account",
+      "what is minimum balance for savings",
+      "how is interest calculated on savings",
+      "ci open multiple savings accounts",
+      "what benefits come with savings account",
+      "is there fees for dormant savings accounts"
+    ],
+    "answer": "Savings account information and rates.\n\nFor savings account information and rates, please visit any branch or contact us at +233 20 205 5170. Our financial advisors can provide detailed information and help you get started."
+  },
+  {
+    "id": "fixed_deposit",
+    "product": "savings_investments",
+    "patterns": [
+      "open fixed deposit for me",
+      "what is fixed deposit maturity date",
+      "how do i close fixed deposit",
+      "what are current fixed deposit rates",
+      "ci break fixed deposit early",
+      "reinvest fd at maturity",
+      "what is minimum amount for fd",
+      "how long are fd tenures available"
+    ],
+    "answer": "Create or inquire about fixed deposits.\n\nFor create or inquire about fixed deposits, please visit any branch or contact us at +233 20 205 5170. Our financial advisors can provide detailed information and help you get started."
+  },
+  {
+    "id": "investment_products",
+    "product": "savings_investments",
+    "patterns": [
+      "bonds"
+    ],
+    "answer": "\"Info on investments (T-bills.\n\nFor \"info on investments (t-bills, please visit any branch or contact us at +233 20 205 5170. Our financial advisors can provide detailed information and help you get started."
+  },
+  {
+    "id": "account_fees",
+    "product": "fees_charges",
+    "patterns": [
+      "why was i charged maintenance fee",
+      "what are account fees",
+      "explain this charge on statement",
+      "do you charge for dormant accounts",
+      "what is monthly account maintenance fee",
+      "are there penalties for falling below minimum balance"
+    ],
+    "answer": "Inquiries about account maintenance and service fees.\n\nFor details about inquiries about account maintenance and service fees, please refer to our fee schedule available at any branch or on our website. You can also contact customer service at +233 20 205 5170."
+  },
+  {
+    "id": "transaction_fees",
+    "product": "fees_charges",
+    "patterns": [
+      "how much is atm withdrawal fee",
+      "is there fee for interbank transfers",
+      "what are card usage fees abroad",
+      "how much do you charge for international transfers",
+      "are there charges for pos transactions"
+    ],
+    "answer": "Specific transaction-related charges.\n\nFor details about specific transaction-related charges, please refer to our fee schedule available at any branch or on our website. You can also contact customer service at +233 20 205 5170."
+  },
+  {
+    "id": "kyc_update",
+    "product": "customer_profile",
+    "patterns": [
+      "how do i update kyc",
+      "where ci submit id documents",
+      "what documents do you need for kyc update",
+      "ci update kyc online",
+      "how long does kyc verification take",
+      "ci add additional id documents to profile"
+    ],
+    "answer": "Update KYC / identity documents.\n\nTo update kyc / identity documents, please visit any branch with valid identification documents or use our mobile banking app. Some changes may require in-person verification."
+  },
+  {
+    "id": "update_personal_details",
+    "product": "customer_profile",
+    "patterns": [
+      "next of kin"
+    ],
+    "answer": "\"Change address.\n\nTo \"change address, please visit any branch with valid identification documents or use our mobile banking app. Some changes may require in-person verification."
+  },
+  {
+    "id": "find_branch_atm",
+    "product": "branch_atm",
+    "patterns": [
+      "where is nearest atm",
+      "find branch near me",
+      "are you open on saturday",
+      "what are branch operating hours",
+      "does this branch accept deposits",
+      "which branches have extended hours",
+      "locate atm that accepts deposits"
+    ],
+    "answer": "Locate branches or ATMs and opening hours.\n\nTo locate branches or atms and opening hours, please use our branch locator on the mobile app or visit our website. You can also call +233 20 205 5170 for directions."
+  },
+  {
+    "id": "report_fraud",
+    "product": "security_fraud",
+    "patterns": [
+      "i see unauthorized transaction",
+      "report fraud on account",
+      "someone used card without permission",
+      "i suspect fraudulent activity on account",
+      "help me dispute suspicious transaction",
+      "how do i report identity theft"
+    ],
+    "answer": "Report suspected fraud or unauthorized transactions.\n\nFor report suspected fraud or unauthorized transactions, please contact our fraud hotline immediately at +233 20 205 5170. Time-sensitive reports can also be made through the mobile banking app."
+  },
+  {
+    "id": "transaction_alerts",
+    "product": "security_fraud",
+    "patterns": [
+      "turn on transaction alerts",
+      "how do i disable sms alerts",
+      "set email notifications for debit transactions",
+      "enable push notifications for account activity",
+      "change phone number for alerts",
+      "i want sms alerts for withdrawals above 1000"
+    ],
+    "answer": "Manage SMS/email/push transaction alerts.\n\nFor manage sms/email/push transaction alerts, please contact our fraud hotline immediately at +233 20 205 5170. Time-sensitive reports can also be made through the mobile banking app."
+  },
+  {
+    "id": "bank_products",
+    "product": "general",
+    "patterns": [
+      "what services does bank offer",
+      "tell me about accounts and cards",
+      "what products are available for small businesses",
+      "do you offer insurance products",
+      "what are digital banking services"
+    ],
+    "answer": "High-level info about bank products and services.\n\nFor more information about high-level info about bank products and services, please visit any branch, check our website, or call customer service at +233 20 205 5170."
+  },
+  {
+    "id": "contact_support",
+    "product": "general",
+    "patterns": [
+      "how do i contact customer support",
+      "give me bank's customer care number",
+      "i need to speak to agent",
+      "what are phone support hours",
+      "how do i escalate unresolved issue"
+    ],
+    "answer": "Provide customer support contact details and escalation.\n\nFor more information about provide customer support contact details and escalation, please visit any branch, check our website, or call customer service at +233 20 205 5170."
+  },
+  {
+    "id": "failed_transaction",
+    "product": "complaints_disputes",
+    "patterns": [
+      "transaction failed but money was debited",
+      "payment didn't complete — funds taken",
+      "why was transfer reversed",
+      "i sent money but it didn't arrive",
+      "how do i get refund for failed payment"
+    ],
+    "answer": "Handle failed transactions and reversals.\n\nTo handle failed transactions and reversals, please contact customer service at +233 20 205 5170 or visit any branch. We aim to resolve all issues within 24-48 hours."
+  },
+  {
+    "id": "complaint_status",
+    "product": "complaints_disputes",
+    "patterns": [
+      "what is status of complaint",
+      "follow up on case reference 7890",
+      "has dispute been resolved",
+      "check progress of ticket",
+      "when will complaint be closed"
+    ],
+    "answer": "Check complaint ticket status or follow-up.\n\nTo check complaint ticket status or follow-up, please contact customer service at +233 20 205 5170 or visit any branch. We aim to resolve all issues within 24-48 hours."
+  },
+  {
+    "id": "escalate_human",
+    "product": "human_agent",
+    "patterns": [
+      "connect me to customer service agent",
+      "i want to speak to human",
+      "please schedule call-back",
+      "escalate this to supervisor",
+      "transfer me to live support"
+    ],
+    "answer": "Escalate to a human agent or request callback.\n\nI'll connect you with a human agent who can better assist you. Please call +233 20 205 5170 or visit any of our branches for personalized service."
   }
 ]
