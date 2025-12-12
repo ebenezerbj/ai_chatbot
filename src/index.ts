@@ -4,12 +4,23 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import * as customerAuth from './customerAuth';
+import { testConnection } from './database';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
+
+// Test database connection on startup
+(async () => {
+  const dbConnected = await testConnection();
+  if (dbConnected) {
+    console.log('[Server] Database connection established');
+  } else {
+    console.warn('[Server] Database connection failed - authentication features will not work');
+  }
+})();
 
 // Middleware
 app.use(express.json());

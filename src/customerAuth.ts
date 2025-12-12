@@ -1,8 +1,10 @@
 /**
  * Customer Authentication Module
  * Handles customer identification and session management for account inquiries
- * Without core banking API integration
+ * Integrated with MySQL database
  */
+
+import { executeQuery, querySingle } from './database';
 
 export interface CustomerSession {
   sessionId: string;
@@ -105,29 +107,74 @@ export function extractAuthDetails(message: string): {
 }
 
 /**
- * Validate customer credentials (mock validation - replace with actual DB lookup)
- * In production, this would query your customer database
+ * Validate customer credentials against database
+ * Queries the customers table to verify account details
  */
 export async function validateCredentials(
   accountNumber: string,
   phoneNumber?: string,
   dateOfBirth?: string
 ): Promise<{ valid: boolean; reason?: string; customerName?: string }> {
-  // MOCK VALIDATION - Replace with actual database query
-  // Example: SELECT * FROM customers WHERE account_number = ? AND phone = ? AND dob = ?
-  
-  // For demo purposes, accept any 10-digit account number
-  if (accountNumber && accountNumber.length >= 10) {
+  try {
+    // Build query based on provided information
+    let query = `
+      SELECT 
+        account_number, 
+        account_name, 
+        phone_number,
+        date_of_birth,
+        account_type,
+        status
+      FROM customers 
+      WHERE account_number = ?
+    `;
+    const params: any[] = [accountNumber];
+    
+    // Add phone verification if provided
+    if (phoneNumber) {
+      query += ' AND phone_number = ?';
+      params.push(phoneNumber);
+    }
+    
+    // Add DOB verification if provided
+    if (dateOfBirth) {
+      query += ' AND DATE_FORMAT(date_of_birth, "%d/%m/%Y") = ?';
+      params.push(dateOfBirth);
+    }
+    
+    const customer = await querySingle<any>(query, params);
+    
+    if (!customer) {
+      console.log('[Auth] No customer found with provided credentials');
+      return {
+        valid: false,
+        reason: "Invalid account details. Please verify your account number" + 
+                (phoneNumber ? " and phone number" : "") + 
+                (dateOfBirth ? " and date of birth" : "") + "."
+      };
+    }
+    
+    // Check account status
+    if (customer.status !== 'Active') {
+      console.log('[Auth] Account not active:', customer.status);
+      return {
+        valid: false,
+        reason: `Your account is ${customer.status.toLowerCase()}. Please visit any branch or call +233 20 205 5170 for assistance.`
+      };
+    }
+    
+    console.log('[Auth] Customer validated successfully:', customer.account_name);
     return {
       valid: true,
-      customerName: "John Doe" // This would come from database
+      customerName: customer.account_name
+    };
+  } catch (error: any) {
+    console.error('[Auth] Database error during validation:', error.message);
+    return {
+      valid: false,
+      reason: "Unable to verify your details at this time. Please try again later or contact customer service at +233 20 205 5170."
     };
   }
-  
-  return {
-    valid: false,
-    reason: "Invalid account details. Please provide your 10-digit account number."
-  };
 }
 
 /**
@@ -235,25 +282,79 @@ export function isSessionAuthenticated(sessionId: string): boolean {
 }
 
 /**
- * Get customer account data (mock - replace with actual API/DB call)
+ * Get customer account data from database
+ * Retrieves balance and recent transactions
  */
 export async function getCustomerAccountData(accountNumber: string): Promise<any> {
-  // MOCK DATA - Replace with actual core banking API or database query
-  return {
-    accountNumber: accountNumber,
-    accountName: "John Doe",
-    accountType: "Savings Account",
-    balance: {
-      ledger: 5420.50,
-      available: 5320.50,
-      currency: "GHS"
-    },
-    recentTransactions: [
-      { date: "2025-12-10", description: "ATM Withdrawal - Amantin", amount: -500.00, balance: 5320.50 },
-      { date: "2025-12-08", description: "Salary Credit", amount: 3000.00, balance: 5820.50 },
-      { date: "2025-12-05", description: "Mobile Money Transfer", amount: -200.00, balance: 2820.50 }
-    ]
-  };
+  try {
+    // Get customer basic info
+    const customer = await querySingle<any>(
+      `SELECT 
+        account_number,
+        account_name,
+        account_type,
+        branch_code,
+        status
+      FROM customers 
+      WHERE account_number = ?`,
+      [accountNumber]
+    );
+    
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+    
+    // Get account balance
+    const balance = await querySingle<any>(
+      `SELECT 
+        ledger_balance,
+        available_balance,
+        currency
+      FROM account_balances 
+      WHERE account_number = ?`,
+      [accountNumber]
+    );
+    
+    // Get recent transactions (last 10)
+    const transactions = await executeQuery<any>(
+      `SELECT 
+        DATE_FORMAT(transaction_date, '%Y-%m-%d') as date,
+        description,
+        CASE 
+          WHEN debit_amount > 0 THEN -debit_amount
+          ELSE credit_amount
+        END as amount,
+        balance_after as balance,
+        reference_number
+      FROM transactions 
+      WHERE account_number = ? 
+      ORDER BY transaction_date DESC, id DESC
+      LIMIT 10`,
+      [accountNumber]
+    );
+    
+    return {
+      accountNumber: customer.account_number,
+      accountName: customer.account_name,
+      accountType: customer.account_type,
+      branchCode: customer.branch_code,
+      balance: {
+        ledger: balance ? parseFloat(balance.ledger_balance) : 0,
+        available: balance ? parseFloat(balance.available_balance) : 0,
+        currency: balance?.currency || 'GHS'
+      },
+      recentTransactions: transactions.map(txn => ({
+        date: txn.date,
+        description: txn.description,
+        amount: parseFloat(txn.amount),
+        balance: parseFloat(txn.balance),
+        reference: txn.reference_number
+      }))
+    };
+  } catch (error: any) {
+    console.error('[Auth] Error fetching account data:', error.message);
+    throw new Error('Unable to retrieve account information at this time.');
+  }
 }
 
 /**
