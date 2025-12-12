@@ -86,23 +86,45 @@ export function extractAuthDetails(message: string): {
   const details: any = {};
   
   // Account number patterns (various formats)
-  const accountMatch = message.match(/\b\d{10,16}\b/);
+  // Handles: "Account: 1234567890", "Account 1234567890", "Acct: 1234567890", "1234567890"
+  let accountMatch = message.match(/(?:account|acct|acc)\s*(?:number|no|#)?\s*[:=]?\s*(\d{10,16})/i);
   if (accountMatch) {
-    details.accountNumber = accountMatch[0];
+    details.accountNumber = accountMatch[1];
+  } else {
+    // Try plain number match if no prefix found
+    accountMatch = message.match(/\b\d{10,16}\b/);
+    if (accountMatch) {
+      details.accountNumber = accountMatch[0];
+    }
   }
   
   // Phone number (Ghana format)
-  const phoneMatch = message.match(/\b(0|\+233)\d{9}\b/);
+  // Handles: "Phone: 0242123456", "Phone 0242123456", "0242123456"
+  let phoneMatch = message.match(/(?:phone|tel|mobile|contact)\s*(?:number|no|#)?\s*[:=]?\s*((0|\+233)\d{9})/i);
   if (phoneMatch) {
-    details.phoneNumber = phoneMatch[0];
+    details.phoneNumber = phoneMatch[1];
+  } else {
+    // Try plain phone match if no prefix found
+    phoneMatch = message.match(/\b(0|\+233)\d{9}\b/);
+    if (phoneMatch) {
+      details.phoneNumber = phoneMatch[0];
+    }
   }
   
   // Date of birth (various formats)
-  const dobMatch = message.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})\b/);
+  // Handles: "DOB: 15/05/1990", "Date of birth: 15/05/1990", "15/05/1990"
+  let dobMatch = message.match(/(?:dob|date\s*of\s*birth|birth\s*date)\s*[:=]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
   if (dobMatch) {
-    details.dateOfBirth = dobMatch[0];
+    details.dateOfBirth = dobMatch[1];
+  } else {
+    // Try plain date match if no prefix found
+    dobMatch = message.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})\b/);
+    if (dobMatch) {
+      details.dateOfBirth = dobMatch[0];
+    }
   }
   
+  console.log('[Auth] Extracted details from message:', details);
   return details;
 }
 
