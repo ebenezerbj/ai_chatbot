@@ -1,0 +1,300 @@
+﻿intent,intent_group,description,utterance
+check_balance,account_information,Retrieve current account balance,What is my account balance?
+check_balance,account_information,Retrieve current account balance,Show my available balance.
+check_balance,account_information,Retrieve current account balance,How much money do I have?
+check_balance,account_information,Retrieve current account balance,Check my balance for me.
+check_balance,account_information,Retrieve current account balance,What is in my account right now?
+check_balance,account_information,Retrieve current account balance,How much do I have left?
+check_balance,account_information,Retrieve current account balance,Tell me my ledger balance.
+check_balance,account_information,Retrieve current account balance,View my account balance.
+check_balance,account_information,Retrieve current account balance,Balance enquiry.
+check_balance,account_information,Retrieve current account balance,How much funds are available?
+check_balance,account_information,Retrieve current account balance,Can you show my current balance?
+check_balance,account_information,Retrieve current account balance,What's my balance after today's transactions?
+check_balance,account_information,Retrieve current account balance,Display my account balance.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Show my last transactions.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,I want a mini statement.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,List my recent transactions.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Show my debit and credit history.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Display activity for the past week.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,What are my latest transactions?
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Show me what happened on my account today.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Any recent withdrawals?
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Provide my recent account history.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Show recent activity.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Get me the transactions for the last 10 days.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Show transactions between Jan 1 and Jan 7.
+view_recent_transactions,account_information,Retrieve recent transactions / mini-statement,Give me a mini statement for this month.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",What is my account number?
+account_details,account_information,"Provide account details (number, type, ledger vs available)",Give me my account details.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",What type of account do I have?
+account_details,account_information,"Provide account details (number, type, ledger vs available)",Show my account information.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",Explain ledger vs available balance.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",View my account profile.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",Tell me my account type.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",What are my account details?
+account_details,account_information,"Provide account details (number, type, ledger vs available)",Provide account information.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",Show my account specifics.
+account_details,account_information,"Provide account details (number, type, ledger vs available)",What is the branch for my account?
+account_details,account_information,"Provide account details (number, type, ledger vs available)",When was this account opened?
+make_transfer,transfers_payments,Initiate or guide a funds transfer,I want to send money.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Help me make a transfer.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Transfer 500 to my savings account.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,How do I transfer funds?
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Send money to another bank.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Make a payment for me.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,I want to move funds.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Initiate a bank transfer.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Guide me to transfer cash.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Send funds to this account.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Transfer to account number 1234567890.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Schedule a transfer for next Friday.
+make_transfer,transfers_payments,Initiate or guide a funds transfer,Set up a recurring transfer to my rent account.
+transfer_status,transfers_payments,Check status of a transfer,Why is my transfer pending?
+transfer_status,transfers_payments,Check status of a transfer,Did my transfer go through?
+transfer_status,transfers_payments,Check status of a transfer,Check my transfer status.
+transfer_status,transfers_payments,Check status of a transfer,Is my transaction successful?
+transfer_status,transfers_payments,Check status of a transfer,Track my transaction.
+transfer_status,transfers_payments,Check status of a transfer,Has the recipient received the money?
+transfer_status,transfers_payments,Check status of a transfer,Was my transfer completed?
+transfer_status,transfers_payments,Check status of a transfer,Check the payment status.
+transfer_status,transfers_payments,Check status of a transfer,Is my transfer delayed?
+transfer_status,transfers_payments,Check status of a transfer,Did the bank receive my transfer request?
+transfer_status,transfers_payments,Check status of a transfer,What is the status of reference 98765?
+transfer_status,transfers_payments,Check status of a transfer,Why hasn't the beneficiary received the funds?
+transfer_fees,transfers_payments,Query transfer fees and charges,What are your transfer charges?
+transfer_fees,transfers_payments,Query transfer fees and charges,How much is the bank transfer fee?
+transfer_fees,transfers_payments,Query transfer fees and charges,Do you charge for transfers?
+transfer_fees,transfers_payments,Query transfer fees and charges,What is the interbank transfer fee?
+transfer_fees,transfers_payments,Query transfer fees and charges,How much to send money?
+transfer_fees,transfers_payments,Query transfer fees and charges,Are transfers free?
+transfer_fees,transfers_payments,Query transfer fees and charges,Explain transfer fees.
+transfer_fees,transfers_payments,Query transfer fees and charges,What charges apply for transactions?
+transfer_fees,transfers_payments,Query transfer fees and charges,What is the cost for sending funds?
+transfer_fees,transfers_payments,Query transfer fees and charges,Tell me your transfer pricing.
+transfer_fees,transfers_payments,Query transfer fees and charges,Is there a fee for same-day transfers?
+transfer_fees,transfers_payments,Query transfer fees and charges,Do you charge for internal transfers between my accounts?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,How do I send money abroad?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,What is your SWIFT code?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,What are today's exchange rates?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,Help me make an international transfer.
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,What charges apply for overseas transfers?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,Can I transfer funds overseas?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,What is the foreign transfer process?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,Show me international transfer steps.
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,Provide SWIFT or routing code.
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,How much does it cost to send money internationally?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,How long do international transfers take?
+international_transfer,transfers_payments,Cross-border transfers and SWIFT details,Do you support USD and EUR transfers?
+block_card,card_management,Block lost or stolen card immediately,I lost my ATM card.
+block_card,card_management,Block lost or stolen card immediately,Block my card immediately.
+block_card,card_management,Block lost or stolen card immediately,My card was stolen.
+block_card,card_management,Block lost or stolen card immediately,Freeze my card now.
+block_card,card_management,Block lost or stolen card immediately,Disable my debit card.
+block_card,card_management,Block lost or stolen card immediately,Stop my card from being used.
+block_card,card_management,Block lost or stolen card immediately,Someone took my card—block it.
+block_card,card_management,Block lost or stolen card immediately,My card is missing.
+block_card,card_management,Block lost or stolen card immediately,Deactivate my card.
+block_card,card_management,Block lost or stolen card immediately,Prevent unauthorized use of my card.
+block_card,card_management,Block lost or stolen card immediately,Temporarily suspend my card.
+block_card,card_management,Block lost or stolen card immediately,Lock my card due to suspicious activity.
+request_new_card,card_management,Request a replacement or new card,I want a new ATM card.
+request_new_card,card_management,Request a replacement or new card,Replace my damaged card.
+request_new_card,card_management,Request a replacement or new card,How do I request a new card?
+request_new_card,card_management,Request a replacement or new card,Order a replacement card.
+request_new_card,card_management,Request a replacement or new card,My card is broken; give me a new one.
+request_new_card,card_management,Request a replacement or new card,Apply for a new debit card.
+request_new_card,card_management,Request a replacement or new card,I want a fresh bank card.
+request_new_card,card_management,Request a replacement or new card,How long does a new card take?
+request_new_card,card_management,Request a replacement or new card,Request for a new ATM card.
+request_new_card,card_management,Request a replacement or new card,Send me a new debit card.
+request_new_card,card_management,Request a replacement or new card,What documents are needed for a replacement card?
+request_new_card,card_management,Request a replacement or new card,Can I choose a different card design?
+card_not_working,card_management,Troubleshoot declined or failing card,My card isn't working.
+card_not_working,card_management,Troubleshoot declined or failing card,Why was my card declined?
+card_not_working,card_management,Troubleshoot declined or failing card,I can’t withdraw money with my card.
+card_not_working,card_management,Troubleshoot declined or failing card,My card keeps failing.
+card_not_working,card_management,Troubleshoot declined or failing card,The ATM rejected my card.
+card_not_working,card_management,Troubleshoot declined or failing card,My POS payment did not go through.
+card_not_working,card_management,Troubleshoot declined or failing card,My card won't swipe.
+card_not_working,card_management,Troubleshoot declined or failing card,Why can't I use my card?
+card_not_working,card_management,Troubleshoot declined or failing card,Card malfunction—help me.
+card_not_working,card_management,Troubleshoot declined or failing card,Card error at ATM.
+card_not_working,card_management,Troubleshoot declined or failing card,Is my card blocked?
+card_not_working,card_management,Troubleshoot declined or failing card,Why is contactless payment not working?
+pin_reset,card_management,Reset or change card PIN,Help me reset my PIN.
+pin_reset,card_management,Reset or change card PIN,I forgot my PIN.
+pin_reset,card_management,Reset or change card PIN,How do I change my card PIN?
+pin_reset,card_management,Reset or change card PIN,Reset my ATM PIN.
+pin_reset,card_management,Reset or change card PIN,I want to update my PIN.
+pin_reset,card_management,Reset or change card PIN,PIN not working—help.
+pin_reset,card_management,Reset or change card PIN,Set a new card PIN.
+pin_reset,card_management,Reset or change card PIN,Guide me to reset my PIN.
+pin_reset,card_management,Reset or change card PIN,My PIN is blocked.
+pin_reset,card_management,Reset or change card PIN,Unlock my PIN.
+pin_reset,card_management,Reset or change card PIN,Change my PIN using the app.
+card_activation,card_management,Activate a new card,Activate my new card.
+card_activation,card_management,Activate a new card,My card needs activation.
+card_activation,card_management,Activate a new card,How do I activate my card?
+card_activation,card_management,Activate a new card,My new card isn’t working.
+card_activation,card_management,Activate a new card,Activate my ATM card.
+card_activation,card_management,Activate a new card,Enable my debit card.
+card_activation,card_management,Activate a new card,Start using my new card.
+card_activation,card_management,Activate a new card,Card activation help.
+card_activation,card_management,Activate a new card,Why is my new card inactive?
+card_activation,card_management,Activate a new card,Help activate my card.
+card_activation,card_management,Activate a new card,Activate card via OTP.
+password_reset,digital_banking,Reset online banking password or help logging in,I forgot my password.
+password_reset,digital_banking,Reset online banking password or help logging in,Reset my online banking password.
+password_reset,digital_banking,Reset online banking password or help logging in,I can't log in.
+password_reset,digital_banking,Reset online banking password or help logging in,My password is not working.
+password_reset,digital_banking,Reset online banking password or help logging in,Help me recover my password.
+password_reset,digital_banking,Reset online banking password or help logging in,How do I change my login password?
+password_reset,digital_banking,Reset online banking password or help logging in,Unlock my online account.
+password_reset,digital_banking,Reset online banking password or help logging in,I am locked out—reset password.
+password_reset,digital_banking,Reset online banking password or help logging in,Forgot my login credentials.
+password_reset,digital_banking,Reset online banking password or help logging in,Send password reset instructions.
+password_reset,digital_banking,Reset online banking password or help logging in,How do I reset my password using SMS?
+profile_update,digital_banking,"Update customer profile (phone, email)",Change my phone number on file.
+profile_update,digital_banking,"Update customer profile (phone, email)",Update my email address.
+profile_update,digital_banking,"Update customer profile (phone, email)",How do I change my contact details?
+profile_update,digital_banking,"Update customer profile (phone, email)",I moved—update my address.
+profile_update,digital_banking,"Update customer profile (phone, email)",Change my registered name.
+profile_update,digital_banking,"Update customer profile (phone, email)",Add an alternate phone number.
+profile_update,digital_banking,"Update customer profile (phone, email)",Update my mailing address.
+profile_update,digital_banking,"Update customer profile (phone, email)",Edit my profile information.
+profile_update,digital_banking,"Update customer profile (phone, email)",How can I update my KYC address?
+profile_update,digital_banking,"Update customer profile (phone, email)",Replace my old email with a new one.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,The app crashes on startup.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,How do I enable biometric login?
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,Mobile app not sending OTPs.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,The app won't update.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,Can't receive OTP on my phone.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,App is slow and keeps freezing.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,How to clear app cache?
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,Biometric login failing—help.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,App login failing after update.
+mobile_app_support,digital_banking,Troubleshoot mobile app issues,Why can't I access certain features on the app?
+loan_products,loans_credit,Provide loan product information,What loans do you offer?
+loan_products,loans_credit,Provide loan product information,Show me your personal loan options.
+loan_products,loans_credit,Provide loan product information,Do you have business loan products?
+loan_products,loans_credit,Provide loan product information,Tell me about mortgage options.
+loan_products,loans_credit,Provide loan product information,What are the eligibility criteria for loans?
+loan_products,loans_credit,Provide loan product information,Do you offer student loans?
+loan_products,loans_credit,Provide loan product information,What is the loan tenure range?
+loan_products,loans_credit,Provide loan product information,Are there special loans for SMEs?
+loan_products,loans_credit,Provide loan product information,Show loan interest rates by product.
+loan_products,loans_credit,Provide loan product information,What documents are needed to apply for a loan?
+loan_application,loans_credit,Assist with loan applications,How do I apply for a loan?
+loan_application,loans_credit,Assist with loan applications,What documents are required for a loan application?
+loan_application,loans_credit,Assist with loan applications,Start a loan application for me.
+loan_application,loans_credit,Assist with loan applications,Can I apply for a loan online?
+loan_application,loans_credit,Assist with loan applications,Help me check loan eligibility.
+loan_application,loans_credit,Assist with loan applications,What is the process to apply for a mortgage?
+loan_application,loans_credit,Assist with loan applications,How long does loan approval take?
+loan_application,loans_credit,Assist with loan applications,Can I save my loan application and continue later?
+loan_application,loans_credit,Assist with loan applications,I need help filling the loan form.
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,What is my loan balance?
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,When is my next loan repayment due?
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,Show my repayment schedule.
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,How much principal is outstanding?
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,When will my loan be fully paid?
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,What is my monthly EMI?
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,Show loan amortization for my loan.
+loan_balance,loans_credit,Retrieve loan balance and repayment schedule,Provide details for loan account 445566.
+loan_interest,loans_credit,Provide current interest rates for loans,What is the interest rate on personal loans?
+loan_interest,loans_credit,Provide current interest rates for loans,Show current mortgage rates.
+loan_interest,loans_credit,Provide current interest rates for loans,What is the APR for your loan products?
+loan_interest,loans_credit,Provide current interest rates for loans,Are interest rates fixed or variable?
+loan_interest,loans_credit,Provide current interest rates for loans,When were your loan rates last updated?
+loan_interest,loans_credit,Provide current interest rates for loans,What rate do first-time borrowers get?
+savings_info,savings_investments,Savings account information and rates,What is the interest rate on savings accounts?
+savings_info,savings_investments,Savings account information and rates,How does the savings account work?
+savings_info,savings_investments,Savings account information and rates,Do you have a youth savings account?
+savings_info,savings_investments,Savings account information and rates,What is the minimum balance for savings?
+savings_info,savings_investments,Savings account information and rates,How is interest calculated on savings?
+savings_info,savings_investments,Savings account information and rates,Can I open multiple savings accounts?
+savings_info,savings_investments,Savings account information and rates,What benefits come with your savings account?
+savings_info,savings_investments,Savings account information and rates,Is there a fees for dormant savings accounts?
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,Open a fixed deposit for me.
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,What is my fixed deposit maturity date?
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,How do I close my fixed deposit?
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,What are current fixed deposit rates?
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,Can I break my fixed deposit early?
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,Reinvest my FD at maturity.
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,What is the minimum amount for FD?
+fixed_deposit,savings_investments,Create or inquire about fixed deposits,How long are FD tenures available?
+investment_products,savings_investments,"Info on investments (T-bills, bonds, funds)",Do you offer treasury bills?
+investment_products,savings_investments,"Info on investments (T-bills, bonds, funds)",How do I invest in bonds through the bank?
+investment_products,savings_investments,"Info on investments (T-bills, bonds, funds)",What investment products are available?
+investment_products,savings_investments,"Info on investments (T-bills, bonds, funds)",Can I invest in mutual funds here?
+investment_products,savings_investments,"Info on investments (T-bills, bonds, funds)",Do you offer wealth management services?
+investment_products,savings_investments,"Info on investments (T-bills, bonds, funds)",How do I buy government securities via the bank?
+investment_products,savings_investments,"Info on investments (T-bills, bonds, funds)",What are the fees for investment services?
+account_fees,fees_charges,Inquiries about account maintenance and service fees,Why was I charged a maintenance fee?
+account_fees,fees_charges,Inquiries about account maintenance and service fees,What are your account fees?
+account_fees,fees_charges,Inquiries about account maintenance and service fees,Explain this charge on my statement.
+account_fees,fees_charges,Inquiries about account maintenance and service fees,Do you charge for dormant accounts?
+account_fees,fees_charges,Inquiries about account maintenance and service fees,What is the monthly account maintenance fee?
+account_fees,fees_charges,Inquiries about account maintenance and service fees,Are there penalties for falling below minimum balance?
+transaction_fees,fees_charges,Specific transaction-related charges,How much is the ATM withdrawal fee?
+transaction_fees,fees_charges,Specific transaction-related charges,Is there a fee for interbank transfers?
+transaction_fees,fees_charges,Specific transaction-related charges,What are the card usage fees abroad?
+transaction_fees,fees_charges,Specific transaction-related charges,How much do you charge for international transfers?
+transaction_fees,fees_charges,Specific transaction-related charges,Are there charges for POS transactions?
+kyc_update,customer_profile,Update KYC / identity documents,How do I update my KYC?
+kyc_update,customer_profile,Update KYC / identity documents,Where can I submit my ID documents?
+kyc_update,customer_profile,Update KYC / identity documents,What documents do you need for KYC update?
+kyc_update,customer_profile,Update KYC / identity documents,Can I update KYC online?
+kyc_update,customer_profile,Update KYC / identity documents,How long does KYC verification take?
+kyc_update,customer_profile,Update KYC / identity documents,Can I add additional ID documents to my profile?
+update_personal_details,customer_profile,"Change address, next of kin, or contact details",Change my registered address.
+update_personal_details,customer_profile,"Change address, next of kin, or contact details",Update my next of kin details.
+update_personal_details,customer_profile,"Change address, next of kin, or contact details",How do I change my name on the account?
+update_personal_details,customer_profile,"Change address, next of kin, or contact details",Add a new emergency contact.
+update_personal_details,customer_profile,"Change address, next of kin, or contact details",Update my marital status on file.
+update_personal_details,customer_profile,"Change address, next of kin, or contact details",Change my mailing address for statements.
+find_branch_atm,branch_atm,Locate branches or ATMs and opening hours,Where is the nearest ATM?
+find_branch_atm,branch_atm,Locate branches or ATMs and opening hours,Find a branch near me.
+find_branch_atm,branch_atm,Locate branches or ATMs and opening hours,Are you open on Saturday?
+find_branch_atm,branch_atm,Locate branches or ATMs and opening hours,What are branch operating hours?
+find_branch_atm,branch_atm,Locate branches or ATMs and opening hours,Does this branch accept deposits?
+find_branch_atm,branch_atm,Locate branches or ATMs and opening hours,Which branches have extended hours?
+find_branch_atm,branch_atm,Locate branches or ATMs and opening hours,Locate an ATM that accepts deposits.
+report_fraud,security_fraud,Report suspected fraud or unauthorized transactions,I see an unauthorized transaction.
+report_fraud,security_fraud,Report suspected fraud or unauthorized transactions,Report fraud on my account.
+report_fraud,security_fraud,Report suspected fraud or unauthorized transactions,Someone used my card without permission.
+report_fraud,security_fraud,Report suspected fraud or unauthorized transactions,I suspect fraudulent activity on my account.
+report_fraud,security_fraud,Report suspected fraud or unauthorized transactions,Help me dispute a suspicious transaction.
+report_fraud,security_fraud,Report suspected fraud or unauthorized transactions,How do I report identity theft?
+transaction_alerts,security_fraud,Manage SMS/email/push transaction alerts,Turn on my transaction alerts.
+transaction_alerts,security_fraud,Manage SMS/email/push transaction alerts,How do I disable SMS alerts?
+transaction_alerts,security_fraud,Manage SMS/email/push transaction alerts,Set email notifications for debit transactions.
+transaction_alerts,security_fraud,Manage SMS/email/push transaction alerts,Enable push notifications for account activity.
+transaction_alerts,security_fraud,Manage SMS/email/push transaction alerts,Change the phone number for alerts.
+transaction_alerts,security_fraud,Manage SMS/email/push transaction alerts,I want SMS alerts for withdrawals above 1000.
+bank_products,general,High-level info about bank products and services,What services does the bank offer?
+bank_products,general,High-level info about bank products and services,Tell me about your accounts and cards.
+bank_products,general,High-level info about bank products and services,What products are available for small businesses?
+bank_products,general,High-level info about bank products and services,Do you offer insurance products?
+bank_products,general,High-level info about bank products and services,What are your digital banking services?
+contact_support,general,Provide customer support contact details and escalation,How do I contact customer support?
+contact_support,general,Provide customer support contact details and escalation,Give me the bank's customer care number.
+contact_support,general,Provide customer support contact details and escalation,I need to speak to an agent.
+contact_support,general,Provide customer support contact details and escalation,What are your phone support hours?
+contact_support,general,Provide customer support contact details and escalation,How do I escalate an unresolved issue?
+failed_transaction,complaints_disputes,Handle failed transactions and reversals,My transaction failed but money was debited.
+failed_transaction,complaints_disputes,Handle failed transactions and reversals,Payment didn't complete — funds taken.
+failed_transaction,complaints_disputes,Handle failed transactions and reversals,Why was my transfer reversed?
+failed_transaction,complaints_disputes,Handle failed transactions and reversals,I sent money but it didn't arrive.
+failed_transaction,complaints_disputes,Handle failed transactions and reversals,How do I get a refund for a failed payment?
+complaint_status,complaints_disputes,Check complaint ticket status or follow-up,What is the status of my complaint?
+complaint_status,complaints_disputes,Check complaint ticket status or follow-up,Follow up on my case reference 7890.
+complaint_status,complaints_disputes,Check complaint ticket status or follow-up,Has my dispute been resolved?
+complaint_status,complaints_disputes,Check complaint ticket status or follow-up,Check progress of my ticket.
+complaint_status,complaints_disputes,Check complaint ticket status or follow-up,When will my complaint be closed?
+escalate_human,human_agent,Escalate to a human agent or request callback,Connect me to a customer service agent.
+escalate_human,human_agent,Escalate to a human agent or request callback,I want to speak to a human.
+escalate_human,human_agent,Escalate to a human agent or request callback,Please schedule a call-back.
+escalate_human,human_agent,Escalate to a human agent or request callback,Escalate this to a supervisor.
+escalate_human,human_agent,Escalate to a human agent or request callback,Transfer me to live support.

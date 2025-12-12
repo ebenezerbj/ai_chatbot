@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import * as customerAuth from './customerAuth';
 
 // Load environment variables
 dotenv.config();
@@ -122,23 +123,76 @@ app.post('/api/chat', async (req: Request, res: Response) => {
   try {
     // Handle both req.body and raw body parsing
     let message: string | undefined;
+    let sessionId: string | undefined;
     
     if (typeof req.body === 'string') {
       try {
         const parsed = JSON.parse(req.body);
         message = parsed.message;
+        sessionId = parsed.sessionId;
       } catch (e) {
         message = req.body;
       }
     } else if (req.body && typeof req.body === 'object') {
       message = (req.body as any).message;
+      sessionId = (req.body as any).sessionId;
     }
     
     console.log('[Chat] Received message:', message);
+    console.log('[Chat] Session ID:', sessionId);
     
     if (!message) {
       console.log('[Chat] No message provided, returning 400');
       return res.status(400).json({ error: 'Message required' });
+    }
+
+    // Check if customer needs authentication for account information
+    if (customerAuth.needsAuthentication(message)) {
+      console.log('[Chat] Authentication required for this query');
+      
+      // Get or create session
+      const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Check if already authenticated
+      if (customerAuth.isSessionAuthenticated(effectiveSessionId)) {
+        console.log('[Chat] Session authenticated, fetching account data');
+        
+        const session = customerAuth.getOrCreateSession(effectiveSessionId);
+        const accountData = await customerAuth.getCustomerAccountData(session.accountNumber!);
+        
+        // Determine what info they want
+        if (/balance/i.test(message)) {
+          const response = customerAuth.formatBalanceResponse(accountData);
+          return res.json({ 
+            reply: response,
+            source: 'authenticated',
+            sessionId: effectiveSessionId
+          });
+        } else if (/(transaction|statement|history)/i.test(message)) {
+          const response = customerAuth.formatTransactionsResponse(accountData);
+          return res.json({ 
+            reply: response,
+            source: 'authenticated',
+            sessionId: effectiveSessionId
+          });
+        }
+      }
+      
+      // Not authenticated - attempt authentication
+      const authDetails = customerAuth.extractAuthDetails(message);
+      const authResult = await customerAuth.authenticateCustomer(
+        effectiveSessionId,
+        authDetails.accountNumber,
+        authDetails.phoneNumber,
+        authDetails.dateOfBirth
+      );
+      
+      return res.json({ 
+        reply: authResult.message,
+        source: 'authentication',
+        sessionId: effectiveSessionId,
+        requiresAuth: !authResult.success
+      });
     }
     
     // Get KB context
