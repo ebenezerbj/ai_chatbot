@@ -221,6 +221,9 @@ export async function validateCredentials(
     
     query += conditions.join(' OR ');
     
+    console.log('[Auth] Executing query:', query);
+    console.log('[Auth] Query params:', params);
+    
     const customer = await querySingle<any>(query, params);
     
     if (!customer) {
@@ -250,6 +253,8 @@ export async function validateCredentials(
     };
   } catch (error: any) {
     console.error('[Auth] Database error during validation:', error.message);
+    console.error('[Auth] Full error:', error);
+    console.error('[Auth] Stack:', error.stack);
     return {
       valid: false,
       reason: "Unable to verify your details at this time. Please try again later or contact customer service at +233 20 205 5170."
