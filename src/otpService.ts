@@ -133,9 +133,14 @@ export async function generateAndSendOTP(
     const sent = await sendSMS(phoneNumber, message);
 
     if (sent) {
+      // Format phone number display (show last 6 digits)
+      const maskedPhone = phoneNumber.length > 6 
+        ? phoneNumber.slice(0, -6) + '******' + phoneNumber.slice(-3)
+        : phoneNumber;
+      
       return {
         success: true,
-        message: `A 6-digit verification code has been sent to your registered phone number ${phoneNumber.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2')}. Please enter the code to continue.`,
+        message: `A 6-digit verification code has been sent to ${phoneNumber}. Please enter the code to continue.`,
         sessionKey
       };
     } else {
