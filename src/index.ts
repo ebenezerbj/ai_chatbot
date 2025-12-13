@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import * as customerAuth from './customerAuth';
 import { testConnection } from './database';
 import * as balanceUpdater from './balanceUpdater';
+import * as customerImporter from './customerImporter';
 
 // Load environment variables
 dotenv.config();
@@ -495,6 +496,49 @@ app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Re
   } catch (error: any) {
     console.error('[Admin] Upload error:', error.message);
     res.status(500).json({ error: 'Upload failed: ' + error.message });
+  }
+});
+
+// Customer & Balance import endpoint (combined)
+app.post('/api/admin/import-customers', upload.single('customers'), async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized - No token provided' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+    
+    // Check file upload
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    console.log('[Admin] Processing customer import, file size:', req.file.size, 'bytes');
+    
+    // Import customers and balances
+    const result = await customerImporter.importCustomersWithBalances(req.file.buffer);
+    console.log('[Admin] Import complete:', result.successCount, 'successful,', result.errorCount, 'errors');
+    
+    // Get statistics
+    const stats = await balanceUpdater.getUpdateStats();
+    
+    res.json({
+      success: result.success,
+      totalRecords: result.totalRecords,
+      successCount: result.successCount,
+      errorCount: result.errorCount,
+      errors: result.errors,
+      stats: stats,
+      summary: result.summary
+    });
+  } catch (error: any) {
+    console.error('[Admin] Import error:', error.message);
+    res.status(500).json({ error: 'Import failed: ' + error.message });
   }
 });
 

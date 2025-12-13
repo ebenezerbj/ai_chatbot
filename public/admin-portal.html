@@ -578,19 +578,26 @@
                 <!-- Balance Upload Page -->
                 <div class="page-section" id="page-balance-upload">
                     <div class="card">
-                        <h2>Upload Customer Balances</h2>
-                        <p style="color: #6b7280; margin-bottom: 24px;">Upload a CSV file with account numbers and balances to update customer accounts.</p>
+                        <h2>Import Customer Data & Balances</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Upload your core banking CSV export to import customer information and update account balances in one operation.</p>
+                        
+                        <div class="alert alert-info" style="margin-bottom: 24px;">
+                            <strong>What this does:</strong><br>
+                            1. Creates/updates customer records (account number, name, type, branch)<br>
+                            2. Updates account balances (ledger, available)<br>
+                            3. All in one upload - no need to import customers separately!
+                        </div>
                         
                         <div class="form-group">
-                            <label for="balanceFile">Select CSV File</label>
+                            <label for="balanceFile">Select Core Banking CSV Export</label>
                             <input type="file" id="balanceFile" accept=".csv">
                             <small style="color: #6b7280; display: block; margin-top: 8px;">
-                                CSV from core banking export - must contain ACCOUNT.ID and WORKING.BALANCE columns
+                                Full core banking export with ACCOUNT.ID, ACCOUNT.TITLE.1, WORKING.BALANCE, etc.
                             </small>
                         </div>
 
                         <button class="btn btn-primary" id="uploadBalancesBtn">
-                            <span id="uploadBtnText">Upload Balances</span>
+                            <span id="uploadBtnText">Import Data</span>
                         </button>
 
                         <div id="uploadProgress" class="hidden">
@@ -858,10 +865,10 @@
             progressDiv.classList.remove('hidden');
 
             const formData = new FormData();
-            formData.append('balances', file);
+            formData.append('customers', file);
 
             try {
-                const response = await fetch('/api/admin/upload-balances', {
+                const response = await fetch('/api/admin/import-customers', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${authToken}` },
                     body: formData
