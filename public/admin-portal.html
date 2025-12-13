@@ -578,14 +578,15 @@
                 <!-- Balance Upload Page -->
                 <div class="page-section" id="page-balance-upload">
                     <div class="card">
-                        <h2>Import Customer Data & Balances</h2>
-                        <p style="color: #6b7280; margin-bottom: 24px;">Upload your core banking CSV export to import customer information and update account balances in one operation.</p>
+                        <h2>Balance Upload</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Upload your core banking CSV export to update account balances. Customer accounts are automatically created if they don't exist.</p>
                         
                         <div class="alert alert-info" style="margin-bottom: 24px;">
-                            <strong>What this does:</strong><br>
-                            1. Creates/updates customer records (account number, name, type, branch)<br>
-                            2. Updates account balances (ledger, available)<br>
-                            3. All in one upload - no need to import customers separately!
+                            <strong>🚀 Automatic Customer Import:</strong><br>
+                            • If an account exists in CSV but not in database → Customer is automatically created<br>
+                            • If account already exists → Balance is updated<br>
+                            • All customer data (name, type, branch) extracted from CSV<br>
+                            • No need for separate customer import!
                         </div>
                         
                         <div class="form-group">
@@ -597,7 +598,7 @@
                         </div>
 
                         <button class="btn btn-primary" id="uploadBalancesBtn">
-                            <span id="uploadBtnText">Import Data</span>
+                            <span id="uploadBtnText">Upload Balances</span>
                         </button>
 
                         <div id="uploadProgress" class="hidden">
@@ -865,10 +866,10 @@
             progressDiv.classList.remove('hidden');
 
             const formData = new FormData();
-            formData.append('customers', file);
+            formData.append('balances', file);
 
             try {
-                const response = await fetch('/api/admin/import-customers', {
+                const response = await fetch('/api/admin/upload-balances', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${authToken}` },
                     body: formData
@@ -884,14 +885,23 @@
 
                 if (response.ok && data.success) {
                     resultDiv.className = 'alert alert-success';
-                    resultDiv.innerHTML = `
-                        <strong>Upload Successful!</strong><br>
+                    let successMessage = `
+                        <strong>✅ Upload Successful!</strong><br>
                         <strong>Total Records:</strong> ${data.totalRecords}<br>
                         <strong>Successful:</strong> ${data.successCount}<br>
-                        <strong>Errors:</strong> ${data.errorCount}<br>
-                        ${data.summary || ''}
+                        <strong>Errors:</strong> ${data.errorCount}
                     `;
-                    addActivityLog(`Balance upload: ${data.successCount} accounts updated`, 'success');
+                    
+                    if (data.customersCreated > 0) {
+                        successMessage += `<br><strong>New Customers Created:</strong> ${data.customersCreated} 🎉`;
+                    }
+                    
+                    if (data.summary) {
+                        successMessage += `<br><br>${data.summary}`;
+                    }
+                    
+                    resultDiv.innerHTML = successMessage;
+                    addActivityLog(`Balance upload: ${data.successCount} accounts updated${data.customersCreated > 0 ? ', ' + data.customersCreated + ' new customers' : ''}`, 'success');
                     loadDashboardData(); // Refresh stats
                 } else {
                     resultDiv.className = 'alert alert-error';
