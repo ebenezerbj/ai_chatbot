@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS customers (
     id SERIAL PRIMARY KEY,
     account_number VARCHAR(16) UNIQUE NOT NULL,
     account_name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(15),
+    phone_number VARCHAR(20),
     email VARCHAR(100),
     date_of_birth DATE,
     account_type VARCHAR(100) DEFAULT 'Savings',
