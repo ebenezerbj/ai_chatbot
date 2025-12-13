@@ -28,8 +28,12 @@ const postgresConfig = {
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined,
   max: 10,
+  min: 2,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000
+  connectionTimeoutMillis: 10000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+  allowExitOnIdle: false
 };
 
 // Create connection pools
@@ -99,8 +103,15 @@ export async function executeQuery<T = any>(
     let paramIndex = 1;
     pgQuery = pgQuery.replace(/\?/g, () => `$${paramIndex++}`);
     
-    const result = await pool.query(pgQuery, params);
-    return result.rows as T[];
+    try {
+      const result = await pool.query(pgQuery, params);
+      return result.rows as T[];
+    } catch (error: any) {
+      console.error('[DB] PostgreSQL query error:', error.message);
+      console.error('[DB] Query:', pgQuery);
+      console.error('[DB] Params:', params);
+      throw error;
+    }
   } else {
     const pool = getPool() as mysql.Pool;
     const connection = await pool.getConnection();
