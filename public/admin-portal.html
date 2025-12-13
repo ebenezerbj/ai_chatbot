@@ -155,6 +155,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            position: relative;
         }
 
         .user-avatar {
@@ -167,6 +168,65 @@
             justify-content: center;
             color: white;
             font-weight: 600;
+        }
+
+        .user-menu {
+            position: relative;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .user-dropdown.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--dark);
+            text-decoration: none;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 8px 8px;
+            color: var(--danger);
+            border-top: 1px solid var(--border);
+        }
+
+        .dropdown-item svg {
+            width: 18px;
+            height: 18px;
         }
 
         .content-area {
@@ -511,8 +571,29 @@
             <div class="topbar">
                 <h1 id="pageTitle">Dashboard</h1>
                 <div class="user-info">
-                    <div class="user-avatar">A</div>
-                    <span>Admin User</span>
+                    <div class="user-menu" id="userMenu">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="user-avatar">A</div>
+                            <span>Admin User</span>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-item">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>Admin User</span>
+                            </div>
+                            <div class="dropdown-item" id="topbarLogoutBtn">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                <span>Logout</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -774,8 +855,8 @@
             }
         });
 
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        // Logout function
+        async function logout() {
             if (authToken) {
                 await fetch('/api/admin/logout', {
                     method: 'POST',
@@ -785,6 +866,23 @@
             authToken = null;
             localStorage.removeItem('adminToken');
             location.reload();
+        }
+
+        // Logout from sidebar
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Logout from topbar dropdown
+        document.getElementById('topbarLogoutBtn').addEventListener('click', logout);
+
+        // User menu dropdown toggle
+        document.getElementById('userMenu').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.remove('show');
         });
 
         // Navigation
