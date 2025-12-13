@@ -7,7 +7,7 @@ import mysql from 'mysql2/promise';
 import { Pool as PgPool } from 'pg';
 
 // Determine database type from environment
-const DB_TYPE = process.env.DATABASE_URL ? 'postgres' : 'mysql';
+export const DB_TYPE = process.env.DATABASE_URL ? 'postgres' : 'mysql';
 
 // MySQL configuration
 const mysqlConfig = {

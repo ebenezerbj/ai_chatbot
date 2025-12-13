@@ -4,7 +4,7 @@
  * Integrated with MySQL database and OTP verification
  */
 
-import { executeQuery, querySingle } from './database';
+import { executeQuery, querySingle, DB_TYPE } from './database';
 import * as otpService from './otpService';
 
 export interface CustomerSession {
@@ -438,9 +438,13 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
     );
     
     // Get recent transactions (last 10)
+    const dateFormat = DB_TYPE === 'postgres' 
+      ? `TO_CHAR(transaction_date, 'YYYY-MM-DD')`
+      : `DATE_FORMAT(transaction_date, '%Y-%m-%d')`;
+    
     const transactions = await executeQuery<any>(
       `SELECT 
-        DATE_FORMAT(transaction_date, '%Y-%m-%d') as date,
+        ${dateFormat} as date,
         description,
         CASE 
           WHEN debit_amount > 0 THEN -debit_amount
