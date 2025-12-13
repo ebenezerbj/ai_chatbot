@@ -175,6 +175,48 @@ ai_chatbot/
 - `npm test` - Run test suite
 - `npm run typecheck` - Type check without building
 
+## Admin Portal
+
+Access the comprehensive admin portal at `/admin-portal.html`:
+
+**Features:**
+- **Dashboard**: System overview with stats (total accounts, last balance update, KB entries, system status)
+- **Balance Upload**: Upload CSV files to update customer balances daily
+- **Knowledge Base**: Manage chatbot knowledge entries
+- **System Logs**: View recent activity and events
+- **Settings**: Environment variables and password management
+
+**Login:**
+- Set `ADMIN_PASSWORD` in environment variables
+- Default (dev): `changeme123`
+- Production: Set in Render dashboard
+
+**Documentation:**
+- [Admin Portal Guide](ADMIN_PORTAL_GUIDE.md) - Complete portal documentation
+- [Balance Upload Guide](BALANCE_UPLOAD_GUIDE.md) - CSV upload instructions
+- [Daily Balance Update](DAILY_BALANCE_UPDATE.md) - Balance update workflows
+
+## Customer Authentication
+
+The chatbot supports customer authentication via:
+
+**Authentication Methods:**
+1. **Account Number**: 16-digit account number (e.g., `1511520000230861`)
+2. **Phone Number**: Ghana mobile number (e.g., `0501336873` or `233501336873`)
+
+**OTP Verification:**
+- OTP sent via SMS Online Ghana
+- 6-digit code valid for session
+- Secure balance and transaction queries
+
+**Check Balance Workflow:**
+1. User: "check my balance"
+2. Bot: "Please provide your account number or phone number"
+3. User: Provides account/phone
+4. Bot: Sends OTP via SMS
+5. User: Enters OTP code
+6. Bot: Shows balance and recent transactions
+
 ## Notes
 
 - The assistant doesn't access accounts. It provides general information and next steps
