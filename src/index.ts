@@ -408,6 +408,81 @@ app.post('/api/tts', async (req: Request, res: Response) => {
   }
 });
 
+// Nearest branch locator endpoint
+app.post('/api/nearest-branch', async (req: Request, res: Response) => {
+  try {
+    const { lat, lng, plusCode } = req.body;
+    
+    console.log('[NearestBranch] Request:', { lat, lng, plusCode });
+
+    // Branch locations with coordinates
+    const branches = [
+      { name: 'Amantin (Head Office)', lat: 7.6667, lng: -1.4167, phone: '+233 20 205 5170', address: 'Amantin High Street' },
+      { name: 'Atebubu', lat: 7.7558, lng: -0.9922, phone: '+233 20 205 5173', address: 'Atebubu' },
+      { name: 'Kajaji', lat: 7.7367, lng: -1.4939, phone: '+233 24 052 6372', address: 'Kajaji East, Tatobatoi', plusCode: 'QQJG+P27' },
+      { name: 'Kwame Danso', lat: 7.6303, lng: -1.4770, phone: '+233 20 205 5174', address: 'Kwame Danso', plusCode: 'P8JF+2C6' },
+      { name: 'Yeji', lat: 7.8265, lng: -0.5043, phone: '+233 20 205 5175', address: 'Yeji', plusCode: '68GW+FHJ' },
+      { name: 'Ahwiaa', lat: 6.8047, lng: -1.4987, phone: '+233 20 209 9931', address: 'Kumasi-Techiman Road, Ahwiaa', plusCode: 'QC32+V79' },
+      { name: 'Ejura', lat: 7.3850, lng: -1.3622, phone: '+233 20 205 5172', address: 'Ejura' },
+      { name: 'Kumasi (Kejetia market)', lat: 6.6928, lng: -1.6236, phone: '+233 24 869 8267', address: 'Kejetia market, Kumasi' }
+    ];
+
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Location coordinates required' });
+    }
+
+    // Calculate distance using Haversine formula
+    function getDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // Find nearest branch
+    let nearest = branches[0];
+    let minDistance = getDistance(lat, lng, nearest.lat, nearest.lng);
+
+    for (const branch of branches) {
+      const distance = getDistance(lat, lng, branch.lat, branch.lng);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = branch;
+      }
+    }
+
+    const distanceText = minDistance < 1 
+      ? `${Math.round(minDistance * 1000)}m` 
+      : `${minDistance.toFixed(1)}km`;
+
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${nearest.lat},${nearest.lng}`;
+
+    const responseText = `📍 **Nearest Branch: ${nearest.name}**\n\n` +
+      `📏 Distance: ~${distanceText}\n` +
+      `📞 Phone: ${nearest.phone}\n` +
+      `📌 Address: ${nearest.address}\n\n` +
+      `[Get Directions on Google Maps](${mapsUrl})`;
+
+    console.log('[NearestBranch] Found:', nearest.name, distanceText);
+
+    res.json({ 
+      success: true,
+      text: responseText,
+      branch: nearest,
+      distance: minDistance,
+      mapsUrl
+    });
+  } catch (error: any) {
+    console.error('[NearestBranch] Error:', error.message);
+    res.status(500).json({ error: 'Failed to find nearest branch' });
+  }
+});
+
 // ============================================================
 // ADMIN ROUTES - Balance Upload System
 // ============================================================
