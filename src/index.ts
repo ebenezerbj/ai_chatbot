@@ -158,8 +158,11 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     }
 
     // Check if customer needs authentication for account information
-    if (customerAuth.needsAuthentication(message)) {
-      console.log('[Chat] Authentication required for this query');
+    const authDetails = customerAuth.extractAuthDetails(message);
+    const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
+    
+    if (customerAuth.needsAuthentication(message) || hasAuthCredentials) {
+      console.log('[Chat] Authentication required for this query or credentials detected');
       
       // Get or create session
       const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -190,7 +193,6 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       }
       
       // Not authenticated - attempt authentication with OTP flow
-      const authDetails = customerAuth.extractAuthDetails(message);
       const authResult = await customerAuth.authenticateCustomer(
         effectiveSessionId,
         authDetails.accountNumber,

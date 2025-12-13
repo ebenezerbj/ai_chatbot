@@ -105,29 +105,33 @@ export function extractAuthDetails(message: string): {
     }
   }
   
-  // Account number patterns (various formats)
-  // Handles: "Account: 1234567890", "Account 1234567890", "Acct: 1234567890", "1234567890"
-  let accountMatch = message.match(/(?:account|acct|acc)\s*(?:number|no|#)?\s*[:=]?\s*(\d{10,16})/i);
-  if (accountMatch) {
-    details.accountNumber = accountMatch[1];
-  } else {
-    // Try plain number match if no prefix found
-    accountMatch = message.match(/\b\d{10,16}\b/);
-    if (accountMatch) {
-      details.accountNumber = accountMatch[0];
-    }
-  }
-  
-  // Phone number (Ghana format)
-  // Handles: "Phone: 0242123456", "Phone 0242123456", "0242123456"
-  let phoneMatch = message.match(/(?:phone|tel|mobile|contact)\s*(?:number|no|#)?\s*[:=]?\s*((0|\+233)\d{9})/i);
+  // Phone number (Ghana format) - CHECK THIS FIRST before account numbers
+  // Handles: "Phone: 0242123456", "233242123456", "0242123456", "+233242123456"
+  let phoneMatch = message.match(/(?:phone|tel|mobile|contact)\s*(?:number|no|#)?\s*[:=]?\s*((0|\+?233)\d{9})/i);
   if (phoneMatch) {
     details.phoneNumber = phoneMatch[1];
   } else {
     // Try plain phone match if no prefix found
-    phoneMatch = message.match(/\b(0|\+233)\d{9}\b/);
+    // Matches: 0XXXXXXXXX (10 digits starting with 0) or 233XXXXXXXXX (12 digits starting with 233)
+    phoneMatch = message.match(/\b(0\d{9}|233\d{9}|\+233\d{9})\b/);
     if (phoneMatch) {
       details.phoneNumber = phoneMatch[0];
+    }
+  }
+  
+  // Account number patterns (various formats) - Check AFTER phone numbers
+  // Handles: "Account: 1234567890", "Account 1234567890", "Acct: 1234567890", "1234567890"
+  // Skip if we already found a phone number
+  if (!details.phoneNumber) {
+    let accountMatch = message.match(/(?:account|acct|acc)\s*(?:number|no|#)?\s*[:=]?\s*(\d{10,16})/i);
+    if (accountMatch) {
+      details.accountNumber = accountMatch[1];
+    } else {
+      // Try plain number match if no prefix found
+      accountMatch = message.match(/\b\d{10,16}\b/);
+      if (accountMatch) {
+        details.accountNumber = accountMatch[0];
+      }
     }
   }
   
