@@ -129,17 +129,17 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
 
   // Prepare customer upsert query based on database type
   const customerQuery = DB_TYPE === 'postgres'
-    ? `INSERT INTO customers (account_number, full_name, account_type, branch_code)
+    ? `INSERT INTO customers (account_number, account_name, account_type, branch_code)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (account_number) 
        DO UPDATE SET 
-         full_name = COALESCE(EXCLUDED.full_name, customers.full_name),
+         account_name = COALESCE(EXCLUDED.account_name, customers.account_name),
          account_type = COALESCE(EXCLUDED.account_type, customers.account_type),
          branch_code = COALESCE(EXCLUDED.branch_code, customers.branch_code)`
-    : `INSERT INTO customers (account_number, full_name, account_type, branch_code)
+    : `INSERT INTO customers (account_number, account_name, account_type, branch_code)
        VALUES (?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE 
-         full_name = COALESCE(VALUES(full_name), full_name),
+         account_name = COALESCE(VALUES(account_name), account_name),
          account_type = COALESCE(VALUES(account_type), account_type),
          branch_code = COALESCE(VALUES(branch_code), branch_code)`;
 
