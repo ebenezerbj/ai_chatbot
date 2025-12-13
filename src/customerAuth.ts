@@ -215,7 +215,7 @@ export async function validateCredentials(
     if (phoneNumber) {
       // Normalize phone for flexible matching (last 9 digits)
       const normalizedPhone = normalizePhoneForMatching(phoneNumber);
-      conditions.push('(phone_number = ? OR RIGHT(phone_number, 9) = ? OR RIGHT(REPLACE(phone_number, "233", ""), 9) = ?)');
+      conditions.push('(phone_number = ? OR RIGHT(phone_number, 9) = ? OR RIGHT(REPLACE(phone_number, \'233\', \'\'), 9) = ?)');
       params.push(phoneNumber, normalizedPhone, normalizedPhone);
     }
     
