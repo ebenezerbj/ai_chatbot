@@ -4,6 +4,9 @@
  */
 
 import axios from 'axios';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
 
 // OTP Configuration
 const OTP_LENGTH = 6;
@@ -63,6 +66,31 @@ async function sendSMS(phoneNumber: string, message: string): Promise<boolean> {
       destinations: [formattedPhone]
     };
 
+    // Create HTTPS agent with CA certificate bundle
+    let httpsAgent;
+    const cacertPath = path.join(process.cwd(), 'cacert.pem');
+    
+    try {
+      if (fs.existsSync(cacertPath)) {
+        const ca = fs.readFileSync(cacertPath);
+        httpsAgent = new https.Agent({
+          ca: ca,
+          rejectUnauthorized: true
+        });
+        console.log('[OTP] Using CA certificate bundle from cacert.pem');
+      } else {
+        console.warn('[OTP] cacert.pem not found, using default SSL settings');
+        httpsAgent = new https.Agent({
+          rejectUnauthorized: true
+        });
+      }
+    } catch (certError) {
+      console.warn('[OTP] Error loading cacert.pem:', certError);
+      httpsAgent = new https.Agent({
+        rejectUnauthorized: true
+      });
+    }
+
     // Send SMS via SMS Online Ghana API
     const response = await axios.post(
       'https://api.smsonlinegh.com/v5/message/sms/send',
@@ -73,7 +101,9 @@ async function sendSMS(phoneNumber: string, message: string): Promise<boolean> {
           'Accept': 'application/json',
           'Host': 'api.smsonlinegh.com',
           'Authorization': `key ${apiKey}`
-        }
+        },
+        httpsAgent,
+        timeout: 10000 // 10 second timeout
       }
     );
 
