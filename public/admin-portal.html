@@ -822,6 +822,11 @@
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 
+                if (statsResponse.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
                 if (statsResponse.ok) {
                     const statsData = await statsResponse.json();
                     document.getElementById('totalAccounts').textContent = statsData.totalAccounts || '-';
@@ -864,6 +869,11 @@
 
                 const data = await response.json();
                 progressDiv.classList.add('hidden');
+
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
 
                 if (response.ok && data.success) {
                     resultDiv.className = 'alert alert-success';
@@ -942,11 +952,26 @@
             const savedToken = localStorage.getItem('adminToken');
             if (savedToken) {
                 authToken = savedToken;
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('adminDashboard').classList.add('active');
-                loadDashboardData();
+                // Verify token is still valid
+                fetch('/api/health').then(() => {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminDashboard').classList.add('active');
+                    loadDashboardData();
+                }).catch(() => {
+                    // Token might be invalid, clear it
+                    localStorage.removeItem('adminToken');
+                    authToken = null;
+                });
             }
         });
+
+        // Handle 401 errors globally
+        function handleUnauthorized() {
+            authToken = null;
+            localStorage.removeItem('adminToken');
+            alert('Session expired. Please login again.');
+            location.reload();
+        }
     </script>
 </body>
 </html>
