@@ -498,6 +498,29 @@ app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Re
   }
 });
 
+// Admin stats endpoint
+app.get('/api/admin/stats', async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    // Get statistics
+    const stats = await balanceUpdater.getUpdateStats();
+    res.json(stats);
+  } catch (error: any) {
+    console.error('[Admin] Stats error:', error.message);
+    res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
   console.log('[Health] Request received');

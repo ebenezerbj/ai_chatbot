@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AKCB Admin Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-card h1 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .login-card p {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .admin-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .admin-container.active {
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            color: var(--dark);
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #f3f4f6;
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: #eef2ff;
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: var(--light);
+            overflow-y: auto;
+        }
+
+        .topbar {
+            background: white;
+            padding: 16px 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h1 {
+            color: var(--dark);
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .content-area {
+            padding: 32px;
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            color: var(--dark);
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .card h3 {
+            color: var(--dark);
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-card.success {
+            border-left-color: var(--success);
+        }
+
+        .stat-card.warning {
+            border-left-color: var(--warning);
+        }
+
+        .stat-card.danger {
+            border-left-color: var(--danger);
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: var(--dark);
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .stat-change {
+            color: var(--success);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: var(--dark);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 12px;
+            text-align: left;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--dark);
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e3a8a;
+            border-left: 4px solid #3b82f6;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 0;
+                bottom: 0;
+                z-index: 1000;
+                transition: left 0.3s;
+            }
+
+            .sidebar.mobile-open {
+                left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-card">
+            <h1>Admin Portal</h1>
+            <p>AKCB - Amantin and Kasei Community Bank PLC</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <div id="loginError" class="alert alert-error hidden" style="margin-top: 16px;"></div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-container" id="adminDashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>AKCB Admin</h2>
+                <p>Portal Management</p>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-page="dashboard">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" data-page="balance-upload">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <span>Balance Upload</span>
+                </div>
+                <div class="nav-item" data-page="knowledge-base">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span>Knowledge Base</span>
+                </div>
+                <div class="nav-item" data-page="system-logs">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>System Logs</span>
+                </div>
+                <div class="nav-item" data-page="settings">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-secondary btn-block" id="logoutBtn">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="topbar">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <span>Admin User</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Dashboard Page -->
+                <div class="page-section active" id="page-dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Accounts</div>
+                            <div class="stat-value" id="totalAccounts">-</div>
+                            <div class="stat-change">Active accounts</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-label">Last Balance Update</div>
+                            <div class="stat-value" style="font-size: 18px;" id="lastUpdate">-</div>
+                            <div class="stat-change">Latest sync</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">Knowledge Base Entries</div>
+                            <div class="stat-value" id="kbEntries">-</div>
+                            <div class="stat-change">Active entries</div>
+                        </div>
+                        <div class="stat-card danger">
+                            <div class="stat-label">System Status</div>
+                            <div class="stat-value" style="font-size: 18px;" id="systemStatus">-</div>
+                            <div class="stat-change">Uptime</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Quick Actions</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <button class="btn btn-primary" onclick="navigateTo('balance-upload')">Upload Balances</button>
+                            <button class="btn btn-primary" onclick="navigateTo('knowledge-base')">Manage KB</button>
+                            <button class="btn btn-primary" onclick="navigateTo('system-logs')">View Logs</button>
+                            <button class="btn btn-primary" onclick="navigateTo('settings')">Settings</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>System Information</h2>
+                        <table>
+                            <tr>
+                                <td><strong>Database Type</strong></td>
+                                <td id="dbType">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Database Status</strong></td>
+                                <td><span class="badge badge-success" id="dbStatus">Connected</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>SMS Service</strong></td>
+                                <td><span class="badge badge-success">SMS Online Ghana</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>OpenAI Status</strong></td>
+                                <td><span class="badge badge-success" id="openaiStatus">Configured</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Balance Upload Page -->
+                <div class="page-section" id="page-balance-upload">
+                    <div class="card">
+                        <h2>Upload Customer Balances</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Upload a CSV file with account numbers and balances to update customer accounts.</p>
+                        
+                        <div class="form-group">
+                            <label for="balanceFile">Select CSV File</label>
+                            <input type="file" id="balanceFile" accept=".csv">
+                            <small style="color: #6b7280; display: block; margin-top: 8px;">
+                                CSV should contain: Account Number, Ledger Balance, Available Balance
+                            </small>
+                        </div>
+
+                        <button class="btn btn-primary" id="uploadBalancesBtn">
+                            <span id="uploadBtnText">Upload Balances</span>
+                        </button>
+
+                        <div id="uploadProgress" class="hidden">
+                            <div class="spinner"></div>
+                            <p style="text-align: center; color: #6b7280;">Processing CSV file...</p>
+                        </div>
+
+                        <div id="uploadResult" class="hidden"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>CSV Format Example</h3>
+                        <pre style="background: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto;">Account Number,Ledger Balance,Available Balance
+1511520000230861,12500.50,12500.50
+1511520000230862,8750.25,8750.25</pre>
+                    </div>
+                </div>
+
+                <!-- Knowledge Base Page -->
+                <div class="page-section" id="page-knowledge-base">
+                    <div class="card">
+                        <h2>Knowledge Base Management</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Manage the chatbot's knowledge base entries.</p>
+                        
+                        <div class="alert alert-info">
+                            <strong>Note:</strong> The full knowledge base editor is available at 
+                            <a href="/kb-admin.html" target="_blank" style="color: #1e3a8a; text-decoration: underline;">kb-admin.html</a>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="window.open('/kb-admin.html', '_blank')">
+                            Open KB Editor
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Logs Page -->
+                <div class="page-section" id="page-system-logs">
+                    <div class="card">
+                        <h2>System Logs</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">View recent system activity and logs.</p>
+                        
+                        <div class="alert alert-info">
+                            <strong>Note:</strong> System logs are maintained on the server. Check your deployment platform (Render) for detailed logs.
+                        </div>
+
+                        <button class="btn btn-primary" onclick="window.open('https://dashboard.render.com', '_blank')">
+                            Open Render Dashboard
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Recent Activity</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Event</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityLog">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #6b7280;">No recent activity</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div class="page-section" id="page-settings">
+                    <div class="card">
+                        <h2>System Settings</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Configure system settings and preferences.</p>
+                        
+                        <div class="alert alert-info">
+                            <strong>Note:</strong> System settings are managed through environment variables. Update them in your Render dashboard or .env file.
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Environment Variables</h3>
+                        <table>
+                            <tr>
+                                <td><strong>DATABASE_URL</strong></td>
+                                <td>PostgreSQL connection string</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SMS_ONLINE_API_KEY</strong></td>
+                                <td>SMS Online Ghana API key</td>
+                            </tr>
+                            <tr>
+                                <td><strong>OPENAI_API_KEY</strong></td>
+                                <td>OpenAI API key for chatbot</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ADMIN_PASSWORD</strong></td>
+                                <td>Admin portal password</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>Change Admin Password</h3>
+                        <form id="changePasswordForm">
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" required minlength="8">
+                                <small style="color: #6b7280; display: block; margin-top: 8px;">
+                                    Minimum 8 characters
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" id="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Password</button>
+                        </form>
+                        <div id="passwordChangeResult" class="hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        // Login Form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('adminToken', authToken);
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminDashboard').classList.add('active');
+                    loadDashboardData();
+                    addActivityLog('Admin login successful', 'success');
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (authToken) {
+                await fetch('/api/admin/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+            }
+            authToken = null;
+            localStorage.removeItem('adminToken');
+            location.reload();
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                navigateTo(page);
+            });
+        });
+
+        function navigateTo(page) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+            // Update page title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'balance-upload': 'Balance Upload',
+                'knowledge-base': 'Knowledge Base',
+                'system-logs': 'System Logs',
+                'settings': 'Settings'
+            };
+            document.getElementById('pageTitle').textContent = titles[page];
+
+            // Show page
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${page}`).classList.add('active');
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                // Get system stats
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                
+                document.getElementById('kbEntries').textContent = healthData.kbEntries || '-';
+                document.getElementById('systemStatus').textContent = healthData.status === 'ok' ? 'Online' : 'Offline';
+
+                // Get balance stats
+                const statsResponse = await fetch('/api/admin/stats', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (statsResponse.ok) {
+                    const statsData = await statsResponse.json();
+                    document.getElementById('totalAccounts').textContent = statsData.totalAccounts || '-';
+                    if (statsData.lastUpdate) {
+                        const date = new Date(statsData.lastUpdate);
+                        document.getElementById('lastUpdate').textContent = date.toLocaleString();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        // Balance upload
+        document.getElementById('uploadBalancesBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('balanceFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const resultDiv = document.getElementById('uploadResult');
+            const progressDiv = document.getElementById('uploadProgress');
+            
+            resultDiv.innerHTML = '';
+            resultDiv.classList.add('hidden');
+            progressDiv.classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('balances', file);
+
+            try {
+                const response = await fetch('/api/admin/upload-balances', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+
+                const data = await response.json();
+                progressDiv.classList.add('hidden');
+
+                if (response.ok && data.success) {
+                    resultDiv.className = 'alert alert-success';
+                    resultDiv.innerHTML = `
+                        <strong>Upload Successful!</strong><br>
+                        <strong>Total Records:</strong> ${data.totalRecords}<br>
+                        <strong>Successful:</strong> ${data.successCount}<br>
+                        <strong>Errors:</strong> ${data.errorCount}<br>
+                        ${data.summary || ''}
+                    `;
+                    addActivityLog(`Balance upload: ${data.successCount} accounts updated`, 'success');
+                    loadDashboardData(); // Refresh stats
+                } else {
+                    resultDiv.className = 'alert alert-error';
+                    resultDiv.innerHTML = `<strong>Upload Failed:</strong> ${data.error || 'Unknown error'}`;
+                    addActivityLog('Balance upload failed', 'error');
+                }
+            } catch (error) {
+                progressDiv.classList.add('hidden');
+                resultDiv.className = 'alert alert-error';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                addActivityLog('Balance upload error', 'error');
+            }
+
+            resultDiv.classList.remove('hidden');
+            fileInput.value = '';
+        });
+
+        // Activity log
+        function addActivityLog(event, status) {
+            const tbody = document.getElementById('activityLog');
+            const firstRow = tbody.querySelector('tr');
+            if (firstRow && firstRow.querySelector('td[colspan]')) {
+                tbody.innerHTML = '';
+            }
+
+            const row = document.createElement('tr');
+            const time = new Date().toLocaleTimeString();
+            const badgeClass = status === 'success' ? 'badge-success' : status === 'error' ? 'badge-danger' : 'badge-warning';
+            
+            row.innerHTML = `
+                <td>${time}</td>
+                <td>${event}</td>
+                <td><span class="badge ${badgeClass}">${status}</span></td>
+            `;
+            
+            tbody.insertBefore(row, tbody.firstChild);
+            
+            // Keep only last 10 entries
+            while (tbody.children.length > 10) {
+                tbody.removeChild(tbody.lastChild);
+            }
+        }
+
+        // Change password form
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const resultDiv = document.getElementById('passwordChangeResult');
+
+            if (newPassword !== confirmPassword) {
+                resultDiv.className = 'alert alert-error';
+                resultDiv.textContent = 'Passwords do not match';
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            resultDiv.className = 'alert alert-info';
+            resultDiv.innerHTML = '<strong>Note:</strong> Password must be changed in environment variables (ADMIN_PASSWORD) on your server or Render dashboard.';
+            resultDiv.classList.remove('hidden');
+        });
+
+        // Check for existing token on load
+        window.addEventListener('load', () => {
+            const savedToken = localStorage.getItem('adminToken');
+            if (savedToken) {
+                authToken = savedToken;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminDashboard').classList.add('active');
+                loadDashboardData();
+            }
+        });
+    </script>
+</body>
+</html>
