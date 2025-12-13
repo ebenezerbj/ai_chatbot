@@ -3,8 +3,11 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import multer from 'multer';
+import crypto from 'crypto';
 import * as customerAuth from './customerAuth';
 import { testConnection } from './database';
+import * as balanceUpdater from './balanceUpdater';
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +27,21 @@ const port = Number(process.env.PORT || 4000);
 
 // Middleware
 app.use(express.json());
+
+// Configure multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// Admin authentication
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const adminTokens = new Set<string>();
+
+// Generate a random token
+function generateToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 // Serve static files from public directory
 const publicPath = path.join(process.cwd(), 'public');
@@ -386,6 +404,97 @@ app.post('/api/tts', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[TTS] Error:', error.message);
     res.status(500).json({ error: 'Failed to generate speech' });
+  }
+});
+
+// ============================================================
+// ADMIN ROUTES - Balance Upload System
+// ============================================================
+
+// Admin login endpoint
+app.post('/api/admin/login', (req: Request, res: Response) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ error: 'Password required' });
+    }
+    
+    if (password === ADMIN_PASSWORD) {
+      const token = generateToken();
+      adminTokens.add(token);
+      console.log('[Admin] Login successful, token generated');
+      return res.json({ token });
+    } else {
+      console.log('[Admin] Login failed - invalid password');
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+  } catch (error: any) {
+    console.error('[Admin] Login error:', error.message);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Admin logout endpoint
+app.post('/api/admin/logout', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      adminTokens.delete(token);
+      console.log('[Admin] Logout successful');
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('[Admin] Logout error:', error.message);
+    res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
+// Balance upload endpoint
+app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized - No token provided' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+    
+    // Check file upload
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    console.log('[Admin] Processing balance upload, file size:', req.file.size, 'bytes');
+    
+    // Parse CSV
+    const updates = await balanceUpdater.parseCSV(req.file.buffer);
+    console.log('[Admin] Parsed', updates.length, 'records from CSV');
+    
+    // Update balances
+    const result = await balanceUpdater.updateBalances(updates);
+    console.log('[Admin] Update complete:', result.successCount, 'successful,', result.errorCount, 'errors');
+    
+    // Get statistics
+    const stats = await balanceUpdater.getUpdateStats();
+    
+    res.json({
+      success: result.success,
+      totalRecords: result.totalRecords,
+      successCount: result.successCount,
+      errorCount: result.errorCount,
+      errors: result.errors,
+      stats: stats,
+      summary: result.summary
+    });
+  } catch (error: any) {
+    console.error('[Admin] Upload error:', error.message);
+    res.status(500).json({ error: 'Upload failed: ' + error.message });
   }
 });
 

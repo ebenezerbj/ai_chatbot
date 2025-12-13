@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AKCB Admin - Balance Upload</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .auth-form, .upload-form {
+      display: none;
+    }
+
+    .auth-form.active, .upload-form.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    input[type="password"],
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input[type="password"]:focus,
+    input[type="file"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .info-box {
+      background: #f0f4ff;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .info-box h3 {
+      color: #667eea;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .info-box p {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .info-box code {
+      background: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #764ba2;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .result.active {
+      display: block;
+    }
+
+    .result.success {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+    }
+
+    .result.error {
+      background: #f8d7da;
+      border-left: 4px solid #dc3545;
+    }
+
+    .result h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .result.success h3 { color: #155724; }
+    .result.error h3 { color: #721c24; }
+
+    .result-details {
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .result-details strong {
+      font-weight: 600;
+    }
+
+    .error-list {
+      margin-top: 10px;
+      padding-left: 20px;
+      font-size: 13px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .logout-btn {
+      margin-top: 15px;
+      background: #6c757d;
+      font-size: 14px;
+      padding: 10px;
+    }
+
+    .logout-btn:hover {
+      background: #5a6268;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏦 AKCB Admin Portal</h1>
+      <p>Daily Balance Update System</p>
+    </div>
+
+    <div class="content">
+      <!-- Authentication Form -->
+      <div class="auth-form active" id="authForm">
+        <div class="info-box">
+          <h3>🔒 Secure Access</h3>
+          <p>Enter the admin password to access the balance upload system.</p>
+        </div>
+        
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="password">Admin Password</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+          </div>
+          <button type="submit">Login</button>
+        </form>
+      </div>
+
+      <!-- Upload Form -->
+      <div class="upload-form" id="uploadForm">
+        <div class="info-box">
+          <h3>📊 CSV File Requirements</h3>
+          <p>Upload the daily balance export CSV file. Accepted formats:</p>
+          <p style="margin-top: 8px;">
+            <code>Account Number, Ledger Balance, Available Balance</code><br>
+            <code>account_number, balance</code>
+          </p>
+        </div>
+
+        <form id="balanceUploadForm">
+          <div class="form-group">
+            <label for="csvFile">Select CSV File</label>
+            <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
+          </div>
+          <button type="submit" id="uploadBtn">
+            Upload & Update Balances
+          </button>
+          <button type="button" class="logout-btn" onclick="logout()">Logout</button>
+        </form>
+
+        <div class="result" id="result"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authToken = null;
+
+    // Login form handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('password').value;
+      const btn = e.target.querySelector('button');
+      const originalText = btn.textContent;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Authenticating...';
+
+      try {
+        const response = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          authToken = data.token;
+          document.getElementById('authForm').classList.remove('active');
+          document.getElementById('uploadForm').classList.add('active');
+        } else {
+          alert(data.error || 'Invalid password');
+        }
+      } catch (error) {
+        alert('Authentication failed. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+
+    // Upload form handler
+    document.getElementById('balanceUploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('csvFile');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        alert('Please select a CSV file');
+        return;
+      }
+
+      const btn = document.getElementById('uploadBtn');
+      const resultDiv = document.getElementById('result');
+      const originalText = btn.textContent;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Processing...';
+      resultDiv.classList.remove('active', 'success', 'error');
+
+      const formData = new FormData();
+      formData.append('balances', file);
+
+      try {
+        const response = await fetch('/api/admin/upload-balances', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.className = 'result active success';
+          resultDiv.innerHTML = `
+            <h3>✅ Success!</h3>
+            <div class="result-details">
+              <p><strong>Summary:</strong> ${data.summary}</p>
+              <p><strong>Total Records:</strong> ${data.totalRecords}</p>
+              <p><strong>Successfully Updated:</strong> ${data.successCount}</p>
+              ${data.errorCount > 0 ? `<p><strong>Errors:</strong> ${data.errorCount}</p>` : ''}
+              ${data.stats ? `
+                <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #c3e6cb;">
+                  <strong>Database Status:</strong><br>
+                  Total Accounts: ${data.stats.totalAccounts}<br>
+                  Last Updated: ${new Date(data.stats.lastUpdate).toLocaleString()}
+                </p>
+              ` : ''}
+              ${data.errors && data.errors.length > 0 ? `
+                <ul class="error-list">
+                  ${data.errors.map(err => `<li>${err}</li>`).join('')}
+                </ul>
+              ` : ''}
+            </div>
+          `;
+        } else {
+          resultDiv.className = 'result active error';
+          resultDiv.innerHTML = `
+            <h3>❌ Update Failed</h3>
+            <div class="result-details">
+              <p>${data.error || 'An error occurred during the update'}</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultDiv.className = 'result active error';
+        resultDiv.innerHTML = `
+          <h3>❌ Upload Failed</h3>
+          <div class="result-details">
+            <p>Network error or server is unavailable. Please try again.</p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        fileInput.value = ''; // Clear file input
+      }
+    });
+
+    function logout() {
+      authToken = null;
+      document.getElementById('uploadForm').classList.remove('active');
+      document.getElementById('authForm').classList.add('active');
+      document.getElementById('password').value = '';
+      document.getElementById('result').classList.remove('active');
+    }
+  </script>
+</body>
+</html>
