@@ -33,8 +33,9 @@ export async function parseCSV(buffer: Buffer): Promise<BalanceUpdate[]> {
     stream
       .pipe(csv())
       .on('data', (row: any) => {
-        // Flexible field mapping - handles various CSV formats
+        // Flexible field mapping - handles various CSV formats from core banking
         const accountNumber = 
+          row['ACCOUNT.ID'] ||           // Core banking export format
           row['Account Number'] || 
           row['account_number'] || 
           row['AccountNumber'] || 
@@ -43,6 +44,8 @@ export async function parseCSV(buffer: Buffer): Promise<BalanceUpdate[]> {
           row['account_no'];
         
         const ledgerBalance = 
+          row['WORKING.BALANCE'] ||      // Core banking export format
+          row['ONLINE.ACTUAL.BAL'] ||    // Core banking alternative
           row['Ledger Balance'] || 
           row['ledger_balance'] || 
           row['LedgerBalance'] || 
@@ -52,6 +55,8 @@ export async function parseCSV(buffer: Buffer): Promise<BalanceUpdate[]> {
           '0.00';
         
         const availableBalance = 
+          row['ONLINE.CLEARED.BAL'] ||   // Core banking export format
+          row['ONLINE.ACTUAL.BAL'] ||    // Core banking alternative
           row['Available Balance'] || 
           row['available_balance'] || 
           row['AvailableBalance'] || 

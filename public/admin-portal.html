@@ -585,7 +585,7 @@
                             <label for="balanceFile">Select CSV File</label>
                             <input type="file" id="balanceFile" accept=".csv">
                             <small style="color: #6b7280; display: block; margin-top: 8px;">
-                                CSV should contain: Account Number, Ledger Balance, Available Balance
+                                CSV from core banking export - must contain ACCOUNT.ID and WORKING.BALANCE columns
                             </small>
                         </div>
 
@@ -602,10 +602,25 @@
                     </div>
 
                     <div class="card">
-                        <h3>CSV Format Example</h3>
-                        <pre style="background: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto;">Account Number,Ledger Balance,Available Balance
-1511520000230861,12500.50,12500.50
-1511520000230862,8750.25,8750.25</pre>
+                        <h3>Core Banking CSV Format</h3>
+                        <p style="color: #6b7280; margin-bottom: 12px;">Your core banking system export should include these columns:</p>
+                        <pre style="background: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto; margin-bottom: 16px;">ACCOUNT.ID,ACCOUNT.TITLE.1,WORKING.BALANCE,ONLINE.CLEARED.BAL,ONLINE.ACTUAL.BAL
+1511520000230861,CUSTOMER NAME 1,12500.50,12500.50,12500.50
+1511520000230862,CUSTOMER NAME 2,8750.25,8750.25,8750.25</pre>
+                        
+                        <p style="color: #6b7280; margin-bottom: 12px;"><strong>Minimum Required Columns:</strong></p>
+                        <pre style="background: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto;">ACCOUNT.ID,WORKING.BALANCE
+1511520000230861,12500.50
+1511520000230862,8750.25</pre>
+                        
+                        <div style="margin-top: 16px;">
+                            <a href="/balance_upload_template.csv" download class="btn btn-secondary" style="margin-right: 8px; text-decoration: none; display: inline-block;">
+                                Download Full Template
+                            </a>
+                            <a href="/balance_upload_template_minimal.csv" download class="btn btn-secondary" style="text-decoration: none; display: inline-block;">
+                                Download Minimal Template
+                            </a>
+                        </div>
                     </div>
                 </div>
 
