@@ -943,11 +943,11 @@ while($row=mysqli_fetch_array($result)){
 #akcb-chat-window {
   position: fixed;
   bottom: 100px;
-  right: 24px;
-  width: 420px;
-  height: 650px;
+  right: 28px;
+  width: 460px;
+  height: 700px;
   background: white;
-  border-radius: 20px;
+  border-radius: 24px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   animation: akcb-slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -957,7 +957,7 @@ while($row=mysqli_fetch_array($result)){
 /* Chat Header */
 .akcb-chat-header {
   background: linear-gradient(135deg, #00BFA5 0%, #00D4BD 100%);
-  padding: 20px;
+  padding: 22px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1036,7 +1036,7 @@ while($row=mysqli_fetch_array($result)){
 
 /* Chat Body */
 .akcb-chat-body {
-  height: calc(100% - 84px);
+  height: calc(100% - 88px);
   position: relative;
   background: #f5f5f5;
 }
