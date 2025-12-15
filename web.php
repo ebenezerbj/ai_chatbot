@@ -90,7 +90,7 @@ while($row=mysqli_fetch_array($result)){
 <div class="col-12 col-lg-9">
 <div class="welcome-text text-center">
 
-<h2 data-animation="fadeInUp" data-delay="300ms"> <h2><?php// echo $row['bannertext'] ?></h2>
+<h2 data-animation="fadeInUp" data-delay="300ms"> <h2><?php /* echo $row['bannertext'] */ ?></h2>
 </div>
 </div>
 </div>
