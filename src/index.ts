@@ -6,7 +6,7 @@ import path from 'path';
 import multer from 'multer';
 import crypto from 'crypto';
 import * as customerAuth from './customerAuth';
-import { testConnection } from './database';
+import { testConnection, executeQuery, DB_TYPE } from './database';
 import * as balanceUpdater from './balanceUpdater';
 import * as customerImporter from './customerImporter';
 import { WebCrawler, CrawlConfig, CrawlResult, convertToKBEntries, updateKnowledgeBase } from './webCrawler';
@@ -205,6 +205,22 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     await analytics.logMessage(effectiveSessionId, messageIndex, 'user', message).catch(e =>
       console.error('[Analytics] Failed to log user message:', e)
     );
+
+    // ===== Phase 3: ML Analysis (non-blocking) =====
+    // Analyze sentiment and intent in parallel
+    Promise.all([
+      analytics.analyzeSentiment(message, effectiveSessionId, messageIndex),
+      analytics.classifyIntent(message, effectiveSessionId, messageIndex)
+    ]).catch(e => console.error('[ML] Analysis failed:', e));
+    
+    // Get user ID for churn prediction
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+    const userId = ipAddress ? `user_${Buffer.from(ipAddress).toString('base64')}` : undefined;
+    
+    // Trigger churn prediction asynchronously (non-blocking)
+    if (userId) {
+      analytics.predictChurn(userId).catch(e => console.error('[ML] Churn prediction failed:', e));
+    }
 
     // Check if customer needs authentication for account information
     const authDetails = customerAuth.extractAuthDetails(message);
@@ -460,6 +476,12 @@ app.post('/api/session/end', async (req: Request, res: Response) => {
     }
     
     await analytics.endSession(sessionId);
+    
+    // ===== Phase 3: Categorize conversation when session ends (non-blocking) =====
+    analytics.categorizeConversation(sessionId).catch(e => 
+      console.error('[ML] Conversation categorization failed:', e)
+    );
+    
     res.json({ success: true, message: 'Session ended' });
   } catch (error: any) {
     console.error('[Session] Error ending session:', error);
@@ -1105,6 +1127,191 @@ app.post('/api/admin/crawler/config', (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Crawler] Config save error:', error.message);
     res.status(500).json({ error: 'Failed to save config' });
+  }
+});
+
+// ===== Phase 3: Machine Learning Endpoints =====
+
+/**
+ * Get sentiment trends for admin dashboard
+ */
+app.get('/api/admin/ml/sentiment-trends', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+  
+  if (token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    // Get overall sentiment distribution
+    const sentimentQuery = `
+      SELECT 
+        sentiment,
+        COUNT(*) as count,
+        AVG(score) as avg_score,
+        COUNT(CASE WHEN needs_escalation = TRUE THEN 1 END) as escalations
+      FROM sentiment_analysis
+      WHERE timestamp >= NOW() - INTERVAL '30 days'
+      GROUP BY sentiment
+      ORDER BY count DESC
+    `;
+    
+    const distribution = await executeQuery(sentimentQuery, []);
+    
+    // Get daily sentiment trends (last 7 days)
+    const trendsQuery = DB_TYPE === 'postgres'
+      ? `SELECT 
+           DATE(timestamp) as date,
+           AVG(score) as avg_score,
+           COUNT(*) as count
+         FROM sentiment_analysis
+         WHERE timestamp >= NOW() - INTERVAL '7 days'
+         GROUP BY DATE(timestamp)
+         ORDER BY date`
+      : `SELECT 
+           DATE(timestamp) as date,
+           AVG(score) as avg_score,
+           COUNT(*) as count
+         FROM sentiment_analysis
+         WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+         GROUP BY DATE(timestamp)
+         ORDER BY date`;
+    
+    const trends = await executeQuery(trendsQuery, []);
+    
+    res.json({ distribution, trends });
+  } catch (error: any) {
+    console.error('[ML] Sentiment trends error:', error);
+    res.status(500).json({ error: 'Failed to fetch sentiment trends' });
+  }
+});
+
+/**
+ * Get intent distribution analytics
+ */
+app.get('/api/admin/ml/intent-distribution', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+  
+  if (token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const distribution = await analytics.getIntentDistribution();
+    res.json({ distribution });
+  } catch (error: any) {
+    console.error('[ML] Intent distribution error:', error);
+    res.status(500).json({ error: 'Failed to fetch intent distribution' });
+  }
+});
+
+/**
+ * Get escalation queue
+ */
+app.get('/api/admin/ml/escalations', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+  
+  if (token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const escalations = await analytics.getEscalationQueue();
+    res.json({ escalations, count: escalations.length });
+  } catch (error: any) {
+    console.error('[ML] Escalations error:', error);
+    res.status(500).json({ error: 'Failed to fetch escalations' });
+  }
+});
+
+/**
+ * Get conversation category insights
+ */
+app.get('/api/admin/ml/categories', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+  
+  if (token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const insights = await analytics.getCategoryInsights();
+    res.json({ categories: insights });
+  } catch (error: any) {
+    console.error('[ML] Categories error:', error);
+    res.status(500).json({ error: 'Failed to fetch category insights' });
+  }
+});
+
+/**
+ * Get high churn risk users
+ */
+app.get('/api/admin/ml/churn-risk', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+  
+  if (token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const highRiskUsers = await analytics.getHighChurnRiskUsers();
+    res.json({ highRiskUsers, count: highRiskUsers.length });
+  } catch (error: any) {
+    console.error('[ML] Churn risk error:', error);
+    res.status(500).json({ error: 'Failed to fetch churn predictions' });
+  }
+});
+
+/**
+ * Get engagement score for a user
+ */
+app.post('/api/ml/engagement-score', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId required' });
+    }
+
+    const score = await analytics.calculateEngagementScore(userId);
+    
+    if (!score) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ engagementScore: score });
+  } catch (error: any) {
+    console.error('[ML] Engagement score error:', error);
+    res.status(500).json({ error: 'Failed to calculate engagement score' });
+  }
+});
+
+/**
+ * Trigger churn prediction for a user
+ */
+app.post('/api/ml/predict-churn', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId required' });
+    }
+
+    const prediction = await analytics.predictChurn(userId);
+    
+    if (!prediction) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ churnPrediction: prediction });
+  } catch (error: any) {
+    console.error('[ML] Churn prediction error:', error);
+    res.status(500).json({ error: 'Failed to predict churn' });
   }
 });
 

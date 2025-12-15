@@ -97,6 +97,60 @@ export interface FollowUp {
   completedAt?: Date;
 }
 
+// ===== Phase 3: Machine Learning Types =====
+
+export interface SentimentAnalysis {
+  id?: number;
+  sessionId: string;
+  messageId: number;
+  sentiment: 'positive' | 'neutral' | 'negative' | 'frustrated';
+  score: number; // -1 to 1 scale
+  confidence: number; // 0 to 1
+  emotionTags: string[]; // ['happy', 'satisfied'] or ['angry', 'confused']
+  needsEscalation: boolean;
+  timestamp: Date;
+}
+
+export interface IntentClassification {
+  id?: number;
+  sessionId: string;
+  messageId: number;
+  intent: string; // 'check_balance', 'loan_inquiry', 'branch_location', etc.
+  confidence: number;
+  entities: Record<string, any>; // Extracted entities like amounts, dates
+  timestamp: Date;
+}
+
+export interface ConversationCategory {
+  id?: number;
+  sessionId: string;
+  category: string; // 'Loans', 'Accounts', 'Support', 'Complaints'
+  subcategory?: string; // 'Personal Loan', 'Savings Account'
+  keywords: string[];
+  confidence: number;
+  assignedAt: Date;
+}
+
+export interface ChurnPrediction {
+  userId: string;
+  churnRisk: 'low' | 'medium' | 'high';
+  riskScore: number; // 0 to 1
+  factors: string[]; // ['long_idle_time', 'negative_sentiment']
+  lastPrediction: Date;
+}
+
+export interface EngagementScore {
+  userId: string;
+  score: number; // 0 to 100
+  factors: {
+    frequency: number;
+    recency: number;
+    satisfaction: number;
+    completionRate: number;
+  };
+  calculatedAt: Date;
+}
+
 // ===== Database Schema Setup =====
 export async function initializeAnalyticsTables(): Promise<void> {
   console.log('[Analytics] Initializing database tables...');
@@ -248,6 +302,72 @@ export async function initializeAnalyticsTables(): Promise<void> {
     await executeQuery(`CREATE INDEX IF NOT EXISTS idx_followups_user ON follow_ups(user_id)`);
     await executeQuery(`CREATE INDEX IF NOT EXISTS idx_followups_completed ON follow_ups(completed)`);
 
+    // ===== Phase 3: Machine Learning Tables (PostgreSQL) =====
+
+    // Sentiment Analysis
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS sentiment_analysis (
+        id SERIAL PRIMARY KEY,
+        session_id VARCHAR(255) NOT NULL,
+        message_id INTEGER NOT NULL,
+        sentiment VARCHAR(20) NOT NULL,
+        score DECIMAL(3,2) NOT NULL,
+        confidence DECIMAL(3,2) NOT NULL,
+        emotion_tags TEXT[],
+        needs_escalation BOOLEAN DEFAULT FALSE,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE
+      )
+    `);
+
+    // Intent Classification
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS intent_classification (
+        id SERIAL PRIMARY KEY,
+        session_id VARCHAR(255) NOT NULL,
+        message_id INTEGER NOT NULL,
+        intent VARCHAR(100) NOT NULL,
+        confidence DECIMAL(3,2) NOT NULL,
+        entities JSONB,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE
+      )
+    `);
+
+    // Conversation Categories
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS conversation_categories (
+        id SERIAL PRIMARY KEY,
+        session_id VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        subcategory VARCHAR(100),
+        keywords TEXT[],
+        confidence DECIMAL(3,2) NOT NULL,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE
+      )
+    `);
+
+    // Churn Predictions
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS churn_predictions (
+        user_id VARCHAR(255) PRIMARY KEY,
+        churn_risk VARCHAR(20) NOT NULL,
+        risk_score DECIMAL(3,2) NOT NULL,
+        factors TEXT[],
+        last_prediction TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // ML Indexes
+    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_sentiment_session ON sentiment_analysis(session_id)`);
+    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_sentiment_needs_escalation ON sentiment_analysis(needs_escalation)`);
+    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_intent_session ON intent_classification(session_id)`);
+    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_intent_intent ON intent_classification(intent)`);
+    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_category_session ON conversation_categories(session_id)`);
+    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_category_category ON conversation_categories(category)`);
+    await executeQuery(`CREATE INDEX IF NOT EXISTS idx_churn_risk ON churn_predictions(churn_risk)`);
+
   } else {
     // MySQL schema
     await executeQuery(`
@@ -305,6 +425,70 @@ export async function initializeAnalyticsTables(): Promise<void> {
         FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE,
         INDEX idx_user (user_id),
         INDEX idx_completed (completed)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // ===== Phase 3: Machine Learning Tables (MySQL) =====
+
+    // Sentiment Analysis
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS sentiment_analysis (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_id VARCHAR(255) NOT NULL,
+        message_id INT NOT NULL,
+        sentiment VARCHAR(20) NOT NULL,
+        score DECIMAL(3,2) NOT NULL,
+        confidence DECIMAL(3,2) NOT NULL,
+        emotion_tags JSON,
+        needs_escalation BOOLEAN DEFAULT FALSE,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE,
+        INDEX idx_session (session_id),
+        INDEX idx_escalation (needs_escalation)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // Intent Classification
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS intent_classification (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_id VARCHAR(255) NOT NULL,
+        message_id INT NOT NULL,
+        intent VARCHAR(100) NOT NULL,
+        confidence DECIMAL(3,2) NOT NULL,
+        entities JSON,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE,
+        INDEX idx_session (session_id),
+        INDEX idx_intent (intent)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // Conversation Categories
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS conversation_categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_id VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        subcategory VARCHAR(100),
+        keywords JSON,
+        confidence DECIMAL(3,2) NOT NULL,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE,
+        INDEX idx_session (session_id),
+        INDEX idx_category (category)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // Churn Predictions
+    await executeQuery(`
+      CREATE TABLE IF NOT EXISTS churn_predictions (
+        user_id VARCHAR(255) PRIMARY KEY,
+        churn_risk VARCHAR(20) NOT NULL,
+        risk_score DECIMAL(3,2) NOT NULL,
+        factors JSON,
+        last_prediction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_risk (churn_risk)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
   }
@@ -836,5 +1020,542 @@ export async function getUserPreference(userId: string, key: string): Promise<st
   
   const result = await executeQuery<{ preference_value: string }>(query, [userId, key]);
   return result[0]?.preference_value || null;
+}
+
+// ===== Phase 3: Machine Learning Functions =====
+
+/**
+ * Analyze sentiment of a message using OpenAI
+ */
+export async function analyzeSentiment(
+  message: string,
+  sessionId: string,
+  messageId: number
+): Promise<SentimentAnalysis> {
+  try {
+    // Using OpenAI for sentiment analysis
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{
+          role: 'system',
+          content: `Analyze the sentiment of the following customer message. Respond with ONLY a JSON object in this exact format:
+{
+  "sentiment": "positive|neutral|negative|frustrated",
+  "score": <number between -1 and 1>,
+  "confidence": <number between 0 and 1>,
+  "emotionTags": ["tag1", "tag2"],
+  "needsEscalation": <true|false>
+}
+
+Sentiment guidelines:
+- positive: happy, satisfied, grateful (score: 0.3 to 1.0)
+- neutral: informational, casual (score: -0.2 to 0.2)
+- negative: disappointed, unhappy (score: -0.6 to -0.3)
+- frustrated: angry, urgent, demanding (score: -1.0 to -0.7, needsEscalation: true)
+
+Emotion tags: happy, satisfied, grateful, confused, disappointed, angry, urgent, calm, curious, frustrated`
+        }, {
+          role: 'user',
+          content: message
+        }],
+        temperature: 0.3,
+        max_tokens: 150
+      })
+    });
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content || '{}';
+    
+    // Parse the JSON response
+    const sentimentData = JSON.parse(content.trim());
+    
+    const sentimentAnalysis: SentimentAnalysis = {
+      sessionId,
+      messageId,
+      sentiment: sentimentData.sentiment || 'neutral',
+      score: sentimentData.score || 0,
+      confidence: sentimentData.confidence || 0.5,
+      emotionTags: sentimentData.emotionTags || [],
+      needsEscalation: sentimentData.needsEscalation || false,
+      timestamp: new Date()
+    };
+
+    // Store in database
+    const query = DB_TYPE === 'postgres'
+      ? `INSERT INTO sentiment_analysis (session_id, message_id, sentiment, score, confidence, emotion_tags, needs_escalation)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`
+      : `INSERT INTO sentiment_analysis (session_id, message_id, sentiment, score, confidence, emotion_tags, needs_escalation)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    
+    const emotionTagsValue = DB_TYPE === 'postgres' 
+      ? sentimentAnalysis.emotionTags 
+      : JSON.stringify(sentimentAnalysis.emotionTags);
+
+    await executeQuery(query, [
+      sessionId,
+      messageId,
+      sentimentAnalysis.sentiment,
+      sentimentAnalysis.score,
+      sentimentAnalysis.confidence,
+      emotionTagsValue,
+      sentimentAnalysis.needsEscalation
+    ]);
+
+    console.log(`[Sentiment] ${sessionId}-${messageId}: ${sentimentAnalysis.sentiment} (${sentimentAnalysis.score.toFixed(2)})`);
+    
+    return sentimentAnalysis;
+  } catch (error) {
+    console.error('[Sentiment] Analysis failed:', error);
+    // Return neutral sentiment as fallback
+    return {
+      sessionId,
+      messageId,
+      sentiment: 'neutral',
+      score: 0,
+      confidence: 0,
+      emotionTags: [],
+      needsEscalation: false,
+      timestamp: new Date()
+    };
+  }
+}
+
+/**
+ * Classify intent of a user message
+ */
+export async function classifyIntent(
+  message: string,
+  sessionId: string,
+  messageId: number
+): Promise<IntentClassification> {
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{
+          role: 'system',
+          content: `Classify the intent of this banking customer message. Respond with ONLY a JSON object:
+{
+  "intent": "<intent_category>",
+  "confidence": <0 to 1>,
+  "entities": {
+    "amount": <number if mentioned>,
+    "account_type": "<type if mentioned>",
+    "time_frame": "<duration if mentioned>"
+  }
+}
+
+Intent categories:
+- check_balance: checking account balance
+- transfer_funds: money transfer inquiries
+- loan_inquiry: asking about loans (personal, business, mortgage)
+- account_opening: want to open new account
+- branch_location: finding branch/ATM
+- complaint: filing complaint or dissatisfaction
+- card_issue: debit/credit card problems
+- general_inquiry: general questions
+- technical_support: app/website issues
+- other: doesn't fit above categories`
+        }, {
+          role: 'user',
+          content: message
+        }],
+        temperature: 0.2,
+        max_tokens: 150
+      })
+    });
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content || '{}';
+    const intentData = JSON.parse(content.trim());
+
+    const classification: IntentClassification = {
+      sessionId,
+      messageId,
+      intent: intentData.intent || 'other',
+      confidence: intentData.confidence || 0.5,
+      entities: intentData.entities || {},
+      timestamp: new Date()
+    };
+
+    // Store in database
+    const query = DB_TYPE === 'postgres'
+      ? `INSERT INTO intent_classification (session_id, message_id, intent, confidence, entities)
+         VALUES ($1, $2, $3, $4, $5)`
+      : `INSERT INTO intent_classification (session_id, message_id, intent, confidence, entities)
+         VALUES (?, ?, ?, ?, ?)`;
+    
+    const entitiesValue = JSON.stringify(classification.entities);
+
+    await executeQuery(query, [
+      sessionId,
+      messageId,
+      classification.intent,
+      classification.confidence,
+      entitiesValue
+    ]);
+
+    console.log(`[Intent] ${sessionId}-${messageId}: ${classification.intent} (${(classification.confidence * 100).toFixed(0)}%)`);
+    
+    return classification;
+  } catch (error) {
+    console.error('[Intent] Classification failed:', error);
+    return {
+      sessionId,
+      messageId,
+      intent: 'other',
+      confidence: 0,
+      entities: {},
+      timestamp: new Date()
+    };
+  }
+}
+
+/**
+ * Categorize entire conversation based on message history
+ */
+export async function categorizeConversation(sessionId: string): Promise<ConversationCategory | null> {
+  try {
+    // Get all messages from the session
+    const messages = await executeQuery<ConversationLog>(
+      DB_TYPE === 'postgres'
+        ? 'SELECT * FROM conversation_logs WHERE session_id = $1 ORDER BY message_index'
+        : 'SELECT * FROM conversation_logs WHERE session_id = ? ORDER BY message_index',
+      [sessionId]
+    );
+
+    if (messages.length === 0) return null;
+
+    // Combine all messages for context
+    const conversationText = messages
+      .map(m => `${m.role}: ${m.content}`)
+      .join('\n');
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{
+          role: 'system',
+          content: `Categorize this banking conversation. Respond with ONLY a JSON object:
+{
+  "category": "<main_category>",
+  "subcategory": "<specific_topic>",
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "confidence": <0 to 1>
+}
+
+Main categories:
+- Loans: personal loans, business loans, mortgages
+- Accounts: savings, checking, opening accounts
+- Cards: debit, credit, card issues
+- Transfers: money transfers, payments
+- Support: complaints, technical issues, general help
+- Branch Services: locations, hours, appointments
+- Investments: fixed deposits, mutual funds
+- Other: doesn't fit above`
+        }, {
+          role: 'user',
+          content: conversationText
+        }],
+        temperature: 0.2,
+        max_tokens: 200
+      })
+    });
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content || '{}';
+    const categoryData = JSON.parse(content.trim());
+
+    const category: ConversationCategory = {
+      sessionId,
+      category: categoryData.category || 'Other',
+      subcategory: categoryData.subcategory,
+      keywords: categoryData.keywords || [],
+      confidence: categoryData.confidence || 0.5,
+      assignedAt: new Date()
+    };
+
+    // Store in database
+    const query = DB_TYPE === 'postgres'
+      ? `INSERT INTO conversation_categories (session_id, category, subcategory, keywords, confidence)
+         VALUES ($1, $2, $3, $4, $5)`
+      : `INSERT INTO conversation_categories (session_id, category, subcategory, keywords, confidence)
+         VALUES (?, ?, ?, ?, ?)`;
+    
+    const keywordsValue = DB_TYPE === 'postgres' 
+      ? category.keywords 
+      : JSON.stringify(category.keywords);
+
+    await executeQuery(query, [
+      sessionId,
+      category.category,
+      category.subcategory,
+      keywordsValue,
+      category.confidence
+    ]);
+
+    console.log(`[Category] ${sessionId}: ${category.category} - ${category.subcategory}`);
+    
+    return category;
+  } catch (error) {
+    console.error('[Category] Categorization failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Predict churn risk for a user
+ */
+export async function predictChurn(userId: string): Promise<ChurnPrediction | null> {
+  try {
+    const profile = await getOrCreateUserProfile(userId);
+    
+    // Calculate days since last visit
+    const daysSinceLastVisit = Math.floor(
+      (new Date().getTime() - new Date(profile.lastSeen).getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Get average sentiment
+    const sentimentQuery = DB_TYPE === 'postgres'
+      ? `SELECT AVG(score) as avg_sentiment 
+         FROM sentiment_analysis sa
+         JOIN chat_sessions cs ON sa.session_id = cs.session_id
+         WHERE cs.ip_address LIKE $1`
+      : `SELECT AVG(score) as avg_sentiment 
+         FROM sentiment_analysis sa
+         JOIN chat_sessions cs ON sa.session_id = cs.session_id
+         WHERE cs.ip_address LIKE ?`;
+    
+    const sentimentResult = await executeQuery<{ avg_sentiment: number }>(
+      sentimentQuery,
+      [`%${userId}%`]
+    );
+    const avgSentiment = sentimentResult[0]?.avg_sentiment || 0;
+
+    // Churn risk factors
+    const factors: string[] = [];
+    let riskScore = 0;
+
+    // Factor 1: Long idle time
+    if (daysSinceLastVisit > 30) {
+      factors.push('long_idle_time');
+      riskScore += 0.3;
+    } else if (daysSinceLastVisit > 14) {
+      factors.push('moderate_idle_time');
+      riskScore += 0.15;
+    }
+
+    // Factor 2: Negative sentiment
+    if (avgSentiment < -0.3) {
+      factors.push('negative_sentiment');
+      riskScore += 0.25;
+    }
+
+    // Factor 3: Low session count
+    if (profile.totalSessions < 3) {
+      factors.push('low_engagement');
+      riskScore += 0.2;
+    }
+
+    // Factor 4: Low satisfaction
+    if (profile.averageSatisfaction && profile.averageSatisfaction < 3) {
+      factors.push('low_satisfaction');
+      riskScore += 0.25;
+    }
+
+    // Determine risk level
+    let churnRisk: 'low' | 'medium' | 'high';
+    if (riskScore >= 0.6) churnRisk = 'high';
+    else if (riskScore >= 0.3) churnRisk = 'medium';
+    else churnRisk = 'low';
+
+    const prediction: ChurnPrediction = {
+      userId,
+      churnRisk,
+      riskScore: Math.min(riskScore, 1),
+      factors,
+      lastPrediction: new Date()
+    };
+
+    // Store/update in database
+    const query = DB_TYPE === 'postgres'
+      ? `INSERT INTO churn_predictions (user_id, churn_risk, risk_score, factors)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (user_id) 
+         DO UPDATE SET churn_risk = $2, risk_score = $3, factors = $4, last_prediction = CURRENT_TIMESTAMP`
+      : `INSERT INTO churn_predictions (user_id, churn_risk, risk_score, factors)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE churn_risk = ?, risk_score = ?, factors = ?, last_prediction = CURRENT_TIMESTAMP`;
+    
+    const factorsValue = DB_TYPE === 'postgres' 
+      ? prediction.factors 
+      : JSON.stringify(prediction.factors);
+
+    const params = DB_TYPE === 'postgres'
+      ? [userId, churnRisk, prediction.riskScore, factorsValue]
+      : [userId, churnRisk, prediction.riskScore, factorsValue, churnRisk, prediction.riskScore, factorsValue];
+
+    await executeQuery(query, params);
+
+    console.log(`[Churn] ${userId}: ${churnRisk} risk (${(riskScore * 100).toFixed(0)}%)`);
+    
+    return prediction;
+  } catch (error) {
+    console.error('[Churn] Prediction failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Calculate engagement score for a user
+ */
+export async function calculateEngagementScore(userId: string): Promise<EngagementScore | null> {
+  try {
+    const profile = await getOrCreateUserProfile(userId);
+    
+    // Frequency score (0-25): based on total sessions
+    let frequencyScore = Math.min(profile.totalSessions * 2.5, 25);
+    
+    // Recency score (0-25): based on days since last visit
+    const daysSinceLastVisit = Math.floor(
+      (new Date().getTime() - new Date(profile.lastSeen).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    let recencyScore = Math.max(25 - daysSinceLastVisit, 0);
+    
+    // Satisfaction score (0-25): based on average satisfaction
+    let satisfactionScore = profile.averageSatisfaction 
+      ? (profile.averageSatisfaction / 5) * 25 
+      : 12.5; // default neutral
+    
+    // Completion rate score (0-25): based on follow-up completion
+    const followUpQuery = DB_TYPE === 'postgres'
+      ? `SELECT 
+           COUNT(*) as total,
+           COUNT(CASE WHEN completed = TRUE THEN 1 END) as completed
+         FROM follow_ups WHERE user_id = $1`
+      : `SELECT 
+           COUNT(*) as total,
+           COUNT(CASE WHEN completed = TRUE THEN 1 END) as completed
+         FROM follow_ups WHERE user_id = ?`;
+    
+    const followUpResult = await executeQuery<{ total: number; completed: number }>(
+      followUpQuery,
+      [userId]
+    );
+    
+    const completionRate = followUpResult[0]?.total > 0
+      ? (followUpResult[0].completed / followUpResult[0].total)
+      : 0.5;
+    
+    let completionScore = completionRate * 25;
+    
+    // Total score (0-100)
+    const totalScore = Math.round(
+      frequencyScore + recencyScore + satisfactionScore + completionScore
+    );
+
+    return {
+      userId,
+      score: totalScore,
+      factors: {
+        frequency: Math.round(frequencyScore),
+        recency: Math.round(recencyScore),
+        satisfaction: Math.round(satisfactionScore),
+        completionRate: Math.round(completionScore)
+      },
+      calculatedAt: new Date()
+    };
+  } catch (error) {
+    console.error('[Engagement] Score calculation failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Get sentiment trends for a session
+ */
+export async function getSentimentTrends(sessionId: string): Promise<SentimentAnalysis[]> {
+  const query = DB_TYPE === 'postgres'
+    ? 'SELECT * FROM sentiment_analysis WHERE session_id = $1 ORDER BY message_id'
+    : 'SELECT * FROM sentiment_analysis WHERE session_id = ? ORDER BY message_id';
+  
+  return executeQuery<SentimentAnalysis>(query, [sessionId]);
+}
+
+/**
+ * Get intent distribution across all sessions
+ */
+export async function getIntentDistribution(): Promise<{ intent: string; count: number }[]> {
+  const query = `
+    SELECT intent, COUNT(*) as count 
+    FROM intent_classification 
+    GROUP BY intent 
+    ORDER BY count DESC
+  `;
+  
+  return executeQuery<{ intent: string; count: number }>(query, []);
+}
+
+/**
+ * Get conversations needing escalation
+ */
+export async function getEscalationQueue(): Promise<any[]> {
+  const query = DB_TYPE === 'postgres'
+    ? `SELECT DISTINCT cs.session_id, cs.start_time, sa.sentiment, sa.score, sa.emotion_tags
+       FROM sentiment_analysis sa
+       JOIN chat_sessions cs ON sa.session_id = cs.session_id
+       WHERE sa.needs_escalation = TRUE
+       ORDER BY sa.timestamp DESC
+       LIMIT 50`
+    : `SELECT DISTINCT cs.session_id, cs.start_time, sa.sentiment, sa.score, sa.emotion_tags
+       FROM sentiment_analysis sa
+       JOIN chat_sessions cs ON sa.session_id = cs.session_id
+       WHERE sa.needs_escalation = TRUE
+       ORDER BY sa.timestamp DESC
+       LIMIT 50`;
+  
+  return executeQuery(query, []);
+}
+
+/**
+ * Get category insights (most common conversation topics)
+ */
+export async function getCategoryInsights(): Promise<any[]> {
+  const query = `
+    SELECT category, subcategory, COUNT(*) as count, AVG(confidence) as avg_confidence
+    FROM conversation_categories
+    GROUP BY category, subcategory
+    ORDER BY count DESC
+    LIMIT 20
+  `;
+  
+  return executeQuery(query, []);
+}
+
+/**
+ * Get high churn risk users
+ */
+export async function getHighChurnRiskUsers(): Promise<ChurnPrediction[]> {
+  const query = DB_TYPE === 'postgres'
+    ? `SELECT * FROM churn_predictions WHERE churn_risk = 'high' ORDER BY risk_score DESC LIMIT 50`
+    : `SELECT * FROM churn_predictions WHERE churn_risk = 'high' ORDER BY risk_score DESC LIMIT 50`;
+  
+  return executeQuery<ChurnPrediction>(query, []);
 }
 

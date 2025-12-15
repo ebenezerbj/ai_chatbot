@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI/ML Analytics Dashboard - Ama Bank</title>
+  <style>
+    :root {
+      --teal: #00796b;
+      --teal-dark: #004d40;
+      --teal-light: #48a999;
+      --orange: #ff9800;
+      --red: #f44336;
+      --green: #4caf50;
+      --gray-50: #fafafa;
+      --gray-100: #f5f5f5;
+      --gray-200: #eeeeee;
+      --gray-300: #e0e0e0;
+      --gray-700: #616161;
+      --gray-900: #212121;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+      color: var(--gray-900);
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 16px;
+    }
+
+    .auth-section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .auth-section h3 {
+      margin-bottom: 15px;
+      color: var(--teal-dark);
+    }
+
+    .auth-form {
+      display: flex;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--gray-700);
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--teal);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 121, 107, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .card h3 {
+      color: var(--teal-dark);
+      margin-bottom: 15px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--teal-light);
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .metric {
+      font-size: 36px;
+      font-weight: bold;
+      color: var(--teal);
+      margin: 10px 0;
+    }
+
+    .metric-label {
+      color: var(--gray-700);
+      font-size: 14px;
+    }
+
+    .sentiment-bar {
+      display: flex;
+      height: 30px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+
+    .sentiment-positive {
+      background: var(--green);
+    }
+
+    .sentiment-neutral {
+      background: var(--gray-300);
+    }
+
+    .sentiment-negative {
+      background: var(--orange);
+    }
+
+    .sentiment-frustrated {
+      background: var(--red);
+    }
+
+    .sentiment-legend {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sentiment-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .sentiment-legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .intent-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .intent-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      background: var(--gray-100);
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .intent-name {
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+
+    .intent-count {
+      background: var(--teal);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .escalation-item {
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #ffebee;
+      border-left: 4px solid var(--red);
+      border-radius: 6px;
+    }
+
+    .escalation-item strong {
+      color: var(--red);
+    }
+
+    .category-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      background: var(--gray-100);
+      border-radius: 6px;
+    }
+
+    .category-title {
+      font-weight: 600;
+      color: var(--teal-dark);
+      margin-bottom: 4px;
+    }
+
+    .category-subtitle {
+      font-size: 13px;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+
+    .category-stats {
+      display: flex;
+      gap: 15px;
+      font-size: 12px;
+      color: var(--gray-700);
+    }
+
+    .churn-risk-high {
+      background: #ffebee;
+      border-left: 4px solid var(--red);
+    }
+
+    .churn-risk-medium {
+      background: #fff3e0;
+      border-left: 4px solid var(--orange);
+    }
+
+    .churn-risk-low {
+      background: #e8f5e9;
+      border-left: 4px solid var(--green);
+    }
+
+    .churn-item {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    .churn-user {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .churn-score {
+      font-size: 13px;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+
+    .churn-factors {
+      font-size: 12px;
+      color: var(--gray-700);
+    }
+
+    .error {
+      background: #ffebee;
+      color: var(--red);
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray-700);
+    }
+
+    .spinner {
+      border: 3px solid var(--gray-300);
+      border-top: 3px solid var(--teal);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🤖 AI/ML Analytics Dashboard</h1>
+      <p>Phase 3: Real-time sentiment analysis, intent classification, and predictive insights</p>
+    </div>
+
+    <div class="auth-section" id="authSection">
+      <h3>🔐 Admin Authentication</h3>
+      <div class="auth-form">
+        <div class="form-group">
+          <label for="adminToken">Admin Bearer Token</label>
+          <input type="password" id="adminToken" placeholder="Enter your admin token">
+        </div>
+        <button class="btn" onclick="loadDashboard()">Load Dashboard</button>
+      </div>
+      <div class="error" id="authError"></div>
+    </div>
+
+    <div id="dashboardContent" class="hidden">
+      <div class="dashboard-grid">
+        <!-- Sentiment Analysis Card -->
+        <div class="card full-width">
+          <h3>
+            <span class="card-icon">😊</span>
+            Sentiment Analysis (Last 30 Days)
+          </h3>
+          <div id="sentimentContent" class="loading">
+            <div class="spinner"></div>
+            <p>Loading sentiment data...</p>
+          </div>
+        </div>
+
+        <!-- Intent Distribution Card -->
+        <div class="card">
+          <h3>
+            <span class="card-icon">🎯</span>
+            Intent Classification
+          </h3>
+          <div id="intentContent" class="loading">
+            <div class="spinner"></div>
+            <p>Loading intents...</p>
+          </div>
+        </div>
+
+        <!-- Escalation Queue Card -->
+        <div class="card">
+          <h3>
+            <span class="card-icon">🚨</span>
+            Escalation Queue
+          </h3>
+          <div id="escalationContent" class="loading">
+            <div class="spinner"></div>
+            <p>Loading escalations...</p>
+          </div>
+        </div>
+
+        <!-- Conversation Categories Card -->
+        <div class="card">
+          <h3>
+            <span class="card-icon">📂</span>
+            Conversation Categories
+          </h3>
+          <div id="categoryContent" class="loading">
+            <div class="spinner"></div>
+            <p>Loading categories...</p>
+          </div>
+        </div>
+
+        <!-- Churn Risk Card -->
+        <div class="card">
+          <h3>
+            <span class="card-icon">⚠️</span>
+            High Churn Risk Users
+          </h3>
+          <div id="churnContent" class="loading">
+            <div class="spinner"></div>
+            <p>Loading predictions...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let adminToken = '';
+
+    async function loadDashboard() {
+      adminToken = document.getElementById('adminToken').value.trim();
+      
+      if (!adminToken) {
+        showError('Please enter your admin token');
+        return;
+      }
+
+      // Hide auth section, show dashboard
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('dashboardContent').classList.remove('hidden');
+
+      // Load all data in parallel
+      await Promise.all([
+        loadSentimentTrends(),
+        loadIntentDistribution(),
+        loadEscalations(),
+        loadCategories(),
+        loadChurnRisk()
+      ]);
+    }
+
+    async function loadSentimentTrends() {
+      try {
+        const response = await fetch('/api/admin/ml/sentiment-trends', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+
+        const data = await response.json();
+        renderSentiment(data);
+      } catch (error) {
+        document.getElementById('sentimentContent').innerHTML = '<p class="error">Failed to load sentiment data</p>';
+      }
+    }
+
+    function renderSentiment(data) {
+      const { distribution } = data;
+      
+      if (!distribution || distribution.length === 0) {
+        document.getElementById('sentimentContent').innerHTML = '<p>No sentiment data available yet</p>';
+        return;
+      }
+
+      const total = distribution.reduce((sum, item) => sum + parseInt(item.count), 0);
+      
+      let html = '<div class="sentiment-bar">';
+      distribution.forEach(item => {
+        const percentage = (parseInt(item.count) / total * 100).toFixed(1);
+        const className = `sentiment-${item.sentiment}`;
+        html += `<div class="${className}" style="width: ${percentage}%" title="${item.sentiment}: ${item.count}"></div>`;
+      });
+      html += '</div>';
+
+      html += '<div class="sentiment-legend">';
+      distribution.forEach(item => {
+        const percentage = (parseInt(item.count) / total * 100).toFixed(1);
+        const className = `sentiment-${item.sentiment}`;
+        html += `
+          <div class="sentiment-legend-item">
+            <div class="sentiment-legend-color ${className}"></div>
+            <span><strong>${item.sentiment}</strong>: ${percentage}% (${item.count} messages)</span>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      const escalations = distribution.reduce((sum, item) => sum + parseInt(item.escalations || 0), 0);
+      if (escalations > 0) {
+        html += `<p style="margin-top: 15px; color: var(--red); font-weight: 500;">⚠️ ${escalations} conversations need escalation</p>`;
+      }
+
+      document.getElementById('sentimentContent').innerHTML = html;
+    }
+
+    async function loadIntentDistribution() {
+      try {
+        const response = await fetch('/api/admin/ml/intent-distribution', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+
+        const data = await response.json();
+        renderIntents(data.distribution);
+      } catch (error) {
+        document.getElementById('intentContent').innerHTML = '<p class="error">Failed to load intent data</p>';
+      }
+    }
+
+    function renderIntents(intents) {
+      if (!intents || intents.length === 0) {
+        document.getElementById('intentContent').innerHTML = '<p>No intent data available yet</p>';
+        return;
+      }
+
+      let html = '<div class="intent-list">';
+      intents.slice(0, 10).forEach(intent => {
+        html += `
+          <div class="intent-item">
+            <span class="intent-name">${intent.intent.replace(/_/g, ' ')}</span>
+            <span class="intent-count">${intent.count}</span>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      document.getElementById('intentContent').innerHTML = html;
+    }
+
+    async function loadEscalations() {
+      try {
+        const response = await fetch('/api/admin/ml/escalations', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+
+        const data = await response.json();
+        renderEscalations(data.escalations);
+      } catch (error) {
+        document.getElementById('escalationContent').innerHTML = '<p class="error">Failed to load escalations</p>';
+      }
+    }
+
+    function renderEscalations(escalations) {
+      if (!escalations || escalations.length === 0) {
+        document.getElementById('escalationContent').innerHTML = '<p style="color: var(--green);">✅ No escalations needed</p>';
+        return;
+      }
+
+      let html = `<div class="metric">${escalations.length}</div>`;
+      html += '<div class="metric-label">Conversations needing attention</div>';
+      html += '<div style="max-height: 250px; overflow-y: auto; margin-top: 15px;">';
+      
+      escalations.slice(0, 5).forEach(item => {
+        const date = new Date(item.start_time).toLocaleString();
+        html += `
+          <div class="escalation-item">
+            <strong>Session: ${item.session_id.substring(0, 12)}...</strong><br>
+            <small>${date}</small><br>
+            <small>Sentiment: ${item.sentiment} (${(item.score || 0).toFixed(2)})</small>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      document.getElementById('escalationContent').innerHTML = html;
+    }
+
+    async function loadCategories() {
+      try {
+        const response = await fetch('/api/admin/ml/categories', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+
+        const data = await response.json();
+        renderCategories(data.categories);
+      } catch (error) {
+        document.getElementById('categoryContent').innerHTML = '<p class="error">Failed to load categories</p>';
+      }
+    }
+
+    function renderCategories(categories) {
+      if (!categories || categories.length === 0) {
+        document.getElementById('categoryContent').innerHTML = '<p>No category data available yet</p>';
+        return;
+      }
+
+      let html = '<div style="max-height: 300px; overflow-y: auto;">';
+      categories.slice(0, 10).forEach(cat => {
+        html += `
+          <div class="category-item">
+            <div class="category-title">${cat.category}</div>
+            ${cat.subcategory ? `<div class="category-subtitle">${cat.subcategory}</div>` : ''}
+            <div class="category-stats">
+              <span>Count: ${cat.count}</span>
+              <span>Confidence: ${(cat.avg_confidence * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      document.getElementById('categoryContent').innerHTML = html;
+    }
+
+    async function loadChurnRisk() {
+      try {
+        const response = await fetch('/api/admin/ml/churn-risk', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+
+        const data = await response.json();
+        renderChurnRisk(data.highRiskUsers);
+      } catch (error) {
+        document.getElementById('churnContent').innerHTML = '<p class="error">Failed to load churn predictions</p>';
+      }
+    }
+
+    function renderChurnRisk(users) {
+      if (!users || users.length === 0) {
+        document.getElementById('churnContent').innerHTML = '<p style="color: var(--green);">✅ No high-risk users detected</p>';
+        return;
+      }
+
+      let html = `<div class="metric">${users.length}</div>`;
+      html += '<div class="metric-label">Users at high churn risk</div>';
+      html += '<div style="max-height: 250px; overflow-y: auto; margin-top: 15px;">';
+      
+      users.slice(0, 5).forEach(user => {
+        html += `
+          <div class="churn-item churn-risk-${user.churn_risk}">
+            <div class="churn-user">User: ${user.user_id.substring(0, 20)}...</div>
+            <div class="churn-score">Risk Score: ${(user.risk_score * 100).toFixed(0)}%</div>
+            <div class="churn-factors">Factors: ${Array.isArray(user.factors) ? user.factors.join(', ') : JSON.parse(user.factors).join(', ')}</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      document.getElementById('churnContent').innerHTML = html;
+    }
+
+    function showError(message) {
+      const errorEl = document.getElementById('authError');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+      setTimeout(() => {
+        errorEl.style.display = 'none';
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
