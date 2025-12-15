@@ -1518,10 +1518,24 @@
       }
     }
 
-    function expireSession() {
+    async function expireSession() {
       // Hide session timer
       const timerEl = document.getElementById('sessionTimer');
       if (timerEl) timerEl.style.display = 'none';
+      
+      // End analytics session on the backend
+      if (sessionId) {
+        try {
+          await fetch('/api/session/end', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+          console.log('[Analytics] Session ended on server');
+        } catch (e) {
+          console.error('[Analytics] Failed to end session:', e);
+        }
+      }
       
       // Clear session
       sessionId = null;
@@ -2335,11 +2349,19 @@
 
       try {
         const sid = await ensureSession();
+        
+        // Count messages to determine index
+        const messageCount = chatEl.querySelectorAll('.message').length;
+        
         const makeCall = async () => {
           const resp = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId: sid, message: msgText })
+            body: JSON.stringify({ 
+              sessionId: sid, 
+              message: msgText,
+              messageIndex: messageCount
+            })
           });
           if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           return resp.json();

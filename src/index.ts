@@ -10,6 +10,7 @@ import { testConnection } from './database';
 import * as balanceUpdater from './balanceUpdater';
 import * as customerImporter from './customerImporter';
 import { WebCrawler, CrawlConfig, CrawlResult, convertToKBEntries, updateKnowledgeBase } from './webCrawler';
+import * as analytics from './analytics';
 
 // Load environment variables
 dotenv.config();
@@ -17,13 +18,21 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT || 4000);
 
-// Test database connection on startup
+// Test database connection and initialize analytics on startup
 (async () => {
   const dbConnected = await testConnection();
   if (dbConnected) {
     console.log('[Server] Database connection established');
+    
+    // Initialize analytics tables
+    try {
+      await analytics.initializeAnalyticsTables();
+      console.log('[Server] Analytics module initialized');
+    } catch (error) {
+      console.error('[Server] Analytics initialization failed:', error);
+    }
   } else {
-    console.warn('[Server] Database connection failed - authentication features will not work');
+    console.warn('[Server] Database connection failed - authentication and analytics features will not work');
   }
 })();
 
@@ -155,18 +164,21 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // Handle both req.body and raw body parsing
     let message: string | undefined;
     let sessionId: string | undefined;
+    let messageIndex: number = 0;
     
     if (typeof req.body === 'string') {
       try {
         const parsed = JSON.parse(req.body);
         message = parsed.message;
         sessionId = parsed.sessionId;
+        messageIndex = parsed.messageIndex || 0;
       } catch (e) {
         message = req.body;
       }
     } else if (req.body && typeof req.body === 'object') {
       message = (req.body as any).message;
       sessionId = (req.body as any).sessionId;
+      messageIndex = (req.body as any).messageIndex || 0;
     }
     
     console.log('[Chat] Received message:', message);
@@ -176,6 +188,23 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       console.log('[Chat] No message provided, returning 400');
       return res.status(400).json({ error: 'Message required' });
     }
+
+    // Get or create session ID
+    const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Start analytics session if new
+    if (!sessionId) {
+      const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+      const userAgent = req.headers['user-agent'];
+      await analytics.startSession(effectiveSessionId, ipAddress, userAgent).catch(e => 
+        console.error('[Analytics] Failed to start session:', e)
+      );
+    }
+    
+    // Log user message
+    await analytics.logMessage(effectiveSessionId, messageIndex, 'user', message).catch(e =>
+      console.error('[Analytics] Failed to log user message:', e)
+    );
 
     // Check if customer needs authentication for account information
     const authDetails = customerAuth.extractAuthDetails(message);
@@ -197,6 +226,12 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         // Determine what info they want
         if (/balance/i.test(message)) {
           const response = customerAuth.formatBalanceResponse(accountData);
+          
+          // Log bot response
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
           return res.json({ 
             reply: response,
             source: 'authenticated',
@@ -204,6 +239,12 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           });
         } else if (/(transaction|statement|history)/i.test(message)) {
           const response = customerAuth.formatTransactionsResponse(accountData);
+          
+          // Log bot response
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
           return res.json({ 
             reply: response,
             source: 'authenticated',
@@ -220,6 +261,11 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         authDetails.otp
       );
       
+      // Log bot response
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', authResult.message).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
       return res.json({ 
         reply: authResult.message,
         source: 'authentication',
@@ -230,7 +276,6 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     }
     
     // Check if user is sending OTP when session is awaiting verification
-    const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const session = customerAuth.getOrCreateSession(effectiveSessionId);
     
     if (session.awaitingOTP) {
@@ -242,6 +287,11 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           undefined,
           undefined,
           authDetails.otp
+        );
+        
+        // Log bot response
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', authResult.message).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
         );
         
         return res.json({ 
@@ -269,10 +319,17 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     if (kbMatches.length > 0) {
       console.log('[Chat] Returning KB response');
       const response = kbMatches[0];
+      
+      // Log bot response
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
       return res.json({ 
         reply: response,
         source: 'kb',
-        kbMatches: kbMatches.length
+        kbMatches: kbMatches.length,
+        sessionId: effectiveSessionId
       });
     }
 
@@ -282,9 +339,17 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // Try OpenAI if configured
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
+      const defaultResponse = 'I can help with banking questions. Please ask about our services, fees, or products.';
+      
+      // Log bot response
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', defaultResponse).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
       return res.json({ 
-        reply: 'I can help with banking questions. Please ask about our services, fees, or products.',
-        source: 'default'
+        reply: defaultResponse,
+        source: 'default',
+        sessionId: effectiveSessionId
       });
     }
 
@@ -339,15 +404,29 @@ Respond naturally and helpfully using the knowledge base!`;
       const reply = response.data.choices[0]?.message?.content || 'I could not generate a response.';
       console.log(`[Chat] OpenAI response: ${reply}`);
       
+      // Log bot response
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
       return res.json({ 
         reply: reply,
-        source: 'openai'
+        source: 'openai',
+        sessionId: effectiveSessionId
       });
     } catch (error: any) {
       console.error('[OpenAI] Error:', error.message);
+      const errorResponse = 'I encountered an issue processing your request. Please try again.';
+      
+      // Log bot response
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', errorResponse).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
       return res.json({ 
-        reply: 'I encountered an issue processing your request. Please try again.',
-        source: 'error'
+        reply: errorResponse,
+        source: 'error',
+        sessionId: effectiveSessionId
       });
     }
   } catch (err: any) {
@@ -361,7 +440,108 @@ Respond naturally and helpfully using the knowledge base!`;
 app.post('/api/session', (req: Request, res: Response) => {
   console.log('[Session] Creating session');
   const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  // Start analytics session
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+  const userAgent = req.headers['user-agent'];
+  analytics.startSession(sessionId, ipAddress, userAgent).catch(e =>
+    console.error('[Analytics] Failed to start session:', e)
+  );
+  
   res.json({ sessionId });
+});
+
+// End session endpoint
+app.post('/api/session/end', async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID required' });
+    }
+    
+    await analytics.endSession(sessionId);
+    res.json({ success: true, message: 'Session ended' });
+  } catch (error: any) {
+    console.error('[Session] Error ending session:', error);
+    res.status(500).json({ error: 'Failed to end session' });
+  }
+});
+
+// ===== Analytics Endpoints (Admin Access) =====
+
+// Get analytics summary
+app.get('/api/admin/analytics/summary', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token || !adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    
+    const summary = await analytics.getAnalyticsSummary(startDate, endDate);
+    res.json(summary);
+  } catch (error: any) {
+    console.error('[Analytics] Error getting summary:', error);
+    res.status(500).json({ error: 'Failed to get analytics summary' });
+  }
+});
+
+// Get recent sessions
+app.get('/api/admin/analytics/sessions', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token || !adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+    const sessions = await analytics.getRecentSessions(limit);
+    res.json(sessions);
+  } catch (error: any) {
+    console.error('[Analytics] Error getting sessions:', error);
+    res.status(500).json({ error: 'Failed to get sessions' });
+  }
+});
+
+// Get session details
+app.get('/api/admin/analytics/session/:sessionId', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token || !adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const { sessionId } = req.params;
+    const details = await analytics.getSessionDetails(sessionId);
+    res.json(details);
+  } catch (error: any) {
+    console.error('[Analytics] Error getting session details:', error);
+    res.status(500).json({ error: 'Failed to get session details' });
+  }
+});
+
+// Export analytics as CSV
+app.get('/api/admin/analytics/export', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token || !adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    
+    const csv = await analytics.exportAnalyticsCSV(startDate, endDate);
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="analytics-export.csv"');
+    res.send(csv);
+  } catch (error: any) {
+    console.error('[Analytics] Error exporting:', error);
+    res.status(500).json({ error: 'Failed to export analytics' });
+  }
 });
 
 // OpenAI Text-to-Speech endpoint
