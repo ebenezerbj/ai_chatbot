@@ -9,6 +9,9 @@ dist
 tts_*.wav
 tts_*.mp3
 
+# Crawl data files (keep KB, ignore raw crawl results)
+data/crawl_*.json
+
 # Android
 android/app/build/
 android/build/
