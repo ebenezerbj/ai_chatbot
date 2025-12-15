@@ -819,6 +819,63 @@
       flex-wrap: wrap;
     }
 
+    /* Phase 2: Feedback buttons */
+    .message-feedback {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      padding-left: 12px;
+      align-items: center;
+    }
+
+    .feedback-btn {
+      background: transparent;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--gray-600);
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .feedback-btn:hover {
+      background: var(--gray-100);
+      border-color: var(--gray-400);
+      transform: translateY(-1px);
+    }
+
+    .feedback-btn.active {
+      background: linear-gradient(135deg, #00BFA5 0%, #00D4BD 100%);
+      border-color: #00BFA5;
+      color: white;
+    }
+
+    .feedback-btn.thumbs-down.active {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      border-color: #ef4444;
+    }
+
+    .feedback-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .feedback-thanks {
+      font-size: 0.85rem;
+      color: var(--teal);
+      margin-left: 8px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .msg-action-btn {
       display: inline-flex;
       align-items: center;
@@ -1566,14 +1623,46 @@
     }
 
     // Initialize with welcome message
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       // Set the chat title to the assistant's name
       const titleEl = document.querySelector('.chat-title');
       if (titleEl) titleEl.textContent = assistantName;
 
-  addMsg('assistant', `Hi, I'm Ama! 👋\n\nHow can I assist you today?`);
-  // Init TTS UI state
-  initTTS();
+      // Fetch personalized greeting (Phase 2)
+      let welcomeMessage = `Hi, I'm Ama! 👋\n\nHow can I assist you today?`;
+      try {
+        const greetingResp = await fetch('/api/greeting', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (greetingResp.ok) {
+          const greetingData = await greetingResp.json();
+          if (greetingData.greeting) {
+            welcomeMessage = greetingData.greeting;
+          }
+          // Show recommendations if available
+          if (greetingData.recommendations && greetingData.recommendations.length > 0) {
+            setTimeout(() => {
+              const recs = greetingData.recommendations.map(r => `• ${r.title}: ${r.description}`).join('\n');
+              addMsg('assistant', `💡 Based on your previous visits, you might be interested in:\n\n${recs}`);
+            }, 1000);
+          }
+          // Show pending follow-ups
+          if (greetingData.followUps && greetingData.followUps.length > 0) {
+            setTimeout(() => {
+              const followUps = greetingData.followUps.map(f => `• ${f.topic}: ${f.action}`).join('\n');
+              addMsg('assistant', `📋 You have pending actions:\n\n${followUps}\n\nWould you like to continue with any of these?`);
+            }, 2000);
+          }
+        }
+      } catch (e) {
+        console.log('[Greeting] Using default greeting');
+      }
+      
+      addMsg('assistant', welcomeMessage);
+      
+      // Init TTS UI state
+      initTTS();
       
       // Start idle timeout tracking
       startIdleTracking();
@@ -1713,6 +1802,63 @@
       }
       
       div.appendChild(content);
+      
+      // Phase 2: Add feedback buttons for assistant messages
+      if (role === 'assistant') {
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'message-feedback';
+        feedbackDiv.innerHTML = `
+          <button class="feedback-btn thumbs-up" data-feedback="1" title="Helpful">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+            </svg>
+          </button>
+          <button class="feedback-btn thumbs-down" data-feedback="-1" title="Not helpful">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
+            </svg>
+          </button>
+        `;
+        
+        // Add feedback event listeners
+        const messageIndex = chatEl.querySelectorAll('.message').length - 1;
+        feedbackDiv.querySelectorAll('.feedback-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const feedbackScore = parseInt(btn.getAttribute('data-feedback'));
+            
+            // Visual feedback
+            feedbackDiv.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Send feedback to server
+            try {
+              const sid = sessionId || await ensureSession();
+              await fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  sessionId: sid,
+                  messageId: messageIndex,
+                  feedbackType: 'thumbs',
+                  score: feedbackScore
+                })
+              });
+              
+              // Show thank you message briefly
+              const thankYou = document.createElement('span');
+              thankYou.className = 'feedback-thanks';
+              thankYou.textContent = feedbackScore > 0 ? 'Thank you! 😊' : 'Thanks for your feedback';
+              feedbackDiv.appendChild(thankYou);
+              setTimeout(() => thankYou.remove(), 2000);
+            } catch (error) {
+              console.error('[Feedback] Failed to send:', error);
+            }
+          });
+        });
+        
+        div.appendChild(feedbackDiv);
+      }
+      
       chatEl.appendChild(div);
       chatEl.scrollTop = chatEl.scrollHeight;
       // Notify parent about assistant messages to drive unread badge

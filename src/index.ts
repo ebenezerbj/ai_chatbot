@@ -544,6 +544,134 @@ app.get('/api/admin/analytics/export', async (req: Request, res: Response) => {
   }
 });
 
+// ===== Phase 2: User Engagement Endpoints =====
+
+// Get personalized greeting and recommendations
+app.post('/api/greeting', async (req: Request, res: Response) => {
+  try {
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+    
+    // Get user profile
+    const userProfile = await analytics.getOrCreateUserProfile(ipAddress);
+    
+    // Generate personalized greeting
+    const greeting = await analytics.getPersonalizedGreeting(userProfile.userId);
+    
+    // Get recommendations (from last session if exists)
+    let recommendations: any[] = [];
+    if (userProfile.totalSessions > 0) {
+      const recentSessions = await analytics.getRecentSessions(1);
+      if (recentSessions.length > 0) {
+        recommendations = await analytics.generateRecommendations(recentSessions[0].sessionId);
+      }
+    }
+    
+    // Get pending follow-ups
+    const followUps = await analytics.getPendingFollowUps(userProfile.userId);
+    
+    res.json({
+      greeting: greeting || `Hi, I'm Ama! 👋\n\nHow can I assist you today?`,
+      userSegment: userProfile.segment,
+      recommendations,
+      followUps,
+      returning: userProfile.totalSessions > 0
+    });
+  } catch (error: any) {
+    console.error('[Greeting] Error:', error);
+    res.json({ greeting: `Hi, I'm Ama! 👋\n\nHow can I assist you today?` });
+  }
+});
+
+// Save feedback
+app.post('/api/feedback', async (req: Request, res: Response) => {
+  try {
+    const { sessionId, messageId, feedbackType, score, comment } = req.body;
+    
+    if (!sessionId || messageId === undefined || !feedbackType || score === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    await analytics.saveFeedback(sessionId, messageId, feedbackType, score, comment);
+    
+    res.json({ success: true, message: 'Thank you for your feedback!' });
+  } catch (error: any) {
+    console.error('[Feedback] Error:', error);
+    res.status(500).json({ error: 'Failed to save feedback' });
+  }
+});
+
+// Get recommendations for current session
+app.post('/api/recommendations', async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.body;
+    
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID required' });
+    }
+    
+    const recommendations = await analytics.generateRecommendations(sessionId);
+    res.json({ recommendations });
+  } catch (error: any) {
+    console.error('[Recommendations] Error:', error);
+    res.status(500).json({ error: 'Failed to generate recommendations' });
+  }
+});
+
+// Create follow-up action
+app.post('/api/followup', async (req: Request, res: Response) => {
+  try {
+    const { sessionId, topic, action } = req.body;
+    
+    if (!sessionId || !topic || !action) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+    const userProfile = await analytics.getOrCreateUserProfile(ipAddress);
+    
+    await analytics.createFollowUp(userProfile.userId, sessionId, topic, action);
+    
+    res.json({ success: true, message: 'Follow-up action created' });
+  } catch (error: any) {
+    console.error('[FollowUp] Error:', error);
+    res.status(500).json({ error: 'Failed to create follow-up' });
+  }
+});
+
+// Complete follow-up
+app.post('/api/followup/complete', async (req: Request, res: Response) => {
+  try {
+    const { followUpId } = req.body;
+    
+    if (!followUpId) {
+      return res.status(400).json({ error: 'Follow-up ID required' });
+    }
+    
+    await analytics.completeFollowUp(followUpId);
+    
+    res.json({ success: true, message: 'Follow-up completed' });
+  } catch (error: any) {
+    console.error('[FollowUp] Error:', error);
+    res.status(500).json({ error: 'Failed to complete follow-up' });
+  }
+});
+
+// Get user segment distribution (admin)
+app.get('/api/admin/segments', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token || !adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const distribution = await analytics.getSegmentDistribution();
+    res.json({ distribution });
+  } catch (error: any) {
+    console.error('[Segments] Error:', error);
+    res.status(500).json({ error: 'Failed to get segment distribution' });
+  }
+});
+
 // OpenAI Text-to-Speech endpoint
 app.post('/api/tts', async (req: Request, res: Response) => {
   try {
