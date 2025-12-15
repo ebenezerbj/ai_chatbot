@@ -23,37 +23,6 @@
             --border: #e5e7eb;
         }
 
-        .nav-bar {
-            background: white;
-            padding: 15px 30px;
-            border-radius: 12px;
-            margin: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .nav-bar a {
-            color: var(--primary);
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .nav-bar a:hover {
-            background: var(--light);
-            color: var(--primary-dark);
-        }
-
-        .nav-bar a.active {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -553,16 +522,6 @@
 
     <!-- Admin Dashboard -->
     <div class="admin-container" id="adminDashboard">
-        <!-- Navigation Bar -->
-        <div class="nav-bar">
-            <a href="admin-portal.html" class="active">🏠 Admin Portal</a>
-            <a href="analytics.html">📊 Phase 1 Analytics</a>
-            <a href="admin-ml-dashboard.html">🤖 AI/ML Dashboard</a>
-            <a href="kb-admin.html">📚 Knowledge Base</a>
-            <a href="balance-upload.html">💰 Balance Upload</a>
-            <a href="admin.html">🛠️ System Tools</a>
-        </div>
-        
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -576,37 +535,37 @@
                     </svg>
                     <span>Dashboard</span>
                 </div>
-                <div class="nav-item" data-page="balance-upload">
+                <a href="analytics.html" class="nav-item" style="text-decoration: none; color: inherit;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span>Phase 1 Analytics</span>
+                </a>
+                <a href="admin-ml-dashboard.html" class="nav-item" style="text-decoration: none; color: inherit;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <span>AI/ML Dashboard</span>
+                </a>
+                <a href="balance-upload.html" class="nav-item" style="text-decoration: none; color: inherit;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                     </svg>
                     <span>Balance Upload</span>
-                </div>
-                <div class="nav-item" data-page="knowledge-base">
+                </a>
+                <a href="kb-admin.html" class="nav-item" style="text-decoration: none; color: inherit;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                     <span>Knowledge Base</span>
-                </div>
-                <div class="nav-item" data-page="web-crawler">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                    </svg>
-                    <span>Web Crawler</span>
-                </div>
-                <div class="nav-item" data-page="system-logs">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    <span>System Logs</span>
-                </div>
-                <div class="nav-item" data-page="settings">
+                </a>
+                <a href="admin.html" class="nav-item" style="text-decoration: none; color: inherit;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <span>Settings</span>
-                </div>
+                    <span>System Tools</span>
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <button class="btn btn-secondary btn-block" id="logoutBtn">Logout</button>

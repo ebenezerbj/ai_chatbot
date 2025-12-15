@@ -69,7 +69,7 @@
       const metricsDiv = document.getElementById('metrics');
       metricsDiv.innerHTML = '<p>Loading...</p>';
       try {
-        const res = await fetch('/api/analytics', {
+        const res = await fetch('/api/admin/analytics/summary', {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!res.ok) {
@@ -78,25 +78,17 @@
         }
         const data = await res.json();
         metricsDiv.innerHTML = `
-          <div class="metric">Total Conversations: <span>${data.totalConversations}</span></div>
-          <div class="metric">Total Messages: <span>${data.totalMessages}</span></div>
-          <div class="metric">RAG Queries: <span>${data.ragQueries}</span></div>
-          <div class="metric">RAG Matches: <span>${data.ragMatches}</span></div>
-          <div class="metric">Handovers Suggested: <span>${data.handoversSuggested}</span></div>
-          <div class="metric">Handovers Completed: <span>${data.handoversCompleted}</span></div>
-          <div class="metric latency">Avg Latency (ms): <span>${avgLatency(data.latencies)}</span></div>
-          <div class="metric">LLM Provider Usage:</div>
-          <ul class="provider-list">
-            ${Object.entries(data.providerCounts).map(([name, count]) => `<li>${name}: <span>${count}</span></li>`).join('')}
-          </ul>
+          <div class="metric">Total Sessions: <span>${data.totalSessions || 0}</span></div>
+          <div class="metric">Total Messages: <span>${data.totalMessages || 0}</span></div>
+          <div class="metric">Average Messages per Session: <span>${data.avgMessagesPerSession ? data.avgMessagesPerSession.toFixed(2) : '0'}</span></div>
+          <div class="metric">Average Session Duration: <span>${data.avgSessionDuration ? data.avgSessionDuration.toFixed(2) : '0'} min</span></div>
+          <div class="metric">Total Users: <span>${data.totalUsers || 0}</span></div>
+          <div class="metric">Returning Users: <span>${data.returningUsers || 0}</span></div>
+          <div class="metric">Average Satisfaction: <span>${data.avgSatisfaction ? data.avgSatisfaction.toFixed(2) : 'N/A'}</span></div>
         `;
       } catch (e) {
         metricsDiv.innerHTML = '<p style="color:red;">Error loading analytics.</p>';
       }
-    }
-    function avgLatency(arr) {
-      if (!arr || !arr.length) return 'N/A';
-      return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
     }
   </script>
 </body>

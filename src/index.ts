@@ -47,7 +47,15 @@ const upload = multer({
 
 // Admin authentication
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // Static token from .env
 const adminTokens = new Set<string>();
+
+// Helper function to validate admin token
+function isValidAdminToken(token: string | undefined): boolean {
+  if (!token) return false;
+  // Check if it's the static token from .env OR a session token
+  return (ADMIN_TOKEN && token === ADMIN_TOKEN) || adminTokens.has(token);
+}
 
 // Generate a random token
 function generateToken(): string {
@@ -491,11 +499,35 @@ app.post('/api/session/end', async (req: Request, res: Response) => {
 
 // ===== Analytics Endpoints (Admin Access) =====
 
+// Debug endpoint to check database directly
+app.get('/api/admin/analytics/debug', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const sessions = await executeQuery('SELECT COUNT(*) as count FROM chat_sessions');
+    const messages = await executeQuery('SELECT COUNT(*) as count FROM conversation_logs');
+    const users = await executeQuery('SELECT COUNT(*) as count FROM user_profiles');
+    
+    res.json({
+      sessions: sessions[0]?.count || 0,
+      messages: messages[0]?.count || 0,
+      users: users[0]?.count || 0,
+      dbType: DB_TYPE
+    });
+  } catch (error: any) {
+    console.error('[Analytics] Debug error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get analytics summary
 app.get('/api/admin/analytics/summary', async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token || !adminTokens.has(token)) {
+    if (!isValidAdminToken(token)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
@@ -514,7 +546,7 @@ app.get('/api/admin/analytics/summary', async (req: Request, res: Response) => {
 app.get('/api/admin/analytics/sessions', async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token || !adminTokens.has(token)) {
+    if (!isValidAdminToken(token)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
@@ -531,7 +563,7 @@ app.get('/api/admin/analytics/sessions', async (req: Request, res: Response) => 
 app.get('/api/admin/analytics/session/:sessionId', async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token || !adminTokens.has(token)) {
+    if (!isValidAdminToken(token)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
@@ -548,7 +580,7 @@ app.get('/api/admin/analytics/session/:sessionId', async (req: Request, res: Res
 app.get('/api/admin/analytics/export', async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token || !adminTokens.has(token)) {
+    if (!isValidAdminToken(token)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
@@ -682,7 +714,7 @@ app.post('/api/followup/complete', async (req: Request, res: Response) => {
 app.get('/api/admin/segments', async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token || !adminTokens.has(token)) {
+    if (!isValidAdminToken(token)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
@@ -958,7 +990,7 @@ app.get('/api/admin/stats', async (req: Request, res: Response) => {
     }
     
     const token = authHeader.substring(7);
-    if (!adminTokens.has(token)) {
+    if (!isValidAdminToken(token)) {
       return res.status(401).json({ error: 'Unauthorized - Invalid token' });
     }
 
@@ -984,7 +1016,7 @@ app.post('/api/admin/crawler/start', async (req: Request, res: Response) => {
     }
     
     const token = authHeader.substring(7);
-    if (!adminTokens.has(token)) {
+    if (!isValidAdminToken(token)) {
       return res.status(401).json({ error: 'Unauthorized - Invalid token' });
     }
 
