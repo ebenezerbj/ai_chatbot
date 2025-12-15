@@ -697,7 +697,7 @@ while($row=mysqli_fetch_array($result)){
         id="akcb-chat-iframe" 
         src="https://ai-chatbot-1-a596.onrender.com" 
         title="AKCB AI Assistant"
-        allow="microphone; camera"
+        allow="geolocation; microphone; camera"
         sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
       ></iframe>
     </div>
