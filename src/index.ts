@@ -9,6 +9,7 @@ import * as customerAuth from './customerAuth';
 import { testConnection } from './database';
 import * as balanceUpdater from './balanceUpdater';
 import * as customerImporter from './customerImporter';
+import { WebCrawler, CrawlConfig, CrawlResult, convertToKBEntries, updateKnowledgeBase } from './webCrawler';
 
 // Load environment variables
 dotenv.config();
@@ -637,6 +638,165 @@ app.get('/api/admin/stats', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Stats error:', error.message);
     res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
+// Web crawler endpoints
+let activeCrawl: { status: string; progress?: number; result?: CrawlResult } = { status: 'idle' };
+
+// Start web crawl
+app.post('/api/admin/crawler/start', async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    if (activeCrawl.status === 'running') {
+      return res.status(400).json({ error: 'Crawl already in progress' });
+    }
+
+    const config: CrawlConfig = req.body.config || {
+      startUrls: req.body.urls || [],
+      maxDepth: req.body.maxDepth || 2,
+      maxPages: req.body.maxPages || 50,
+      useJavaScript: req.body.useJavaScript || false,
+      excludePatterns: (req.body.excludePatterns || []).map((p: string) => new RegExp(p))
+    };
+
+    if (!config.startUrls || config.startUrls.length === 0) {
+      return res.status(400).json({ error: 'No URLs provided' });
+    }
+
+    // Start crawl in background
+    activeCrawl = { status: 'running', progress: 0 };
+    
+    // Run crawl asynchronously
+    (async () => {
+      try {
+        const crawler = new WebCrawler(config);
+        const result = await crawler.crawl();
+        
+        // Convert to KB entries
+        const kbEntries = convertToKBEntries(result.pages);
+        
+        // Update KB if configured
+        if (req.body.autoUpdateKB !== false) {
+          await updateKnowledgeBase(kbEntries);
+          loadKB(); // Reload KB
+        }
+        
+        // Save crawl results
+        const outputPath = path.join(process.cwd(), 'data', `crawl_${Date.now()}.json`);
+        await crawler.saveCrawlResults(result, outputPath);
+        
+        activeCrawl = { 
+          status: 'completed', 
+          result: result 
+        };
+        
+        console.log(`[Crawler] Completed: ${result.totalPages} pages, KB updated with ${kbEntries.length} entries`);
+      } catch (error: any) {
+        console.error('[Crawler] Error:', error.message);
+        activeCrawl = { status: 'error' };
+      }
+    })();
+
+    res.json({ 
+      message: 'Crawl started',
+      config: {
+        urls: config.startUrls,
+        maxDepth: config.maxDepth,
+        maxPages: config.maxPages
+      }
+    });
+  } catch (error: any) {
+    console.error('[Crawler] Start error:', error.message);
+    res.status(500).json({ error: 'Failed to start crawl' });
+  }
+});
+
+// Get crawl status
+app.get('/api/admin/crawler/status', (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    res.json(activeCrawl);
+  } catch (error: any) {
+    console.error('[Crawler] Status error:', error.message);
+    res.status(500).json({ error: 'Failed to get status' });
+  }
+});
+
+// Get crawler configuration
+app.get('/api/admin/crawler/config', (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    // Read crawler config
+    const configPath = path.join(process.cwd(), 'config', 'crawler.json');
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      res.json(config);
+    } else {
+      res.json({ 
+        enabled: false,
+        crawlConfigs: [],
+        message: 'No configuration file found'
+      });
+    }
+  } catch (error: any) {
+    console.error('[Crawler] Config error:', error.message);
+    res.status(500).json({ error: 'Failed to get config' });
+  }
+});
+
+// Update crawler configuration
+app.post('/api/admin/crawler/config', (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    // Save crawler config
+    const configPath = path.join(process.cwd(), 'config', 'crawler.json');
+    fs.writeFileSync(configPath, JSON.stringify(req.body, null, 2), 'utf-8');
+    
+    res.json({ success: true, message: 'Configuration saved' });
+  } catch (error: any) {
+    console.error('[Crawler] Config save error:', error.message);
+    res.status(500).json({ error: 'Failed to save config' });
   }
 });
 

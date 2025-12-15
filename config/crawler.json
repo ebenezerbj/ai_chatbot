@@ -1,0 +1,44 @@
+{
+  "enabled": true,
+  "crawlConfigs": [
+    {
+      "name": "Bank Main Website",
+      "startUrls": [
+        "https://example-bank.com"
+      ],
+      "maxDepth": 3,
+      "maxPages": 50,
+      "useJavaScript": false,
+      "includePatterns": [],
+      "excludePatterns": [
+        "/admin",
+        "/login",
+        "/signup",
+        "/wp-admin",
+        "\\.pdf$",
+        "\\.jpg$",
+        "\\.png$"
+      ],
+      "selectors": {
+        "title": "h1, .page-title, title",
+        "content": "main, article, .content, .post-content",
+        "exclude": [
+          "script",
+          "style",
+          "nav",
+          "footer",
+          "header",
+          ".sidebar",
+          ".advertisement"
+        ]
+      }
+    }
+  ],
+  "schedule": {
+    "enabled": false,
+    "frequency": "daily",
+    "time": "02:00"
+  },
+  "autoUpdateKB": true,
+  "notifyOnComplete": true
+}

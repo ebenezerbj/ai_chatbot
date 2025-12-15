@@ -547,6 +547,12 @@
                     </svg>
                     <span>Knowledge Base</span>
                 </div>
+                <div class="nav-item" data-page="web-crawler">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    </svg>
+                    <span>Web Crawler</span>
+                </div>
                 <div class="nav-item" data-page="system-logs">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -727,6 +733,70 @@
                         <button class="btn btn-primary" onclick="window.open('/kb-admin.html', '_blank')">
                             Open KB Editor
                         </button>
+                    </div>
+                </div>
+
+                <!-- Web Crawler Page -->
+                <div class="page-section" id="page-web-crawler">
+                    <div class="card">
+                        <h2>Web Crawler</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Automatically extract content from websites and update the knowledge base.</p>
+
+                        <div id="crawlerStatus" class="alert alert-info" style="margin-bottom: 24px;">
+                            <strong>Status:</strong> <span id="crawlStatus">Idle</span>
+                        </div>
+
+                        <div class="card" style="background: #f9fafb; border: 1px solid #e5e7eb;">
+                            <h3>Start Crawl</h3>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Website URLs (one per line)</label>
+                                <textarea id="crawlUrls" rows="4" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 4px; font-family: monospace;"
+placeholder="https://example.com
+https://example.com/about
+https://example.com/products"></textarea>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Max Depth</label>
+                                    <input type="number" id="crawlDepth" value="2" min="1" max="5" 
+                                        style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                    <small style="color: #6b7280;">How many levels deep to crawl links</small>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Max Pages</label>
+                                    <input type="number" id="crawlMaxPages" value="50" min="1" max="500" 
+                                        style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                    <small style="color: #6b7280;">Maximum pages to crawl</small>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="crawlUseJS" style="width: 20px; height: 20px;">
+                                    <span>Use JavaScript Rendering (slower, for dynamic sites)</span>
+                                </label>
+                            </div>
+
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="crawlAutoUpdate" checked style="width: 20px; height: 20px;">
+                                    <span>Auto-update Knowledge Base</span>
+                                </label>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="startCrawl()" id="startCrawlBtn">
+                                <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                                </svg>
+                                Start Crawl
+                            </button>
+                        </div>
+
+                        <div id="crawlResults" style="display: none; margin-top: 24px;" class="card">
+                            <h3>Crawl Results</h3>
+                            <div id="crawlResultsContent"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -1086,6 +1156,134 @@
             localStorage.removeItem('adminToken');
             alert('Session expired. Please login again.');
             location.reload();
+        }
+
+        // Web Crawler Functions
+        async function startCrawl() {
+            const urls = document.getElementById('crawlUrls').value.trim().split('\n').filter(u => u.trim());
+            const maxDepth = parseInt(document.getElementById('crawlDepth').value);
+            const maxPages = parseInt(document.getElementById('crawlMaxPages').value);
+            const useJavaScript = document.getElementById('crawlUseJS').checked;
+            const autoUpdateKB = document.getElementById('crawlAutoUpdate').checked;
+
+            if (urls.length === 0) {
+                alert('Please enter at least one URL');
+                return;
+            }
+
+            const statusDiv = document.getElementById('crawlerStatus');
+            const statusSpan = document.getElementById('crawlStatus');
+            const startBtn = document.getElementById('startCrawlBtn');
+
+            try {
+                startBtn.disabled = true;
+                startBtn.textContent = 'Starting...';
+                statusDiv.className = 'alert alert-info';
+                statusSpan.textContent = 'Starting crawl...';
+
+                const response = await fetch('/api/admin/crawler/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        urls,
+                        maxDepth,
+                        maxPages,
+                        useJavaScript,
+                        autoUpdateKB
+                    })
+                });
+
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.className = 'alert alert-success';
+                    statusSpan.textContent = 'Crawling in progress...';
+                    addActivityLog('Web crawl started', 'info');
+
+                    // Poll for status
+                    pollCrawlStatus();
+                } else {
+                    statusDiv.className = 'alert alert-error';
+                    statusSpan.textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                statusDiv.className = 'alert alert-error';
+                statusSpan.textContent = `Error: ${error.message}`;
+            } finally {
+                startBtn.disabled = false;
+                startBtn.innerHTML = `
+                    <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    </svg>
+                    Start Crawl
+                `;
+            }
+        }
+
+        async function pollCrawlStatus() {
+            const statusDiv = document.getElementById('crawlerStatus');
+            const statusSpan = document.getElementById('crawlStatus');
+            const resultsDiv = document.getElementById('crawlResults');
+            const resultsContent = document.getElementById('crawlResultsContent');
+
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/admin/crawler/status', {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+
+                    if (response.status === 401) {
+                        clearInterval(interval);
+                        handleUnauthorized();
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.status === 'completed') {
+                        clearInterval(interval);
+                        statusDiv.className = 'alert alert-success';
+                        statusSpan.textContent = 'Crawl completed!';
+                        
+                        // Show results
+                        resultsDiv.style.display = 'block';
+                        resultsContent.innerHTML = `
+                            <div style="margin-bottom: 16px;">
+                                <strong>Pages Crawled:</strong> ${data.result.totalPages}<br>
+                                <strong>Errors:</strong> ${data.result.errors.length}<br>
+                                <strong>Time:</strong> ${new Date(data.result.startTime).toLocaleString()} - ${new Date(data.result.endTime).toLocaleString()}
+                            </div>
+                            <div class="alert alert-success">
+                                Knowledge base has been updated with ${data.result.totalPages} new entries!
+                            </div>
+                        `;
+                        
+                        addActivityLog(`Web crawl completed: ${data.result.totalPages} pages`, 'success');
+                        loadDashboardData(); // Refresh KB count
+                    } else if (data.status === 'error') {
+                        clearInterval(interval);
+                        statusDiv.className = 'alert alert-error';
+                        statusSpan.textContent = 'Crawl failed';
+                        addActivityLog('Web crawl failed', 'error');
+                    } else if (data.status === 'running') {
+                        statusSpan.textContent = 'Crawling... (this may take a few minutes)';
+                    }
+                } catch (error) {
+                    clearInterval(interval);
+                    statusDiv.className = 'alert alert-error';
+                    statusSpan.textContent = `Error: ${error.message}`;
+                }
+            }, 3000); // Poll every 3 seconds
         }
     </script>
 </body>
