@@ -11,6 +11,40 @@
       box-sizing: border-box;
     }
 
+    .nav-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      z-index: 1000;
+    }
+    
+    .nav-bar a {
+      color: #667eea;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .nav-bar a:hover {
+      background: #f5f5f5;
+      color: #5568d3;
+    }
+    
+    .nav-bar a.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,6 +53,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
+      padding-top: 80px;
     }
 
     .container {
@@ -215,6 +250,14 @@
   </style>
 </head>
 <body>
+  <div class="nav-bar">
+    <a href="admin-portal.html">🏠 Admin Portal</a>
+    <a href="analytics.html">📊 Phase 1 Analytics</a>
+    <a href="admin-ml-dashboard.html">🤖 AI/ML Dashboard</a>
+    <a href="kb-admin.html">📚 Knowledge Base</a>
+    <a href="balance-upload.html" class="active">💰 Balance Upload</a>
+    <a href="admin.html">🛠️ System Tools</a>
+  </div>
   <div class="container">
     <div class="header">
       <h1>🏦 AKCB Admin Portal</h1>

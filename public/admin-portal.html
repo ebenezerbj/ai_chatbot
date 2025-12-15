@@ -23,6 +23,37 @@
             --border: #e5e7eb;
         }
 
+        .nav-bar {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            margin: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-bar a {
+            color: var(--primary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-bar a:hover {
+            background: var(--light);
+            color: var(--primary-dark);
+        }
+
+        .nav-bar a.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -522,6 +553,16 @@
 
     <!-- Admin Dashboard -->
     <div class="admin-container" id="adminDashboard">
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <a href="admin-portal.html" class="active">🏠 Admin Portal</a>
+            <a href="analytics.html">📊 Phase 1 Analytics</a>
+            <a href="admin-ml-dashboard.html">🤖 AI/ML Dashboard</a>
+            <a href="kb-admin.html">📚 Knowledge Base</a>
+            <a href="balance-upload.html">💰 Balance Upload</a>
+            <a href="admin.html">🛠️ System Tools</a>
+        </div>
+        
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">

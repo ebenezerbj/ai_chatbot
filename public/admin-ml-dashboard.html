@@ -39,6 +39,46 @@
       margin: 0 auto;
     }
 
+    .nav-bar {
+      background: white;
+      padding: 15px 30px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-bar a {
+      color: var(--teal-dark);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-bar a:hover {
+      background: var(--gray-100);
+      color: var(--teal);
+    }
+
+    .nav-bar a.active {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: white;
+    }
+
+    .nav-divider {
+      height: 24px;
+      width: 1px;
+      background: var(--gray-300);
+    }
+
     .header {
       background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
       color: white;
@@ -366,6 +406,16 @@
 </head>
 <body>
   <div class="container">
+    <div class="nav-bar">
+      <a href="admin-portal.html">🏠 Admin Portal</a>
+      <a href="analytics.html">📊 Phase 1 Analytics</a>
+      <a href="admin-ml-dashboard.html" class="active">🤖 AI/ML Dashboard</a>
+      <div class="nav-divider"></div>
+      <a href="kb-admin.html">📚 Knowledge Base</a>
+      <a href="balance-upload.html">💰 Balance Upload</a>
+      <a href="admin.html">🛠️ System Tools</a>
+    </div>
+
     <div class="header">
       <h1>🤖 AI/ML Analytics Dashboard</h1>
       <p>Phase 3: Real-time sentiment analysis, intent classification, and predictive insights</p>
