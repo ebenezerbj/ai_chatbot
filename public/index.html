@@ -359,6 +359,24 @@
       font-size: 0.875rem;
       color: var(--gray-500);
       margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .session-timer {
+      font-size: 0.75rem;
+      color: var(--warning-color);
+      font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      background: var(--warning-50);
+      border-radius: 12px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
 
     .chat-messages {
@@ -1382,7 +1400,10 @@
         <div class="chat-header">
           <div class="status-indicator"></div>
           <div class="chat-title">Digital Assistant</div>
-          <div class="chat-subtitle">Online</div>
+          <div class="chat-subtitle">
+            <span id="sessionStatus">Online</span>
+            <span id="sessionTimer" class="session-timer" style="display:none;"></span>
+          </div>
           <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
             <select id="ttsSelect" class="header-action-select" title="Voice & language" aria-label="Voice and language" style="display:none"></select>
             <span id="ttsNote" class="tts-note" style="display:none"></span>
@@ -1453,6 +1474,83 @@
 
     let sessionId = null;
 
+    // ===== Session Idle Timeout Management =====
+    const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+    const WARNING_TIME = 4 * 60 * 1000; // Show warning at 4 minutes
+    let lastActivityTime = Date.now();
+    let idleWarningShown = false;
+    let idleCheckInterval = null;
+
+    function resetIdleTimer() {
+      lastActivityTime = Date.now();
+      idleWarningShown = false;
+      
+      // Hide timer when activity detected
+      const timerEl = document.getElementById('sessionTimer');
+      if (timerEl) timerEl.style.display = 'none';
+    }
+
+    function checkIdleTimeout() {
+      const idleTime = Date.now() - lastActivityTime;
+      const remainingTime = IDLE_TIMEOUT - idleTime;
+      const remainingMinutes = Math.ceil(remainingTime / 60000);
+      
+      // Update session timer display
+      const timerEl = document.getElementById('sessionTimer');
+      if (timerEl) {
+        if (idleTime >= WARNING_TIME) {
+          timerEl.textContent = `${remainingMinutes}m`;
+          timerEl.style.display = 'inline-block';
+        } else {
+          timerEl.style.display = 'none';
+        }
+      }
+      
+      // Show warning at 13 minutes
+      if (idleTime >= WARNING_TIME && !idleWarningShown) {
+        idleWarningShown = true;
+        addMsg('assistant', '⏰ Your session will expire in 2 minutes due to inactivity. Send a message to keep it active.');
+      }
+      
+      // Expire session at 15 minutes
+      if (idleTime >= IDLE_TIMEOUT) {
+        expireSession();
+      }
+    }
+
+    function expireSession() {
+      // Hide session timer
+      const timerEl = document.getElementById('sessionTimer');
+      if (timerEl) timerEl.style.display = 'none';
+      
+      // Clear session
+      sessionId = null;
+      
+      // Clear chat messages except welcome
+      const messages = chatEl.querySelectorAll('.message');
+      messages.forEach(msg => msg.remove());
+      
+      // Show expiration message
+      addMsg('assistant', '🔒 Your session has expired due to inactivity.\n\nFor your security, the conversation has been cleared.\n\nHow can I assist you today?');
+      
+      // Reset idle tracking
+      resetIdleTimer();
+      idleWarningShown = false;
+      
+      console.log('[Session] Expired due to inactivity');
+    }
+
+    function startIdleTracking() {
+      // Track user activity
+      const activityEvents = ['click', 'keypress', 'touchstart', 'scroll'];
+      activityEvents.forEach(event => {
+        document.addEventListener(event, resetIdleTimer, { passive: true });
+      });
+      
+      // Check idle status every 30 seconds
+      idleCheckInterval = setInterval(checkIdleTimeout, 30000);
+    }
+
     // Initialize with welcome message
     window.addEventListener('DOMContentLoaded', () => {
       // Set the chat title to the assistant's name
@@ -1462,6 +1560,10 @@
   addMsg('assistant', `Hi, I'm Ama! 👋\n\nHow can I assist you today?`);
   // Init TTS UI state
   initTTS();
+      
+      // Start idle timeout tracking
+      startIdleTracking();
+      
       // Notify parent that the chat is ready (for iframed embedding)
       try { window.parent?.postMessage({ source: 'akcb-chat', type: 'ready' }, '*'); } catch {}
     });
@@ -2220,6 +2322,9 @@
       } catch (e) {
         // Non-fatal
       }
+      
+      // Reset idle timer on message send
+      resetIdleTimer();
       
       input.value = '';
       input.style.height = 'auto'; // Reset height
