@@ -296,7 +296,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
 
     // Call OpenAI with KB context
     try {
-      const systemPrompt = `You are Ama, a friendly and helpful banking assistant for AKCB - Amantin and Kasei Community Bank PLC, a community bank in Ghana.
+      const systemPrompt = `You are AMA, a friendly and helpful banking assistant for AKCB - Amantin and Kasei Community Bank PLC, a community bank in Ghana.
 
 KNOWLEDGE BASE:
 ${kbContext}
