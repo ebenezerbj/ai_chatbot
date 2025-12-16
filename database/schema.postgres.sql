@@ -52,8 +52,16 @@ CREATE TABLE IF NOT EXISTS account_balances (
 CREATE INDEX IF NOT EXISTS idx_last_updated ON account_balances(last_updated);
 
 -- Trigger to update last_updated timestamp
+CREATE OR REPLACE FUNCTION update_last_updated_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.last_updated = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 CREATE TRIGGER update_account_balances_last_updated BEFORE UPDATE ON account_balances
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    FOR EACH ROW EXECUTE FUNCTION update_last_updated_column();
 
 -- =====================================================
 -- Table: transactions
