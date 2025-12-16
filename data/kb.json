@@ -749,6 +749,23 @@
     "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 20 205 5170 for assistance."
   },
   {
+    "id": "balance_update_time",
+    "product": "account_information",
+    "patterns": [
+      "when.*balance.*updated",
+      "when.*last.*updated.*balance",
+      "balance.*update.*time",
+      "when.*balance.*loaded",
+      "last.*balance.*update",
+      "balance.*refresh.*time",
+      "how.*old.*balance",
+      "balance.*timestamp",
+      "when.*balance.*changed",
+      "balance.*last.*modified"
+    ],
+    "answer": "Balance Update Information\n\nYour account balance is updated in real-time whenever transactions occur. When you check your balance through our authenticated service, you will see:\n\n• The current available balance\n• The ledger balance\n• A timestamp showing when the balance was last updated\n\nThe timestamp will display as:\n- \"just now\" (less than 1 minute)\n- \"X minutes ago\" (less than 1 hour)\n- \"X hours ago\" (less than 24 hours)\n- \"X days ago\" (less than 7 days)\n- Exact date for older updates\n\nTo view your current balance with the update time, please authenticate by providing your account number and we'll send you an OTP for verification."
+  },
+  {
     "id": "view_recent_transactions",
     "product": "account_information",
     "patterns": [

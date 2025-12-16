@@ -431,7 +431,8 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
       `SELECT 
         ledger_balance,
         available_balance,
-        currency
+        currency,
+        last_updated
       FROM account_balances 
       WHERE account_number = ?`,
       [accountNumber]
@@ -467,7 +468,8 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
       balance: {
         ledger: balance ? parseFloat(balance.ledger_balance) : 0,
         available: balance ? parseFloat(balance.available_balance) : 0,
-        currency: balance?.currency || 'GHS'
+        currency: balance?.currency || 'GHS',
+        lastUpdated: balance?.last_updated || null
       },
       recentTransactions: transactions.map(txn => ({
         date: txn.date,
@@ -487,12 +489,36 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
  * Format account balance response
  */
 export function formatBalanceResponse(accountData: any): string {
+  let lastUpdatedText = '';
+  if (accountData.balance.lastUpdated) {
+    const updateDate = new Date(accountData.balance.lastUpdated);
+    const now = new Date();
+    const diffMs = now.getTime() - updateDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    let timeAgo = '';
+    if (diffMins < 60) {
+      timeAgo = diffMins <= 1 ? 'just now' : `${diffMins} minutes ago`;
+    } else if (diffHours < 24) {
+      timeAgo = diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+    } else if (diffDays < 7) {
+      timeAgo = diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+    } else {
+      timeAgo = `on ${updateDate.toLocaleDateString('en-GB')}`;
+    }
+    
+    lastUpdatedText = `Last Updated: ${timeAgo}\n\n`;
+  }
+  
   return `**Account Balance**\n\n` +
     `Account: ${accountData.accountNumber}\n` +
     `Name: ${accountData.accountName}\n` +
     `Type: ${accountData.accountType}\n\n` +
     `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
-    `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n\n` +
+    `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
+    lastUpdatedText +
     `Is there anything else you'd like to know about your account?`;
 }
 
