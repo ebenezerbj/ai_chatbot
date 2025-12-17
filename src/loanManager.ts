@@ -51,17 +51,79 @@ export async function parseLoanCSV(buffer: Buffer): Promise<LoanRecord[]> {
       .pipe(csv())
       .on('data', (row: any) => {
         try {
-          // Parse dates safely
+          // Parse dates safely with validation
           const parseDate = (dateStr: string): string | null => {
-            if (!dateStr || dateStr.trim() === '') return null;
-            // Handle Excel date format (YYYYMMDD)
-            if (/^\d{8}$/.test(dateStr)) {
-              const year = dateStr.substring(0, 4);
-              const month = dateStr.substring(4, 6);
-              const day = dateStr.substring(6, 8);
-              return `${year}-${month}-${day}`;
+            if (!dateStr || dateStr.trim() === '' || dateStr === '0') return null;
+            
+            const str = String(dateStr).trim().replace(/\s+/g, ''); // Remove spaces
+            
+            // Handle Excel date format (YYYYMMDD) - must be exactly 8 digits
+            if (/^\d{8}$/.test(str)) {
+              const year = str.substring(0, 4);
+              const month = str.substring(4, 6);
+              const day = str.substring(6, 8);
+              const date = `${year}-${month}-${day}`;
+              
+              // Validate the date
+              if (isValidDate(date)) {
+                return date;
+              }
+              return null;
             }
-            return dateStr;
+            
+            // Handle dd-MMM-yy format (e.g., 27-Apr-24)
+            if (/^\d{1,2}-[A-Za-z]{3}-\d{2}$/.test(str)) {
+              try {
+                const parts = str.split('-');
+                const day = parts[0].padStart(2, '0');
+                const monthMap: { [key: string]: string } = {
+                  'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+                  'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                };
+                const month = monthMap[parts[1]];
+                const year = '20' + parts[2];
+                const date = `${year}-${month}-${day}`;
+                
+                if (isValidDate(date)) {
+                  return date;
+                }
+              } catch (e) {
+                return null;
+              }
+              return null;
+            }
+            
+            // Handle YYYY-MM-DD format with validation
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+              if (isValidDate(str)) {
+                return str;
+              }
+              return null;
+            }
+            
+            // Invalid format
+            return null;
+          };
+          
+          // Validate date string
+          const isValidDate = (dateStr: string): boolean => {
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return false;
+            
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+            
+            // Check ranges
+            if (year < 1900 || year > 2100) return false;
+            if (month < 1 || month > 12) return false;
+            if (day < 1 || day > 31) return false;
+            
+            // Check actual date validity (handles leap years, month lengths)
+            const date = new Date(year, month - 1, day);
+            return date.getFullYear() === year && 
+                   date.getMonth() === month - 1 && 
+                   date.getDate() === day;
           };
 
           // Parse currency amounts
@@ -70,11 +132,29 @@ export async function parseLoanCSV(buffer: Buffer): Promise<LoanRecord[]> {
             const cleaned = String(value).replace(/[^0-9.-]/g, '');
             return parseFloat(cleaned) || 0;
           };
+          
+          // Truncate phone number to 20 chars
+          const truncatePhone = (phone: string): string => {
+            const cleaned = String(phone || '').trim();
+            return cleaned.length > 20 ? cleaned.substring(0, 20) : cleaned;
+          };
+          
+          // Truncate repayment frequency to 2 chars
+          const truncateRepaymentFreq = (freq: string): string => {
+            const cleaned = String(freq || '').trim();
+            return cleaned.length > 2 ? cleaned.substring(0, 2) : cleaned;
+          };
+          
+          // Parse customer ID (null if empty)
+          const parseCustomerId = (id: any): string => {
+            const str = String(id || '').trim();
+            return str === '' ? '' : str;
+          };
 
           const loan: LoanRecord = {
             facilityAccountNumber: String(row.FacilityAccNum || '').trim(),
-            customerId: String(row.CustomerId || '').trim(),
-            phoneNumber: String(row.MobileTel1 || '').trim(),
+            customerId: parseCustomerId(row.CustomerId),
+            phoneNumber: truncatePhone(row.MobileTel1),
             customerName: `${row.Surname || ''} ${row.FirstName || ''} ${row.MiddleNames || ''}`.trim(),
             nationalId: String(row.NatIDNum || '').trim(),
             branchCode: String(row.BranchCode || '').trim(),
@@ -90,7 +170,7 @@ export async function parseLoanCSV(buffer: Buffer): Promise<LoanRecord[]> {
             facilityTerm: parseInt(row.FacilityTerm) || 0,
             scheduledInstallment: parseAmount(row.SchdInstalAmount),
             lastPaymentAmount: parseAmount(row.LastPaymentAmount),
-            repaymentFrequency: String(row.RepaymentFreq || '').trim(),
+            repaymentFrequency: truncateRepaymentFreq(row.RepaymentFreq),
             facilityStatusCode: String(row.FacilityStatusCode || 'A').trim(),
             assetClassification: String(row.AssetClassification || 'A').trim(),
             amountInArrears: parseAmount(row.AmountInarrears)
