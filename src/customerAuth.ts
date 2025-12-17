@@ -465,7 +465,10 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
       [accountNumber]
     );
     
-    // Get customer loans
+    // Get customer loans - handle both phone formats (0501336873 and 233501336873)
+    const phoneWithoutCountryCode = customer.phone_number.replace(/^233/, '0');
+    const phoneWithCountryCode = customer.phone_number.startsWith('233') ? customer.phone_number : '233' + customer.phone_number.replace(/^0/, '');
+    
     const loans = await executeQuery<any>(
       `SELECT 
         facility_account_number,
@@ -480,9 +483,9 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
         facility_status_code,
         amount_in_arrears
       FROM loans 
-      WHERE phone_number = ? OR customer_id = ?
+      WHERE phone_number IN (?, ?, ?) OR customer_id = ?
       ORDER BY facility_status_code, disbursement_date DESC`,
-      [customer.phone_number, customer.id]
+      [customer.phone_number, phoneWithoutCountryCode, phoneWithCountryCode, customer.id]
     );
     
     return {
