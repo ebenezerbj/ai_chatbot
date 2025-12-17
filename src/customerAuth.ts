@@ -466,27 +466,34 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
     );
     
     // Get customer loans - handle both phone formats (0501336873 and 233501336873)
-    const phoneWithoutCountryCode = customer.phone_number.replace(/^233/, '0');
-    const phoneWithCountryCode = customer.phone_number.startsWith('233') ? customer.phone_number : '233' + customer.phone_number.replace(/^0/, '');
-    
-    const loans = await executeQuery<any>(
-      `SELECT 
-        facility_account_number,
-        facility_amount,
-        current_balance,
-        disbursement_date,
-        maturity_date,
-        next_payment_date,
-        facility_term,
-        scheduled_installment,
-        repayment_frequency,
-        facility_status_code,
-        amount_in_arrears
-      FROM loans 
-      WHERE phone_number IN (?, ?, ?) OR customer_id = ?
-      ORDER BY facility_status_code, disbursement_date DESC`,
-      [customer.phone_number, phoneWithoutCountryCode, phoneWithCountryCode, customer.id]
-    );
+    let loans: any[] = [];
+    if (customer.phone_number) {
+      const phoneWithoutCountryCode = customer.phone_number.replace(/^233/, '0');
+      const phoneWithCountryCode = customer.phone_number.startsWith('233') ? customer.phone_number : '233' + customer.phone_number.replace(/^0/, '');
+      
+      console.log('[Auth] Query params:', [customer.phone_number, phoneWithoutCountryCode, phoneWithCountryCode]);
+      
+      loans = await executeQuery<any>(
+        `SELECT 
+          facility_account_number,
+          facility_amount,
+          current_balance,
+          disbursement_date,
+          maturity_date,
+          next_payment_date,
+          facility_term,
+          scheduled_installment,
+          repayment_frequency,
+          facility_status_code,
+          amount_in_arrears
+        FROM loans 
+        WHERE phone_number IN (?, ?, ?) OR customer_id = ?
+        ORDER BY facility_status_code, disbursement_date DESC`,
+        [customer.phone_number, phoneWithoutCountryCode, phoneWithCountryCode, customer.id]
+      );
+    } else {
+      console.log('[Auth] No phone number found for customer, skipping loan lookup');
+    }
     
     return {
       accountNumber: customer.account_number,
@@ -535,7 +542,7 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
 export function formatLoanResponse(accountData: any): string {
   try {
     if (!accountData || !accountData.loans || accountData.loans.length === 0) {
-      return `**Loan Information**\n\nNo active loans found for your account.\n\nIf you believe this is an error or would like to apply for a loan, please contact us at +233 20 205 5170 or visit any AKCB branch.`;
+      return `**Loan Information**\n\nYou have no loan account associated with the bank.\n\nIf you would like to apply for a loan, please contact us at +233 20 205 5170 or visit any AKCB branch.`;
     }
     
     let response = `**Loan Information**\n\n`;
@@ -585,6 +592,11 @@ export function formatLoanResponse(accountData: any): string {
  * Format account balance only (without loans)
  */
 export function formatAccountBalanceOnly(accountData: any): string {
+  // Check if customer has account
+  if (!accountData || !accountData.accountNumber || !accountData.balance) {
+    return `**Account Information**\n\nYou have no account associated with the bank.\n\nIf you would like to open an account, please contact us at +233 20 205 5170 or visit any AKCB branch.`;
+  }
+  
   let lastUpdatedText = '';
   if (accountData.balance.lastUpdated) {
     const updateDate = new Date(accountData.balance.lastUpdated);
@@ -622,6 +634,20 @@ export function formatAccountBalanceOnly(accountData: any): string {
  * Format account balance response (includes both account and loans)
  */
 export function formatBalanceResponse(accountData: any): string {
+  // Check if customer has account or loans
+  const hasAccount = accountData && accountData.accountNumber && accountData.balance;
+  const hasLoans = accountData && accountData.loans && accountData.loans.length > 0;
+  
+  // If customer has neither
+  if (!hasAccount && !hasLoans) {
+    return `**Account Information**\n\nYou have no account or loan associated with the bank.\n\nIf you would like to open an account or apply for a loan, please contact us at +233 20 205 5170 or visit any AKCB branch.`;
+  }
+  
+  // If customer has loans but no account
+  if (!hasAccount && hasLoans) {
+    return formatLoanResponse(accountData);
+  }
+  
   let lastUpdatedText = '';
   if (accountData.balance.lastUpdated) {
     const updateDate = new Date(accountData.balance.lastUpdated);
@@ -651,13 +677,14 @@ export function formatBalanceResponse(accountData: any): string {
     
     accountData.loans.forEach((loan: any, index: number) => {
       const status = loan.status === 'A' ? 'Active' : loan.status === 'C' ? 'Closed' : 'Dormant';
-      const termYears = Math.floor(loan.termMonths / 12);
-      const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${loan.termMonths} months`;
+      const termMonths = loan.termMonths || 0;
+      const termYears = Math.floor(termMonths / 12);
+      const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${termMonths} months`;
       
-      loansText += `Loan ${index + 1}: ${loan.loanNumber}\n`;
-      loansText += `Original Amount: GHS ${loan.originalAmount.toFixed(2)}\n`;
-      loansText += `Current Balance: GHS ${loan.currentBalance.toFixed(2)}\n`;
-      loansText += `Monthly Payment: GHS ${loan.monthlyInstallment.toFixed(2)}\n`;
+      loansText += `Loan ${index + 1}: ${loan.loanNumber || 'N/A'}\n`;
+      loansText += `Original Amount: GHS ${(loan.originalAmount || 0).toFixed(2)}\n`;
+      loansText += `Current Balance: GHS ${(loan.currentBalance || 0).toFixed(2)}\n`;
+      loansText += `Monthly Payment: GHS ${(loan.monthlyInstallment || 0).toFixed(2)}\n`;
       
       if (loan.nextPaymentDate) {
         const nextDate = new Date(loan.nextPaymentDate);
@@ -674,7 +701,7 @@ export function formatBalanceResponse(accountData: any): string {
       loansText += `Duration: ${termText}\n`;
       loansText += `Status: ${status}\n`;
       
-      if (loan.amountInArrears > 0) {
+      if (loan.amountInArrears && loan.amountInArrears > 0) {
         loansText += `⚠️ Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;
       }
       
