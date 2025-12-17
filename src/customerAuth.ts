@@ -534,8 +534,24 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
 }
 
 /**
- * Format loan-only response
+ * Get friendly account type name from code
  */
+function getAccountTypeName(code: string): string {
+  const typeMap: { [key: string]: string } = {
+    '1850': 'Savings Account',
+    '1800': 'Current Account',
+    '1900': 'Fixed Deposit',
+    '2000': 'Investment Account',
+    '2100': 'Student Account',
+    '2200': 'Salary Account',
+    '2300': 'Business Account',
+    '2400': 'Joint Account',
+    // Add more mappings as needed
+  };
+  
+  return typeMap[code] || `Account Type ${code}`;
+}
+
 /**
  * Format loan-only response
  */
@@ -623,7 +639,7 @@ export function formatAccountBalanceOnly(accountData: any): string {
   return `**Account Balance**\n\n` +
     `Account: ${accountData.accountNumber}\n` +
     `Name: ${accountData.accountName}\n` +
-    `Type: ${accountData.accountType}\n\n` +
+    `Type: ${getAccountTypeName(accountData.accountType)}\n\n` +
     `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
     `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
     lastUpdatedText +
@@ -712,7 +728,7 @@ export function formatBalanceResponse(accountData: any): string {
   return `**Account Balance**\n\n` +
     `Account: ${accountData.accountNumber}\n` +
     `Name: ${accountData.accountName}\n` +
-    `Type: ${accountData.accountType}\n\n` +
+    `Type: ${getAccountTypeName(accountData.accountType)}\n\n` +
     `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
     `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
     lastUpdatedText +
