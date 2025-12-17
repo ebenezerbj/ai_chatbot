@@ -73,7 +73,12 @@ export function needsAuthentication(message: string): boolean {
     /\bcheck\s+my\s+balance/i,
     /\bshow\s+my\s+(recent|last)\s+transactions/i,
     /\bmini\s+statement/i,
-    /\baccount\s+(details|information|number)/i
+    /\baccount\s+(details|information|number)/i,
+    /\b(my|check|show|view|get)\s+loan(s)?\s*(balance|status|details|payment)?/i,
+    /\bhow\s+much\s+(do\s+i\s+)?owe/i,
+    /\bloan\s+(balance|payment|maturity|duration)/i,
+    /\bwhen\s+is\s+my\s+loan\s+due/i,
+    /\bnext\s+loan\s+payment/i
   ];
   
   return authRequiredPatterns.some(pattern => pattern.test(message));
@@ -460,6 +465,26 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
       [accountNumber]
     );
     
+    // Get customer loans
+    const loans = await executeQuery<any>(
+      `SELECT 
+        facility_account_number,
+        facility_amount,
+        current_balance,
+        disbursement_date,
+        maturity_date,
+        next_payment_date,
+        facility_term,
+        scheduled_installment,
+        repayment_frequency,
+        facility_status_code,
+        amount_in_arrears
+      FROM loans 
+      WHERE phone_number = ? OR customer_id = ?
+      ORDER BY facility_status_code, disbursement_date DESC`,
+      [customer.phone_number, customer.id]
+    );
+    
     return {
       accountNumber: customer.account_number,
       accountName: customer.account_name,
@@ -471,6 +496,19 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
         currency: balance?.currency || 'GHS',
         lastUpdated: balance?.last_updated || null
       },
+      loans: loans.map(loan => ({
+        loanNumber: loan.facility_account_number,
+        originalAmount: parseFloat(loan.facility_amount),
+        currentBalance: parseFloat(loan.current_balance),
+        disbursementDate: loan.disbursement_date,
+        maturityDate: loan.maturity_date,
+        nextPaymentDate: loan.next_payment_date,
+        termMonths: parseInt(loan.facility_term),
+        monthlyInstallment: parseFloat(loan.scheduled_installment),
+        repaymentFrequency: loan.repayment_frequency,
+        status: loan.facility_status_code,
+        amountInArrears: parseFloat(loan.amount_in_arrears) || 0
+      })),
       recentTransactions: transactions.map(txn => ({
         date: txn.date,
         description: txn.description,
@@ -512,6 +550,43 @@ export function formatBalanceResponse(accountData: any): string {
     lastUpdatedText = `Last Updated: ${timeAgo}\n\n`;
   }
   
+  let loansText = '';
+  if (accountData.loans && accountData.loans.length > 0) {
+    loansText = `\n**Loan Information**\n\n`;
+    
+    accountData.loans.forEach((loan: any, index: number) => {
+      const status = loan.status === 'A' ? 'Active' : loan.status === 'C' ? 'Closed' : 'Dormant';
+      const termYears = Math.floor(loan.termMonths / 12);
+      const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${loan.termMonths} months`;
+      
+      loansText += `Loan ${index + 1}: ${loan.loanNumber}\n`;
+      loansText += `Original Amount: GHS ${loan.originalAmount.toFixed(2)}\n`;
+      loansText += `Current Balance: GHS ${loan.currentBalance.toFixed(2)}\n`;
+      loansText += `Monthly Payment: GHS ${loan.monthlyInstallment.toFixed(2)}\n`;
+      
+      if (loan.nextPaymentDate) {
+        const nextDate = new Date(loan.nextPaymentDate);
+        loansText += `Next Payment: ${nextDate.toLocaleDateString('en-GB')}\n`;
+      }
+      
+      if (loan.maturityDate) {
+        const matDate = new Date(loan.maturityDate);
+        const today = new Date();
+        const daysRemaining = Math.ceil((matDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        loansText += `Maturity Date: ${matDate.toLocaleDateString('en-GB')}${daysRemaining > 0 ? ` (${daysRemaining} days remaining)` : ''}\n`;
+      }
+      
+      loansText += `Duration: ${termText}\n`;
+      loansText += `Status: ${status}\n`;
+      
+      if (loan.amountInArrears > 0) {
+        loansText += `⚠️ Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;
+      }
+      
+      loansText += `\n`;
+    });
+  }
+  
   return `**Account Balance**\n\n` +
     `Account: ${accountData.accountNumber}\n` +
     `Name: ${accountData.accountName}\n` +
@@ -519,6 +594,7 @@ export function formatBalanceResponse(accountData: any): string {
     `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
     `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
     lastUpdatedText +
+    loansText +
     `Is there anything else you'd like to know about your account?`;
 }
 

@@ -783,6 +783,49 @@
     "answer": "Retrieve recent transactions / mini-statement.\n\nTo retrieve recent transactions / mini-statement, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 20 205 5170 for assistance."
   },
   {
+    "id": "check_loan_balance",
+    "product": "loan_information",
+    "patterns": [
+      "check.*loan.*balance",
+      "how much.*loan.*owe",
+      "my.*loan.*balance",
+      "show.*loan.*details",
+      "loan.*outstanding",
+      "remaining.*loan",
+      "loan.*status",
+      "how much.*left.*loan"
+    ],
+    "answer": "Check Loan Balance\n\nTo check your loan balance and details, please authenticate using your account number or phone number. Once verified with OTP, I will show you:\n\n• Current loan balance\n• Original loan amount\n• Monthly installment amount\n• Next payment due date\n• Loan maturity date\n• Remaining duration\n• Payment status\n\nYou can also call our customer service at +233 20 205 5170 for loan inquiries."
+  },
+  {
+    "id": "loan_payment_schedule",
+    "product": "loan_information",
+    "patterns": [
+      "when.*loan.*payment.*due",
+      "next.*loan.*payment",
+      "loan.*payment.*date",
+      "when.*pay.*loan",
+      "loan.*maturity",
+      "when.*loan.*finish",
+      "how long.*loan",
+      "loan.*duration"
+    ],
+    "answer": "Loan Payment Schedule\n\nTo view your loan payment schedule including next payment date and maturity, please authenticate with your account details. I will provide:\n\n• Next payment due date\n• Monthly installment amount\n• Loan maturity date\n• Time remaining on your loan\n• Payment frequency\n\nFor detailed amortization schedules, please visit any branch or call +233 20 205 5170."
+  },
+  {
+    "id": "loan_arrears",
+    "product": "loan_information",
+    "patterns": [
+      "loan.*arrears",
+      "loan.*overdue",
+      "missed.*loan.*payment",
+      "late.*loan.*payment",
+      "defaulted.*loan",
+      "loan.*penalty"
+    ],
+    "answer": "Loan Arrears Information\n\nIf you have concerns about loan arrears or overdue payments, please contact our Credit Department immediately:\n\n📞 Phone: +233 20 205 5170\n🏦 Visit: Any AKCB branch\n\nWe can help you with:\n• Current arrears amount\n• Payment restructuring options\n• Penalty waiver requests\n• Repayment plans\n\nPlease authenticate to check your current loan status and any outstanding arrears."
+  },
+  {
     "id": "account_details",
     "product": "account_information",
     "patterns": [

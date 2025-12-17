@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AKCB Admin - Loan Upload</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .nav-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 15px 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      z-index: 1000;
+    }
+    
+    .nav-bar a {
+      color: #667eea;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .nav-bar a:hover {
+      background: #f0f0f0;
+    }
+    
+    .nav-bar a.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 100px auto 40px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+    }
+
+    h1 {
+      color: #2d3748;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #718096;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .info-box {
+      background: #ebf8ff;
+      border-left: 4px solid #4299e1;
+      padding: 16px;
+      margin-bottom: 24px;
+      border-radius: 4px;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #2c5282;
+    }
+
+    .info-box ul {
+      margin-left: 20px;
+      color: #2d3748;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2d3748;
+      font-weight: 500;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-upload-label {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #f7fafc;
+      border: 2px dashed #cbd5e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #4a5568;
+      font-weight: 500;
+    }
+
+    .file-upload-label:hover {
+      border-color: #667eea;
+      background: #edf2f7;
+    }
+
+    .file-name {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f7fafc;
+      border-radius: 8px;
+      color: #2d3748;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .progress {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f7fafc;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .progress.show {
+      display: block;
+    }
+
+    .progress-text {
+      color: #4a5568;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 4px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .result.show {
+      display: block;
+    }
+
+    .result.success {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+    }
+
+    .result.error {
+      background: #fef2f2;
+      border-left: 4px solid #ef4444;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .result.success .result-title {
+      color: #047857;
+    }
+
+    .result.error .result-title {
+      color: #dc2626;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .stat-item {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stat-label {
+      color: #718096;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      color: #2d3748;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .errors-list {
+      margin-top: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #fee2e2;
+    }
+
+    .error-item {
+      padding: 8px;
+      margin-bottom: 8px;
+      background: #fef2f2;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #991b1b;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-bar">
+    <a href="balance-upload.html">Balance Upload</a>
+    <a href="loan-upload.html" class="active">Loan Upload</a>
+    <a href="admin-portal.html">Admin Portal</a>
+  </div>
+
+  <div class="container">
+    <h1>📊 Loan Upload</h1>
+    <p class="subtitle">Upload loan data from core banking system CSV export</p>
+
+    <div class="info-box">
+      <strong>📋 CSV Format Requirements:</strong>
+      <ul>
+        <li>Must include: FacilityAccNum, CustomerId, MobileTel1, CurBal</li>
+        <li>Optional: Maturitydate, NextPaymentDate, FacilityTerm, SchdInstalAmount</li>
+        <li>Customer matching via CustomerId or phone number</li>
+        <li>Active loans automatically displayed to customers</li>
+      </ul>
+    </div>
+
+    <div class="form-group">
+      <label for="loanFile">Select Loan CSV File</label>
+      <label for="loanFile" class="file-upload-label">
+        📂 Choose CSV File
+      </label>
+      <input type="file" id="loanFile" accept=".csv" />
+      <div id="fileName" class="file-name" style="display: none;"></div>
+    </div>
+
+    <button id="uploadBtn" disabled>
+      Upload Loan Data
+    </button>
+
+    <div id="progress" class="progress">
+      <div class="progress-text">Uploading and processing...</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar"></div>
+      </div>
+    </div>
+
+    <div id="result" class="result">
+      <div class="result-title"></div>
+      <div class="result-content"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    const fileInput = document.getElementById('loanFile');
+    const fileNameDiv = document.getElementById('fileName');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progress = document.getElementById('progress');
+    const result = document.getElementById('result');
+
+    // Check if we have an auth token
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      alert('Please log in first');
+      window.location.href = 'balance-upload.html';
+    }
+
+    // File selection
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        fileNameDiv.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+        fileNameDiv.style.display = 'block';
+        uploadBtn.disabled = false;
+      } else {
+        fileNameDiv.style.display = 'none';
+        uploadBtn.disabled = true;
+      }
+    });
+
+    // Upload handler
+    uploadBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = 'Uploading<span class="spinner"></span>';
+      progress.classList.add('show');
+      result.classList.remove('show');
+
+      const formData = new FormData();
+      formData.append('loans', file);
+
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/upload-loans`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        progress.classList.remove('show');
+        result.classList.add('show');
+
+        if (data.success) {
+          result.classList.remove('error');
+          result.classList.add('success');
+          result.querySelector('.result-title').textContent = '✅ Loan Upload Successful!';
+          
+          let content = `
+            <div class="stats">
+              <div class="stat-item">
+                <div class="stat-label">Total Records</div>
+                <div class="stat-value">${data.totalRecords.toLocaleString()}</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Successfully Imported</div>
+                <div class="stat-value" style="color: #10b981;">${data.successCount.toLocaleString()}</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Errors</div>
+                <div class="stat-value" style="color: ${data.errorCount > 0 ? '#ef4444' : '#10b981'};">${data.errorCount.toLocaleString()}</div>
+              </div>
+            </div>
+            <div class="stats" style="margin-top: 16px;">
+              <div class="stat-item">
+                <div class="stat-label">Total Loans</div>
+                <div class="stat-value">${data.stats.totalLoans.toLocaleString()}</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Active Loans</div>
+                <div class="stat-value">${data.stats.activeLoans.toLocaleString()}</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Total Outstanding</div>
+                <div class="stat-value">GHS ${data.stats.totalOutstanding.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+              </div>
+            </div>
+          `;
+
+          if (data.errors && data.errors.length > 0) {
+            content += `
+              <div class="errors-list">
+                <strong style="color: #dc2626; display: block; margin-bottom: 8px;">Errors (showing first ${Math.min(data.errors.length, 100)}):</strong>
+                ${data.errors.map(err => `
+                  <div class="error-item">
+                    Row ${err.row}: ${err.error}
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          }
+
+          result.querySelector('.result-content').innerHTML = content;
+        } else {
+          throw new Error(data.error || 'Upload failed');
+        }
+      } catch (error) {
+        progress.classList.remove('show');
+        result.classList.add('show');
+        result.classList.remove('success');
+        result.classList.add('error');
+        result.querySelector('.result-title').textContent = '❌ Upload Failed';
+        result.querySelector('.result-content').textContent = error.message;
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload Loan Data';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import * as customerAuth from './customerAuth';
 import { testConnection, executeQuery, DB_TYPE } from './database';
 import * as balanceUpdater from './balanceUpdater';
+import * as loanManager from './loanManager';
 import * as customerImporter from './customerImporter';
 import { WebCrawler, CrawlConfig, CrawlResult, convertToKBEntries, updateKnowledgeBase } from './webCrawler';
 import * as analytics from './analytics';
@@ -1000,6 +1001,81 @@ app.get('/api/admin/stats', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Stats error:', error.message);
     res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
+// ============================================================
+// ADMIN ROUTES - Loan Upload System
+// ============================================================
+
+// Upload loans endpoint
+app.post('/api/admin/upload-loans', upload.single('loans'), async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    console.log('[Admin] Loan upload started:', req.file.originalname);
+
+    // Parse CSV
+    const loans = await loanManager.parseLoanCSV(req.file.buffer);
+    console.log(`[Admin] Parsed ${loans.length} loan records`);
+
+    // Import loans
+    const result = await loanManager.importLoans(loans);
+    console.log(`[Admin] Import result: ${result.successCount} success, ${result.errorCount} errors`);
+
+    // Get statistics
+    const stats = await loanManager.getLoanStats();
+
+    res.json({
+      success: true,
+      totalRecords: result.totalRecords,
+      successCount: result.successCount,
+      errorCount: result.errorCount,
+      errors: result.errors.slice(0, 100), // Limit error list
+      stats
+    });
+  } catch (error: any) {
+    console.error('[Admin] Loan upload error:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to upload loans',
+      details: error.message 
+    });
+  }
+});
+
+// Get loan statistics
+app.get('/api/admin/loan-stats', async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    // Get statistics
+    const stats = await loanManager.getLoanStats();
+    res.json(stats);
+  } catch (error: any) {
+    console.error('[Admin] Loan stats error:', error.message);
+    res.status(500).json({ error: 'Failed to get loan stats' });
   }
 });
 
