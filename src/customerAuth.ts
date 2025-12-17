@@ -529,47 +529,56 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
 /**
  * Format loan-only response
  */
+/**
+ * Format loan-only response
+ */
 export function formatLoanResponse(accountData: any): string {
-  if (!accountData.loans || accountData.loans.length === 0) {
-    return `**Loan Information**\n\nNo active loans found for your account.\n\nIf you believe this is an error or would like to apply for a loan, please contact us at +233 20 205 5170 or visit any AKCB branch.`;
+  try {
+    if (!accountData || !accountData.loans || accountData.loans.length === 0) {
+      return `**Loan Information**\n\nNo active loans found for your account.\n\nIf you believe this is an error or would like to apply for a loan, please contact us at +233 20 205 5170 or visit any AKCB branch.`;
+    }
+    
+    let response = `**Loan Information**\n\n`;
+    
+    accountData.loans.forEach((loan: any, index: number) => {
+      const status = loan.status === 'A' ? 'Active' : loan.status === 'C' ? 'Closed' : 'Dormant';
+      const termMonths = loan.termMonths || 0;
+      const termYears = Math.floor(termMonths / 12);
+      const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${termMonths} months`;
+      
+      response += `Loan ${index + 1}: ${loan.loanNumber || 'N/A'}\n`;
+      response += `Original Amount: GHS ${(loan.originalAmount || 0).toFixed(2)}\n`;
+      response += `Current Balance: GHS ${(loan.currentBalance || 0).toFixed(2)}\n`;
+      response += `Monthly Payment: GHS ${(loan.monthlyInstallment || 0).toFixed(2)}\n`;
+      
+      if (loan.nextPaymentDate) {
+        const nextDate = new Date(loan.nextPaymentDate);
+        response += `Next Payment: ${nextDate.toLocaleDateString('en-GB')}\n`;
+      }
+      
+      if (loan.maturityDate) {
+        const matDate = new Date(loan.maturityDate);
+        const today = new Date();
+        const daysRemaining = Math.ceil((matDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        response += `Maturity Date: ${matDate.toLocaleDateString('en-GB')}${daysRemaining > 0 ? ` (${daysRemaining} days remaining)` : ''}\n`;
+      }
+      
+      response += `Duration: ${termText}\n`;
+      response += `Status: ${status}\n`;
+      
+      if (loan.amountInArrears && loan.amountInArrears > 0) {
+        response += `⚠️ Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;
+      }
+      
+      response += `\n`;
+    });
+    
+    response += `Need help with your loan? Call +233 20 205 5170 or visit any AKCB branch.`;
+    return response;
+  } catch (error: any) {
+    console.error('[Auth] Error formatting loan response:', error);
+    return `**Loan Information**\n\nWe're experiencing technical difficulties retrieving your loan information. Please contact us at +233 20 205 5170 or visit any AKCB branch for assistance.`;
   }
-  
-  let response = `**Loan Information**\n\n`;
-  
-  accountData.loans.forEach((loan: any, index: number) => {
-    const status = loan.status === 'A' ? 'Active' : loan.status === 'C' ? 'Closed' : 'Dormant';
-    const termYears = Math.floor(loan.termMonths / 12);
-    const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${loan.termMonths} months`;
-    
-    response += `Loan ${index + 1}: ${loan.loanNumber}\n`;
-    response += `Original Amount: GHS ${loan.originalAmount.toFixed(2)}\n`;
-    response += `Current Balance: GHS ${loan.currentBalance.toFixed(2)}\n`;
-    response += `Monthly Payment: GHS ${loan.monthlyInstallment.toFixed(2)}\n`;
-    
-    if (loan.nextPaymentDate) {
-      const nextDate = new Date(loan.nextPaymentDate);
-      response += `Next Payment: ${nextDate.toLocaleDateString('en-GB')}\n`;
-    }
-    
-    if (loan.maturityDate) {
-      const matDate = new Date(loan.maturityDate);
-      const today = new Date();
-      const daysRemaining = Math.ceil((matDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      response += `Maturity Date: ${matDate.toLocaleDateString('en-GB')}${daysRemaining > 0 ? ` (${daysRemaining} days remaining)` : ''}\n`;
-    }
-    
-    response += `Duration: ${termText}\n`;
-    response += `Status: ${status}\n`;
-    
-    if (loan.amountInArrears > 0) {
-      response += `⚠️ Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;
-    }
-    
-    response += `\n`;
-  });
-  
-  response += `Need help with your loan? Call +233 20 205 5170 or visit any AKCB branch.`;
-  return response;
 }
 
 /**
