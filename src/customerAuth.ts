@@ -527,7 +527,90 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
 }
 
 /**
- * Format account balance response
+ * Format loan-only response
+ */
+export function formatLoanResponse(accountData: any): string {
+  if (!accountData.loans || accountData.loans.length === 0) {
+    return `**Loan Information**\n\nNo active loans found for your account.\n\nIf you believe this is an error or would like to apply for a loan, please contact us at +233 20 205 5170 or visit any AKCB branch.`;
+  }
+  
+  let response = `**Loan Information**\n\n`;
+  
+  accountData.loans.forEach((loan: any, index: number) => {
+    const status = loan.status === 'A' ? 'Active' : loan.status === 'C' ? 'Closed' : 'Dormant';
+    const termYears = Math.floor(loan.termMonths / 12);
+    const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${loan.termMonths} months`;
+    
+    response += `Loan ${index + 1}: ${loan.loanNumber}\n`;
+    response += `Original Amount: GHS ${loan.originalAmount.toFixed(2)}\n`;
+    response += `Current Balance: GHS ${loan.currentBalance.toFixed(2)}\n`;
+    response += `Monthly Payment: GHS ${loan.monthlyInstallment.toFixed(2)}\n`;
+    
+    if (loan.nextPaymentDate) {
+      const nextDate = new Date(loan.nextPaymentDate);
+      response += `Next Payment: ${nextDate.toLocaleDateString('en-GB')}\n`;
+    }
+    
+    if (loan.maturityDate) {
+      const matDate = new Date(loan.maturityDate);
+      const today = new Date();
+      const daysRemaining = Math.ceil((matDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      response += `Maturity Date: ${matDate.toLocaleDateString('en-GB')}${daysRemaining > 0 ? ` (${daysRemaining} days remaining)` : ''}\n`;
+    }
+    
+    response += `Duration: ${termText}\n`;
+    response += `Status: ${status}\n`;
+    
+    if (loan.amountInArrears > 0) {
+      response += `⚠️ Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;
+    }
+    
+    response += `\n`;
+  });
+  
+  response += `Need help with your loan? Call +233 20 205 5170 or visit any AKCB branch.`;
+  return response;
+}
+
+/**
+ * Format account balance only (without loans)
+ */
+export function formatAccountBalanceOnly(accountData: any): string {
+  let lastUpdatedText = '';
+  if (accountData.balance.lastUpdated) {
+    const updateDate = new Date(accountData.balance.lastUpdated);
+    const now = new Date();
+    const diffMs = now.getTime() - updateDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    let timeAgo = '';
+    if (diffMins < 60) {
+      timeAgo = diffMins <= 1 ? 'just now' : `${diffMins} minutes ago`;
+    } else if (diffHours < 24) {
+      timeAgo = diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+    } else if (diffDays < 7) {
+      timeAgo = diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+    } else {
+      timeAgo = `on ${updateDate.toLocaleDateString('en-GB')}`;
+    }
+    
+    lastUpdatedText = `Last Updated: ${timeAgo}\n\n`;
+  }
+  
+  return `**Account Balance**\n\n` +
+    `Account: ${accountData.accountNumber}\n` +
+    `Name: ${accountData.accountName}\n` +
+    `Type: ${accountData.accountType}\n\n` +
+    `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
+    `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
+    lastUpdatedText +
+    `Is there anything else you'd like to know about your account?`;
+}
+
+/**
+ * Format account balance response (includes both account and loans)
  */
 export function formatBalanceResponse(accountData: any): string {
   let lastUpdatedText = '';

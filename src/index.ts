@@ -248,34 +248,40 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         const session = customerAuth.getOrCreateSession(effectiveSessionId);
         const accountData = await customerAuth.getCustomerAccountData(session.accountNumber!);
         
-        // Determine what info they want
-        if (/balance/i.test(message)) {
-          const response = customerAuth.formatBalanceResponse(accountData);
-          
-          // Log bot response
-          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
-            console.error('[Analytics] Failed to log bot message:', e)
-          );
-          
-          return res.json({ 
-            reply: response,
-            source: 'authenticated',
-            sessionId: effectiveSessionId
-          });
-        } else if (/(transaction|statement|history)/i.test(message)) {
-          const response = customerAuth.formatTransactionsResponse(accountData);
-          
-          // Log bot response
-          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
-            console.error('[Analytics] Failed to log bot message:', e)
-          );
-          
-          return res.json({ 
-            reply: response,
-            source: 'authenticated',
-            sessionId: effectiveSessionId
-          });
+        // Determine what info they want - distinguish between account, loan, or both
+        let response: string;
+        
+        // Check if specifically asking about loans only
+        if (/\b(loan|owe)\b/i.test(message) && !/\baccount\b/i.test(message)) {
+          response = customerAuth.formatLoanResponse(accountData);
         }
+        // Check if specifically asking about account balance only (not loans)
+        else if (/\baccount\s+(balance|details|info)/i.test(message) && !/\bloan/i.test(message)) {
+          response = customerAuth.formatAccountBalanceOnly(accountData);
+        }
+        // Check for transaction/statement requests
+        else if (/(transaction|statement|history)/i.test(message)) {
+          response = customerAuth.formatTransactionsResponse(accountData);
+        }
+        // Default: show both account and loans for general "balance" queries
+        else if (/balance/i.test(message)) {
+          response = customerAuth.formatBalanceResponse(accountData);
+        }
+        // Fallback: show complete info
+        else {
+          response = customerAuth.formatBalanceResponse(accountData);
+        }
+          
+        // Log bot response
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
+        );
+        
+        return res.json({ 
+          reply: response,
+          source: 'authenticated',
+          sessionId: effectiveSessionId
+        });
       }
       
       // Not authenticated - attempt authentication with OTP flow
