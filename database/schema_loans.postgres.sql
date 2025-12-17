@@ -8,8 +8,8 @@
 CREATE TABLE IF NOT EXISTS loans (
     id SERIAL PRIMARY KEY,
     facility_account_number VARCHAR(50) UNIQUE NOT NULL,
-    customer_id INT,
-    phone_number VARCHAR(20),
+    customer_id VARCHAR(50),
+    phone_number VARCHAR(50),
     customer_name VARCHAR(100),
     national_id VARCHAR(50),
     branch_code VARCHAR(20),
