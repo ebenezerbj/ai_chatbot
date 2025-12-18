@@ -21,6 +21,9 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT || 4000);
 
+// Middleware - MUST be before routes
+app.use(express.json());
+
 // Test database connection and initialize analytics on startup
 (async () => {
   const dbConnected = await testConnection();
@@ -99,9 +102,6 @@ app.get('/api/admin/loan-applications', async (req: Request, res: Response) => {
     return res.status(500).json({ ok: false, error: 'Failed to load loan applications' });
   }
 });
-
-// Middleware
-app.use(express.json());
 
 // Configure multer for file uploads
 const upload = multer({ 
