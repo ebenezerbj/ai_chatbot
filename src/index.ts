@@ -990,7 +990,7 @@ app.post('/api/nearest-branch', async (req: Request, res: Response) => {
       text: responseText,
       branch: nearest,
       distance: minDistance,
-      mapsUrl
+      mapsUrl: mapsUrlGoogle
     });
   } catch (error: any) {
     console.error('[NearestBranch] Error:', error.message);
