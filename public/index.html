@@ -2978,6 +2978,11 @@
       const last = nodes[nodes.length - 1];
       if (last.querySelector('.loan-app-form')) return;
 
+      // Ensure only one loan form exists at a time (IDs inside the form must remain unique)
+      try {
+        chatEl.querySelectorAll('.loan-app-form').forEach(el => el.remove());
+      } catch {}
+
       const wrap = document.createElement('div');
       wrap.className = 'loan-app-form';
       wrap.style.marginTop = '0.5rem';
@@ -3070,7 +3075,7 @@
       loanTenorEl?.addEventListener('input', recalc);
 
       const submitBtn = wrap.querySelector('#loanSubmit');
-      submitBtn?.addEventListener('click', submitLoanApplication);
+      submitBtn?.addEventListener('click', (e) => submitLoanApplication(e));
 
       const cancelBtn = wrap.querySelector('#loanCancel');
       cancelBtn?.addEventListener('click', () => {
@@ -3079,7 +3084,7 @@
 
       // Simple automation: restore/save a draft so users don't retype if they close/reopen.
       const DRAFT_KEY = 'loanApplicationDraft';
-      const getField = (id) => document.getElementById(id);
+      const getField = (id) => wrap.querySelector(`#${id}`);
       const setValue = (id, value) => {
         const el = getField(id);
         if (!el) return;
@@ -3152,17 +3157,18 @@
       try { recalc(); } catch {}
     }
 
-    async function submitLoanApplication() {
-      const statusEl = document.getElementById('loanAppStatus');
+    async function submitLoanApplication(event) {
+      const wrap = event?.target?.closest?.('.loan-app-form') || chatEl.querySelector('.loan-app-form');
+      const statusEl = wrap?.querySelector?.('#loanAppStatus') || document.getElementById('loanAppStatus');
       try {
         const sid = await ensureSession();
 
         const getVal = (id) => {
-          const el = document.getElementById(id);
+          const el = wrap?.querySelector?.(`#${id}`) || document.getElementById(id);
           return el ? (el.value || '') : '';
         };
         const getChecked = (id) => {
-          const el = document.getElementById(id);
+          const el = wrap?.querySelector?.(`#${id}`) || document.getElementById(id);
           return !!(el && el.checked);
         };
 
