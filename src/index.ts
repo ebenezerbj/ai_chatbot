@@ -1476,6 +1476,10 @@ app.get('/api/admin/ml/escalations', async (req: Request, res: Response) => {
 
   try {
     const escalations = await analytics.getEscalationQueue();
+    console.log('[ML] Escalation queue results:', escalations.length, 'records');
+    if (escalations.length > 0) {
+      console.log('[ML] Sample escalation:', escalations[0]);
+    }
     res.json({ escalations, count: escalations.length });
   } catch (error: any) {
     console.error('[ML] Escalations error:', error);

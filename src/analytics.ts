@@ -1516,31 +1516,40 @@ export async function getIntentDistribution(): Promise<{ intent: string; count: 
  * Get conversations needing escalation
  */
 export async function getEscalationQueue(): Promise<any[]> {
-  const query = DB_TYPE === 'postgres'
-    ? `SELECT 
-         sa.session_id, 
-         sa.timestamp as start_time, 
-         sa.sentiment, 
-         sa.score, 
-         sa.emotion_tags,
-         sa.message_id
-       FROM sentiment_analysis sa
-       WHERE sa.needs_escalation = TRUE
-       ORDER BY sa.timestamp DESC
-       LIMIT 50`
-    : `SELECT 
-         sa.session_id, 
-         sa.timestamp as start_time, 
-         sa.sentiment, 
-         sa.score, 
-         sa.emotion_tags,
-         sa.message_id
-       FROM sentiment_analysis sa
-       WHERE sa.needs_escalation = 1
-       ORDER BY sa.timestamp DESC
-       LIMIT 50`;
-  
-  return executeQuery(query, []);
+  try {
+    const query = DB_TYPE === 'postgres'
+      ? `SELECT 
+           sa.session_id, 
+           sa.timestamp as start_time, 
+           sa.sentiment, 
+           sa.score, 
+           sa.emotion_tags::text as emotion_tags,
+           sa.message_id
+         FROM sentiment_analysis sa
+         WHERE sa.needs_escalation = TRUE
+         ORDER BY sa.timestamp DESC
+         LIMIT 50`
+      : `SELECT 
+           sa.session_id, 
+           sa.timestamp as start_time, 
+           sa.sentiment, 
+           sa.score, 
+           sa.emotion_tags,
+           sa.message_id
+         FROM sentiment_analysis sa
+         WHERE sa.needs_escalation = 1
+         ORDER BY sa.timestamp DESC
+         LIMIT 50`;
+    
+    console.log('[Analytics] Running escalation queue query...');
+    const results = await executeQuery(query, []);
+    console.log('[Analytics] Escalation queue found:', results.length, 'records');
+    
+    return results;
+  } catch (error: any) {
+    console.error('[Analytics] getEscalationQueue error:', error.message);
+    throw error;
+  }
 }
 
 /**
