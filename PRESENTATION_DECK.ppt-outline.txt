@@ -1,0 +1,178 @@
+AKCB AI Chatbot
+	24/7 customer service + secure self-service banking
+	Production: https://amankacombank.com
+	Stack: Node.js + Express + TypeScript + PostgreSQL + OpenAI
+
+The Problem
+	Customers need support outside banking hours
+	Call center workload grows with customer growth
+	Routine inquiries overload staff (balance, branches, loans)	
+	Response times become inconsistent
+	Goal: reduce routine workload and improve customer experience
+
+What We Built
+	Customer authentication (OTP + PIN)
+	Balance inquiry (database-backed)
+	Loan request / application capture
+	Nearest branch finder (GPS + map fallbacks)
+	Admin portal (analytics + escalation + conversation viewer)
+	Web + Android + iOS (Cordova)
+
+Real Data Snapshot (Project Dataset)
+	Accounts dataset (Accounts.csv)
+		Total accounts: 48,871
+		Total balance (GHS): 150,485,333.49
+		Average balance (GHS): 3,079.24
+		Min balance (GHS): 0.00
+		Max balance (GHS): 1,912,113.02
+	Training dataset (bank_chatbot_training_data_all_expanded.csv)
+		Rows (excluding header): 299
+
+Real Production Availability (Measured)
+	Production homepage status: HTTP 200
+	HEAD response time (measured): 253 ms
+
+Customer Experience
+	Entry points
+		Web chat (desktop/mobile)
+		Android app (Cordova)
+		iOS app (Cordova)
+	UX principles
+		Guided prompts
+		Security-first flows
+		Clear next steps
+		Map/network fallbacks
+
+Authentication Flow (OTP + PIN)
+	First-time user
+		Enter phone + account number
+		Receive OTP via SMS
+		Verify OTP
+		Create 4-digit PIN
+	Returning user
+		Enter phone + account number
+		Enter PIN
+	Security
+		PIN stored as bcrypt hash
+		OTP expiration
+		Retry limits / lockouts (configurable)
+
+Core Banking Features
+	Balance inquiry
+		Reads latest balance from database
+		Returns formatted response (GHS)
+	Loan application
+		Captures amount, purpose, repayment period
+		Saves application for review
+	Nearest branch finder
+		Uses GPS coordinates
+		Computes nearest from configured branches
+		Outputs address + phone + coordinates + map links
+
+Branch Finder (Configured Branches)
+	Configured branches: 8
+		Amantin (Head Office)
+		Atebubu
+		Kajaji
+		Kwame Danso
+		Yeji
+		Ahwiaa
+		Ejura
+		Kumasi (Kejetia market)
+	Navigation outputs
+		Google Maps / OpenStreetMap / Apple Maps / geo:
+		Copy/Share GPS coordinates
+
+Admin Portal
+	Conversation analytics (volume, sessions)
+	Escalation queue (priority + assignment)
+	Conversation viewer (full transcript)
+	Bulk updates (balances via CSV)
+
+System Architecture (High Level)
+	Clients
+		Customer Web/Mobile UI
+		Admin Portal
+	Core service
+		Node.js/Express API (TypeScript)
+	Dependencies
+		PostgreSQL
+		OpenAI API
+		SMS gateway
+
+Backend Modules (Actual Repo Files)
+	src/index.ts (Express routes)
+	src/database.ts (DB connection + queries)
+	src/customerAuth.ts + src/otpService.ts (OTP/PIN auth)
+	src/balanceUpdater.ts (balance utilities)
+	src/loanManager.ts (loan workflows)
+	src/analytics.ts (admin analytics)
+	src/webCrawler.ts (knowledge ingestion)
+
+Chat Request Flow
+	User sends message (Web/Mobile UI)
+	UI calls POST /api/chat
+	API loads session/account context (as needed)
+	API calls OpenAI with system policy + context
+	API saves conversation + analytics
+	UI renders safely (escaped HTML + link handling)
+
+Data Design (Conceptual)
+	Entities
+		Accounts
+		Customer auth (PIN hash + OTP state)
+		Conversations (session transcript)
+		Escalations (handover queue)
+		Loan applications
+	Relationships
+		Accounts ↔ CustomerAuth
+		CustomerAuth ↔ Conversations
+		Conversations ↔ Escalations
+		Accounts ↔ LoanApplications
+
+Security Design
+	HTTPS/TLS for all traffic
+	PIN stored hashed (bcrypt)
+	OTP expiration + retry controls
+	Parameterized SQL queries
+	Safe HTML rendering (XSS prevention)
+	Admin endpoints protected
+	Secrets in environment variables
+
+Performance + Reliability
+	Measured production homepage response: ~253 ms (HEAD)
+	Lightweight UI
+	Efficient DB lookups
+	Simple distance computation
+	Logging + metrics hooks
+
+Deployment (Render + GitHub)
+	GitHub triggers Render auto-deploy
+	Build: npm install → npm run build
+	Run: npm start
+	DB: Render PostgreSQL
+
+Current Status & Risk
+	Confirmed: production homepage reachable and responsive
+	Risk: validate production API endpoints return 200 end-to-end
+
+Live Demo Plan
+	Greeting + verification (OTP/PIN)
+	Balance inquiry
+	Loan request submission
+	Nearest branch + copy coordinates
+	Admin portal: analytics + conversation viewer
+	Fallbacks: local demo, screenshots/recorded demo
+
+Business Value & ROI (Talk Track)
+	24/7 coverage without 24/7 staffing
+	Reduces repeat routine calls
+	Faster customer response times
+	Admin visibility for QA/compliance
+	Next steps: pilot rollout, monitor metrics, iterate
+
+Q&A
+	Security: OTP + hashed PIN + HTTPS + DB protections
+	Accuracy: DB-backed balances + controlled workflows
+	Cost: hosting + SMS + OpenAI usage-based
+	Continuity: map/network fallbacks

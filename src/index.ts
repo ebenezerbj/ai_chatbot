@@ -654,7 +654,50 @@ app.get('/api/admin/analytics/summary', async (req: Request, res: Response) => {
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
     
     const summary = await analytics.getAnalyticsSummary(startDate, endDate);
-    res.json(summary);
+
+    const dateFilter = startDate && endDate
+      ? DB_TYPE === 'postgres'
+        ? 'WHERE start_time BETWEEN $1 AND $2'
+        : 'WHERE start_time BETWEEN ? AND ?'
+      : '';
+    const params = startDate && endDate ? [startDate, endDate] : [];
+
+    // User metrics (based on unique IPs per session)
+    const totalUsersQuery = `SELECT COUNT(DISTINCT ip_address) as count FROM chat_sessions WHERE ip_address IS NOT NULL ${dateFilter ? 'AND ' + dateFilter.replace('WHERE ', '') : ''}`;
+    const totalUsersResult = await executeQuery<{ count: string | number }>(totalUsersQuery, params);
+    const totalUsers = Number(totalUsersResult[0]?.count || 0);
+
+    const returningUsersQuery = `
+      SELECT COUNT(*) as count
+      FROM (
+        SELECT ip_address
+        FROM chat_sessions
+        WHERE ip_address IS NOT NULL ${dateFilter ? 'AND ' + dateFilter.replace('WHERE ', '') : ''}
+        GROUP BY ip_address
+        HAVING COUNT(*) > 1
+      ) t
+    `;
+    const returningUsersResult = await executeQuery<{ count: string | number }>(returningUsersQuery, params);
+    const returningUsers = Number(returningUsersResult[0]?.count || 0);
+
+    // Satisfaction (from feedback table)
+    const avgSatisfactionQuery = `
+      SELECT AVG(score) as avg_score
+      FROM feedback
+      ${dateFilter ? 'WHERE session_id IN (SELECT session_id FROM chat_sessions ' + dateFilter + ')' : ''}
+    `;
+    const avgSatisfactionResult = await executeQuery<{ avg_score: string | number | null }>(avgSatisfactionQuery, dateFilter ? params : []);
+    const avgSatisfactionRaw = avgSatisfactionResult[0]?.avg_score;
+    const avgSatisfaction = avgSatisfactionRaw === null || avgSatisfactionRaw === undefined ? null : Number(avgSatisfactionRaw);
+
+    res.json({
+      ...summary,
+      // Keep avgSessionDuration in seconds for backward compatibility.
+      avgSessionDurationMinutes: summary.avgSessionDuration ? summary.avgSessionDuration / 60 : 0,
+      totalUsers,
+      returningUsers,
+      avgSatisfaction
+    });
   } catch (error: any) {
     console.error('[Analytics] Error getting summary:', error);
     res.status(500).json({ error: 'Failed to get analytics summary' });
@@ -737,7 +780,7 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     const userProfile = await analytics.getOrCreateUserProfile(ipAddress);
     
     // Start session in database (so feedback can reference it)
-    await analytics.startSession(effectiveSessionId, userProfile.userId);
+    await analytics.startSession(effectiveSessionId, ipAddress, req.headers['user-agent'] as string | undefined);
     
     // Generate personalized greeting
     const greeting = await analytics.getPersonalizedGreeting(userProfile.userId);

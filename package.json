@@ -12,6 +12,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "deck:pptx": "npx --yes @marp-team/marp-cli@latest PRESENTATION_DECK.marp.md --allow-local-files --pptx --output PRESENTATION_DECK.pptx",
+    "deck:pdf": "npx --yes @marp-team/marp-cli@latest PRESENTATION_DECK.marp.md --allow-local-files --pdf --output PRESENTATION_DECK.pdf",
     "deploy": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
     "deploy:unix": "bash deploy.sh"
   },

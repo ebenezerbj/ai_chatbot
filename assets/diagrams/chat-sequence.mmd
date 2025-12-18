@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant User
+  participant UI as Web/Mobile UI
+  participant API as Express API
+  participant DB as PostgreSQL
+  participant AI as OpenAI
+
+  User->>UI: Message
+  UI->>API: POST /api/chat
+  API->>DB: (optional) read auth/session/account data
+  API->>AI: Generate response (policy + context)
+  AI-->>API: Answer + intent
+  API->>DB: Save conversation + analytics
+  API-->>UI: JSON response
+  UI-->>User: Rendered answer + actions

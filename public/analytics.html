@@ -77,14 +77,17 @@
           return;
         }
         const data = await res.json();
+        const avgDurationMin = typeof data.avgSessionDurationMinutes === 'number'
+          ? data.avgSessionDurationMinutes
+          : (data.avgSessionDuration ? (data.avgSessionDuration / 60) : 0);
         metricsDiv.innerHTML = `
           <div class="metric">Total Sessions: <span>${data.totalSessions || 0}</span></div>
           <div class="metric">Total Messages: <span>${data.totalMessages || 0}</span></div>
           <div class="metric">Average Messages per Session: <span>${data.avgMessagesPerSession ? data.avgMessagesPerSession.toFixed(2) : '0'}</span></div>
-          <div class="metric">Average Session Duration: <span>${data.avgSessionDuration ? data.avgSessionDuration.toFixed(2) : '0'} min</span></div>
-          <div class="metric">Total Users: <span>${data.totalUsers || 0}</span></div>
-          <div class="metric">Returning Users: <span>${data.returningUsers || 0}</span></div>
-          <div class="metric">Average Satisfaction: <span>${data.avgSatisfaction ? data.avgSatisfaction.toFixed(2) : 'N/A'}</span></div>
+          <div class="metric">Average Session Duration: <span>${avgDurationMin ? avgDurationMin.toFixed(2) : '0'} min</span></div>
+          <div class="metric">Total Users: <span>${(data.totalUsers ?? 0)}</span></div>
+          <div class="metric">Returning Users: <span>${(data.returningUsers ?? 0)}</span></div>
+          <div class="metric">Average Satisfaction: <span>${(data.avgSatisfaction === null || data.avgSatisfaction === undefined) ? 'N/A' : Number(data.avgSatisfaction).toFixed(2)}</span></div>
         `;
       } catch (e) {
         metricsDiv.innerHTML = '<p style="color:red;">Error loading analytics.</p>';

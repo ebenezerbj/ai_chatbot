@@ -1,0 +1,45 @@
+erDiagram
+  ACCOUNTS {
+    string account_number
+    string phone_number
+    decimal balance
+    string status
+  }
+
+  CUSTOMER_AUTH {
+    string phone_number
+    string account_number
+    string pin_hash
+    string otp_code
+    datetime otp_expires_at
+  }
+
+  LOAN_APPLICATIONS {
+    string account_number
+    string phone_number
+    decimal loan_amount
+    string purpose
+    int repayment_period
+    string status
+  }
+
+  CONVERSATIONS {
+    string session_id
+    string phone_number
+    string message
+    string response
+    datetime created_at
+  }
+
+  ESCALATIONS {
+    string session_id
+    string phone_number
+    string issue_type
+    string priority
+    string status
+  }
+
+  ACCOUNTS ||--o{ CUSTOMER_AUTH : verifies
+  ACCOUNTS ||--o{ LOAN_APPLICATIONS : submits
+  CUSTOMER_AUTH ||--o{ CONVERSATIONS : identifies
+  CONVERSATIONS ||--o{ ESCALATIONS : triggers

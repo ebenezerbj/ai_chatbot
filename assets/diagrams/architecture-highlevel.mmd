@@ -1,0 +1,14 @@
+flowchart LR
+  U[Customer] -->|Web/Android/iOS| UI[Chat UI]
+  A[Admin Staff] -->|Browser| ADM[Admin Portal]
+
+  UI -->|HTTPS| SVC[Node.js/Express API]
+  ADM -->|HTTPS| SVC
+
+  SVC --> DB[(PostgreSQL)]
+  SVC --> AI[OpenAI API]
+  SVC --> SMS[SMS Gateway]
+
+  subgraph Hosting
+    SVC
+  end
