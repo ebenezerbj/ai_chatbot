@@ -718,11 +718,21 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
       userSegment: userProfile.segment,
       recommendations,
       followUps,
-      returning: userProfile.totalSessions > 0
+      returning: userProfile.totalSessions > 0,
+      buttons: [
+        { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
+        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+      ]
     });
   } catch (error: any) {
     console.error('[Greeting] Error:', error);
-    res.json({ greeting: `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?` });
+    res.json({ 
+      greeting: `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`,
+      buttons: [
+        { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
+        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+      ]
+    });
   }
 });
 

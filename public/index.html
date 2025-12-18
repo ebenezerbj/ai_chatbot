@@ -1579,6 +1579,10 @@
 
       // Fetch personalized greeting (Phase 2)
       let welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`;
+      let welcomeButtons = [
+        { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
+        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+      ];
       try {
         const greetingResp = await fetch('/api/greeting', {
           method: 'POST',
@@ -1588,6 +1592,9 @@
           const greetingData = await greetingResp.json();
           if (greetingData.greeting) {
             welcomeMessage = greetingData.greeting;
+          }
+          if (greetingData.buttons) {
+            welcomeButtons = greetingData.buttons;
           }
           // Show recommendations if available
           if (greetingData.recommendations && greetingData.recommendations.length > 0) {
@@ -1608,11 +1615,8 @@
         console.log('[Greeting] Using default greeting');
       }
       
-      addMsg('assistant', `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`, {
-        buttons: [
-          { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
-          { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
-        ]
+      addMsg('assistant', welcomeMessage, {
+        buttons: welcomeButtons
       });
       
       // Init TTS UI state
