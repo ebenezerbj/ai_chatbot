@@ -967,13 +967,21 @@ app.post('/api/nearest-branch', async (req: Request, res: Response) => {
       ? `${Math.round(minDistance * 1000)}m` 
       : `${minDistance.toFixed(1)}km`;
 
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${nearest.lat},${nearest.lng}`;
+    // Navigation links (provide fallbacks for environments where Google is blocked)
+    const mapsUrlGoogle = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${nearest.lat},${nearest.lng}`;
+    const mapsUrlOSM = `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${lat}%2C${lng}%3B${nearest.lat}%2C${nearest.lng}`;
+    const mapsUrlApple = `https://maps.apple.com/?saddr=${lat},${lng}&daddr=${nearest.lat},${nearest.lng}`;
+    const geoUri = `geo:${nearest.lat},${nearest.lng}?q=${nearest.lat},${nearest.lng}(${encodeURIComponent(nearest.name)})`;
 
     const responseText = `📍 **Nearest Branch: ${nearest.name}**\n\n` +
       `📏 Distance: ~${distanceText}\n` +
       `📞 Phone: ${nearest.phone}\n` +
       `📌 Address: ${nearest.address}\n\n` +
-      `[Get Directions on Google Maps](${mapsUrl})`;
+      `[Open in Google Maps](${mapsUrlGoogle})\n` +
+      `[Open in OpenStreetMap](${mapsUrlOSM})\n` +
+      `[Open in Apple Maps](${mapsUrlApple})\n` +
+      `Coordinates: ${nearest.lat}, ${nearest.lng}\n` +
+      `Mobile: [Open in Maps App](${geoUri})`;
 
     console.log('[NearestBranch] Found:', nearest.name, distanceText);
 
