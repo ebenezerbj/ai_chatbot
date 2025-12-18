@@ -651,11 +651,12 @@
       
       escalations.slice(0, 5).forEach(item => {
         const date = new Date(item.start_time).toLocaleString();
+        const score = parseFloat(item.score) || 0;
         html += `
           <div class="escalation-item">
             <strong>Session: ${item.session_id.substring(0, 12)}...</strong><br>
             <small>${date}</small><br>
-            <small>Sentiment: ${item.sentiment} (${(item.score || 0).toFixed(2)})</small>
+            <small>Sentiment: ${item.sentiment} (${score.toFixed(2)})</small>
           </div>
         `;
       });
