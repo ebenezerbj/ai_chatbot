@@ -402,6 +402,83 @@
     .full-width {
       grid-column: 1 / -1;
     }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .modal-close {
+      cursor: pointer;
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--gray-500);
+    }
+
+    .modal-close:hover {
+      color: var(--red);
+    }
+
+    .conversation-message {
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 4px solid var(--teal);
+    }
+
+    .conversation-message.user {
+      background-color: var(--gray-100);
+      border-left-color: var(--blue);
+    }
+
+    .conversation-message.assistant {
+      background-color: var(--teal-light);
+      border-left-color: var(--teal);
+    }
+
+    .message-meta {
+      font-size: 12px;
+      color: var(--gray-600);
+      margin-bottom: 5px;
+    }
+
+    .session-link {
+      color: var(--teal);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .session-link:hover {
+      color: var(--blue);
+    }
   </style>
 </head>
 <body>
@@ -493,6 +570,22 @@
             <div class="spinner"></div>
             <p>Loading predictions...</p>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversation Modal -->
+  <div id="conversationModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Conversation Details</h2>
+        <span class="modal-close" onclick="closeConversationModal()">&times;</span>
+      </div>
+      <div id="conversationContent">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Loading conversation...</p>
         </div>
       </div>
     </div>
@@ -652,9 +745,10 @@
       escalations.slice(0, 5).forEach(item => {
         const date = new Date(item.start_time).toLocaleString();
         const score = parseFloat(item.score) || 0;
+        const shortId = item.session_id.substring(0, 16);
         html += `
           <div class="escalation-item">
-            <strong>Session: ${item.session_id.substring(0, 12)}...</strong><br>
+            <strong class="session-link" onclick="viewConversation('${item.session_id}')">Session: ${shortId}...</strong><br>
             <small>${date}</small><br>
             <small>Sentiment: ${item.sentiment} (${score.toFixed(2)})</small>
           </div>
@@ -663,6 +757,70 @@
       html += '</div>';
 
       document.getElementById('escalationContent').innerHTML = html;
+    }
+
+    async function viewConversation(sessionId) {
+      const modal = document.getElementById('conversationModal');
+      const content = document.getElementById('conversationContent');
+      
+      modal.style.display = 'block';
+      content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading conversation...</p></div>';
+      
+      try {
+        const response = await fetch(`/api/admin/analytics/session/${sessionId}`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load conversation');
+        }
+
+        const data = await response.json();
+        renderConversation(data);
+      } catch (error) {
+        content.innerHTML = '<p class="error">Failed to load conversation details</p>';
+      }
+    }
+
+    function renderConversation(data) {
+      const content = document.getElementById('conversationContent');
+      
+      let html = `
+        <div style="margin-bottom: 20px;">
+          <strong>Session ID:</strong> ${data.session.sessionId}<br>
+          <strong>Started:</strong> ${new Date(data.session.startTime).toLocaleString()}<br>
+          <strong>Total Messages:</strong> ${data.messages.length}
+        </div>
+        <h3>Messages:</h3>
+      `;
+      
+      data.messages.forEach(msg => {
+        const isUser = msg.role === 'user';
+        html += `
+          <div class="conversation-message ${isUser ? 'user' : 'assistant'}">
+            <div class="message-meta">
+              <strong>${isUser ? '👤 User' : '🤖 Assistant'}</strong> - ${new Date(msg.timestamp).toLocaleString()}
+            </div>
+            <div>${msg.message}</div>
+          </div>
+        `;
+      });
+      
+      content.innerHTML = html;
+    }
+
+    function closeConversationModal() {
+      document.getElementById('conversationModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('conversationModal');
+      if (event.target === modal) {
+        closeConversationModal();
+      }
     }
 
     async function loadCategories() {
