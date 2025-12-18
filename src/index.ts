@@ -405,11 +405,11 @@ IMPORTANT INSTRUCTIONS:
    - "Debrah" or "Michael Debrah" → Michael Debrah Bempong (Head of Credit)
    - Search the KB for any name mentioned
 3. **Product queries**: When asked about "products", "services", "savings", "loans", provide specific offerings from the KB
-4. **Agent requests**: If someone asks to "talk to an agent" or "speak to a human", provide contact info (0202055171) and offer to help with their question
+4. **Agent requests**: If someone asks to "talk to an agent" or "speak to a human", provide contact info (0542428935) and offer to help with their question
 5. **Misspellings**: Handle typos intelligently (e.g., "prodicts" → "products")
 6. **Be conversational and helpful**: Don't give generic responses - actively provide relevant information from the KB
 7. **Be specific**: Use actual names, numbers, and details from the KB
-8. If truly not in KB, say you don't have that specific info and suggest calling 0202055171
+8. If truly not in KB, say you don't have that specific info and suggest calling 0542428935
 
 Respond naturally and helpfully using the knowledge base!`;
 
@@ -787,7 +787,7 @@ app.post('/api/nearest-branch', async (req: Request, res: Response) => {
 
     // Branch locations with coordinates
     const branches = [
-      { name: 'Amantin (Head Office)', lat: 7.6667, lng: -1.4167, phone: '+233 20 205 5170', address: 'Amantin High Street' },
+      { name: 'Amantin (Head Office)', lat: 7.6667, lng: -1.4167, phone: '+233 54 242 8935', address: 'Amantin High Street' },
       { name: 'Atebubu', lat: 7.7558, lng: -0.9922, phone: '+233 20 205 5173', address: 'Atebubu' },
       { name: 'Kajaji', lat: 7.7367, lng: -1.4939, phone: '+233 24 052 6372', address: 'Kajaji East, Tatobatoi', plusCode: 'QQJG+P27' },
       { name: 'Kwame Danso', lat: 7.6303, lng: -1.4770, phone: '+233 20 205 5174', address: 'Kwame Danso', plusCode: 'P8JF+2C6' },

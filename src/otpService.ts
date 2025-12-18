@@ -178,7 +178,7 @@ export async function generateAndSendOTP(
       otpSessions.delete(sessionKey);
       return {
         success: false,
-        message: 'Unable to send verification code at this time. Please try again later or contact customer service at +233 20 205 5170.',
+        message: 'Unable to send verification code at this time. Please try again later or contact customer service at +233 54 242 8935.',
         sessionKey: ''
       };
     }
@@ -231,7 +231,7 @@ export function verifyOTP(
     otpSessions.delete(sessionKey);
     return {
       success: false,
-      message: 'Maximum verification attempts exceeded. Please request a new code or contact customer service at +233 20 205 5170.'
+      message: 'Maximum verification attempts exceeded. Please request a new code or contact customer service at +233 54 242 8935.'
     };
   }
 
