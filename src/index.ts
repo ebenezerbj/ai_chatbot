@@ -385,13 +385,25 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         console.error('[Analytics] Failed to log bot message:', e)
       );
       
-      return res.json({ 
+      // Add suggestive buttons if authentication succeeded
+      const responseData: any = { 
         reply: authResult.message,
         source: 'authentication',
         sessionId: effectiveSessionId,
         requiresAuth: !authResult.success,
         awaitingOTP: authResult.awaitingOTP || false
-      });
+      };
+      
+      if (authResult.success) {
+        responseData.buttons = [
+          { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
+          { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
+          { text: 'Loan information', action: 'send', value: 'Tell me about my loan' },
+          { text: 'Other inquiry', action: 'send', value: 'I have another question' }
+        ];
+      }
+      
+      return res.json(responseData);
     }
     
     // Check if user is sending OTP when session is awaiting verification
@@ -413,13 +425,25 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           console.error('[Analytics] Failed to log bot message:', e)
         );
         
-        return res.json({ 
+        // Add suggestive buttons if authentication succeeded
+        const responseData: any = { 
           reply: authResult.message,
           source: 'authentication',
           sessionId: effectiveSessionId,
           requiresAuth: !authResult.success,
           awaitingOTP: authResult.awaitingOTP || false
-        });
+        };
+        
+        if (authResult.success) {
+          responseData.buttons = [
+            { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
+            { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
+            { text: 'Loan information', action: 'send', value: 'Tell me about my loan' },
+            { text: 'Other inquiry', action: 'send', value: 'I have another question' }
+          ];
+        }
+        
+        return res.json(responseData);
       }
     }
     
