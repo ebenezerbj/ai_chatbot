@@ -669,7 +669,7 @@
 
                     <div class="card">
                         <h2>📋 Sample Test Accounts</h2>
-                        <p style="color: #6b7280; margin-bottom: 16px;">Use these test accounts for chatbot authentication testing:</p>
+                        <p style="color: #6b7280; margin-bottom: 16px;">Use these <strong>real</strong> accounts from the database for chatbot authentication testing:</p>
                         <table>
                             <thead>
                                 <tr>
@@ -677,41 +677,58 @@
                                     <th>Account Number</th>
                                     <th>Phone Number</th>
                                     <th>DOB</th>
-                                    <th>Notes</th>
+                                    <th>Balance</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><strong>John Mensah</strong></td>
-                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1001234567</code></td>
-                                    <td>+233 24 123 4567</td>
-                                    <td>1985-03-15</td>
-                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td><strong>SARPONG FRANK</strong></td>
+                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1511120005110471</code></td>
+                                    <td>-</td>
+                                    <td>22/01/1974</td>
+                                    <td>GHS 5,613.79</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Ama Kofi</strong></td>
-                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1001234568</code></td>
-                                    <td>+233 24 234 5678</td>
-                                    <td>1990-07-22</td>
-                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td><strong>OPOKU AGYEMANG EDDIE</strong></td>
+                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1511120005021051</code></td>
+                                    <td>+233 55 061 1055</td>
+                                    <td>08/09/1991</td>
+                                    <td>GHS 3,424.96</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Kwame Asante</strong></td>
-                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1001234569</code></td>
-                                    <td>+233 24 345 6789</td>
-                                    <td>1988-11-10</td>
-                                    <td><span class="badge badge-warning">Has Loan</span></td>
+                                    <td><strong>ACHEAMPONG KWAME</strong></td>
+                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1511120004976251</code></td>
+                                    <td>+233 24 413 1250</td>
+                                    <td>19/07/1975</td>
+                                    <td>GHS 2,170.00</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Grace Osei</strong></td>
-                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1001234570</code></td>
-                                    <td>+233 24 456 7890</td>
-                                    <td>1992-05-18</td>
-                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td><strong>ALI FESTUS CHINEDU</strong></td>
+                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1511120005167111</code></td>
+                                    <td>+233 55 449 3902</td>
+                                    <td>12/04/1988</td>
+                                    <td>GHS 1,050.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GEORGINA ACHIAA</strong></td>
+                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1511120005045671</code></td>
+                                    <td>+233 24 340 4334</td>
+                                    <td>01/01/1958</td>
+                                    <td>GHS 811.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SHAFATU</strong></td>
+                                    <td><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">1511120000006841</code></td>
+                                    <td>+233 24 581 8153</td>
+                                    <td>07/02/1978</td>
+                                    <td>GHS 602.72</td>
                                 </tr>
                             </tbody>
                         </table>
-                        <div style="margin-top: 16px; padding: 12px; background: #eff6ff; border-left: 4px solid var(--primary); border-radius: 4px;">
+                        <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid var(--warning); border-radius: 4px;">
+                            <strong>⚠️ Important:</strong> If an account number is not found, it means it doesn't exist in the <code>Accounts.csv</code> database. Only accounts listed in the CSV file can authenticate.
+                        </div>
+                        <div style="margin-top: 12px; padding: 12px; background: #eff6ff; border-left: 4px solid var(--primary); border-radius: 4px;">
                             <strong>💡 Testing Tip:</strong> Use these account numbers in the chatbot to test the OTP authentication flow. The system will send a verification code to the registered phone number.
                         </div>
                     </div>
