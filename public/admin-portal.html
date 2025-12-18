@@ -559,6 +559,12 @@
                     </svg>
                     <span>Loan Upload</span>
                 </a>
+                <div class="nav-item" data-page="loan-applications">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h7l5 5v9a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Loan Applications</span>
+                </div>
                 <a href="kb-admin.html" class="nav-item" style="text-decoration: none; color: inherit;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
@@ -639,6 +645,7 @@
                         <h2>Quick Actions</h2>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                             <button class="btn btn-primary" onclick="navigateTo('balance-upload')">Upload Balances</button>
+                            <button class="btn btn-primary" onclick="navigateTo('loan-applications')">Loan Applications</button>
                             <button class="btn btn-primary" onclick="navigateTo('knowledge-base')">Manage KB</button>
                             <button class="btn btn-primary" onclick="navigateTo('system-logs')">View Logs</button>
                             <button class="btn btn-primary" onclick="navigateTo('settings')">Settings</button>
@@ -788,6 +795,47 @@
                                 Download Minimal Template
                             </a>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Loan Applications Page -->
+                <div class="page-section" id="page-loan-applications">
+                    <div class="card">
+                        <h2>Loan Applications</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">View loan application submissions received from the chatbot.</p>
+
+                        <div style="display:flex; gap: 12px; align-items:center; flex-wrap: wrap; margin-bottom: 16px;">
+                            <button class="btn btn-primary" onclick="loadLoanApplications()">Refresh</button>
+                            <div style="color:#6b7280;">Total: <strong id="loanAppsTotal">-</strong></div>
+                        </div>
+
+                        <div id="loanAppsError" class="alert alert-error hidden"></div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Created</th>
+                                    <th>Full Name</th>
+                                    <th>Phone</th>
+                                    <th>Account</th>
+                                    <th>Loan Amount</th>
+                                    <th>Tenor (mo)</th>
+                                    <th>Monthly</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loanAppsTable">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: #6b7280;">No data loaded</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>Selected Application</h3>
+                        <p style="color: #6b7280; margin-bottom: 12px;">Click a row above to view full details.</p>
+                        <pre id="loanAppDetails" style="background: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto;">No application selected</pre>
                     </div>
                 </div>
 
@@ -1044,6 +1092,7 @@ https://example.com/products"></textarea>
             const titles = {
                 'dashboard': 'Dashboard',
                 'balance-upload': 'Balance Upload',
+                'loan-applications': 'Loan Applications',
                 'knowledge-base': 'Knowledge Base',
                 'system-logs': 'System Logs',
                 'settings': 'Settings'
@@ -1053,6 +1102,96 @@ https://example.com/products"></textarea>
             // Show page
             document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
             document.getElementById(`page-${page}`).classList.add('active');
+
+            if (page === 'loan-applications') {
+                loadLoanApplications();
+            }
+        }
+
+        // Loan Applications
+        async function loadLoanApplications() {
+            const tbody = document.getElementById('loanAppsTable');
+            const totalEl = document.getElementById('loanAppsTotal');
+            const detailsEl = document.getElementById('loanAppDetails');
+            const errorEl = document.getElementById('loanAppsError');
+
+            if (!tbody) return;
+
+            if (errorEl) {
+                errorEl.classList.add('hidden');
+                errorEl.textContent = '';
+            }
+
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">Loading…</td></tr>`;
+
+            try {
+                const resp = await fetch('/api/admin/loan-applications?limit=100&offset=0', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (resp.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || !data?.ok) {
+                    const msg = data?.error || data?.message || 'Failed to load loan applications';
+                    if (errorEl) {
+                        errorEl.textContent = msg;
+                        errorEl.classList.remove('hidden');
+                    }
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No data</td></tr>`;
+                    return;
+                }
+
+                if (totalEl) totalEl.textContent = String(data.total ?? 0);
+                if (detailsEl) detailsEl.textContent = 'No application selected';
+
+                const items = Array.isArray(data.items) ? data.items : [];
+                if (!items.length) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No applications found</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                items.forEach((item) => {
+                    const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+                    const row = document.createElement('tr');
+                    row.style.cursor = 'pointer';
+                    row.innerHTML = `
+                        <td>${created}</td>
+                        <td>${escapeHtml(item.fullName || '')}</td>
+                        <td>${escapeHtml(item.phoneNumber || '')}</td>
+                        <td>${escapeHtml(item.accountNumber || '')}</td>
+                        <td>GHS ${Number(item.loanAmount || 0).toFixed(2)}</td>
+                        <td>${Number(item.loanTenorMonths || 0)}</td>
+                        <td>GHS ${Number(item.monthlyInstalment || 0).toFixed(2)}</td>
+                        <td>${escapeHtml(item.status || '')}</td>
+                    `;
+                    row.addEventListener('click', () => {
+                        if (detailsEl) {
+                            detailsEl.textContent = JSON.stringify(item, null, 2);
+                        }
+                    });
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                if (errorEl) {
+                    errorEl.textContent = error?.message || 'Error loading loan applications';
+                    errorEl.classList.remove('hidden');
+                }
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No data</td></tr>`;
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         // Load dashboard data

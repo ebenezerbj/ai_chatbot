@@ -12,6 +12,8 @@ import * as loanManager from './loanManager';
 import * as customerImporter from './customerImporter';
 import { WebCrawler, CrawlConfig, CrawlResult, convertToKBEntries, updateKnowledgeBase } from './webCrawler';
 import * as analytics from './analytics';
+import * as loanApplications from './loanApplications';
+import * as kbModule from './knowledge/kb';
 
 // Load environment variables
 dotenv.config();
@@ -29,6 +31,14 @@ const port = Number(process.env.PORT || 4000);
     try {
       await analytics.initializeAnalyticsTables();
       console.log('[Server] Analytics module initialized');
+
+      // Initialize loan applications table
+      try {
+        await loanApplications.initializeLoanApplicationsTable();
+        console.log('[Server] Loan applications module initialized');
+      } catch (error) {
+        console.error('[Server] Loan applications initialization failed:', error);
+      }
     } catch (error) {
       console.error('[Server] Analytics initialization failed:', error);
     }
@@ -36,6 +46,56 @@ const port = Number(process.env.PORT || 4000);
     console.warn('[Server] Database connection failed - authentication and analytics features will not work');
   }
 })();
+
+// Loan application submit endpoint (used by chatbot UI)
+app.post('/api/loan-application', async (req: Request, res: Response) => {
+  try {
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    const sessionId = (body as any)?.sessionId as string | undefined;
+    const ipAddress = req.ip || (req.headers['x-forwarded-for'] as string | undefined);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    const validation = loanApplications.validateLoanApplicationPayload({
+      ...body,
+      sessionId,
+      ipAddress,
+      userAgent
+    });
+
+    if (!validation.ok) {
+      return res.status(400).json({ ok: false, error: validation.error });
+    }
+
+    const result = await loanApplications.createLoanApplication(validation.value);
+    return res.json({
+      ok: true,
+      applicationId: result.applicationId,
+      monthlyInstalment: result.monthlyInstalment
+    });
+  } catch (error: any) {
+    console.error('[LoanApplication] Error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: 'Failed to submit loan application. Please try again.' });
+  }
+});
+
+// Admin: list loan applications
+app.get('/api/admin/loan-applications', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const limit = Number((req.query as any)?.limit ?? 50);
+    const offset = Number((req.query as any)?.offset ?? 0);
+    const result = await loanApplications.listLoanApplications(limit, offset);
+    return res.json({ ok: true, ...result });
+  } catch (error: any) {
+    console.error('[Admin] Loan applications list error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: 'Failed to load loan applications' });
+  }
+});
 
 // Middleware
 app.use(express.json());
@@ -82,24 +142,13 @@ app.get('/api', (req: Request, res: Response) => {
   });
 });
 
-// KB Entry interface
-interface KBEntry {
-  id?: string;
-  product?: string;
-  patterns?: string[];
-  answer?: string;
-  response?: string; // fallback
-  pattern?: string; // fallback
-}
-
-let kb: KBEntry[] = [];
+let kb: kbModule.KBEntry[] = [];
 
 // Load KB from file
 function loadKB() {
   try {
-    const kbPath = path.join(process.cwd(), 'data', 'kb.json');
-    const data = fs.readFileSync(kbPath, 'utf-8');
-    kb = JSON.parse(data);
+    const kbPath = kbModule.defaultKBPath();
+    kb = kbModule.loadKBFromFile(kbPath);
     console.log(`[KB] Loaded ${kb.length} entries`);
   } catch (err) {
     console.error('[KB] Failed to load:', err);
@@ -109,62 +158,7 @@ function loadKB() {
 
 // Retrieve KB matches
 function retrieveKB(query: string | undefined): string[] {
-  const matches: string[] = [];
-  console.log(`[KB] retrieveKB called with: query="${query}", type=${typeof query}`);
-  if (!query) {
-    console.log('[KB] Query is undefined/falsy, returning empty');
-    return [];
-  }
-  const lowerQuery = query.toLowerCase();
-  
-  for (const entry of kb) {
-    // Handle both formats: patterns array and single pattern string
-    let entryPatterns: string[] = [];
-    
-    if (Array.isArray(entry.patterns)) {
-      entryPatterns = entry.patterns;
-    } else if (typeof entry.pattern === 'string') {
-      entryPatterns = [entry.pattern];
-    }
-    
-    // Check if any pattern matches
-    for (const pattern of entryPatterns) {
-      const patternLower = pattern.toLowerCase();
-      
-      // Determine if pattern should be treated as regex
-      let isMatch = false;
-      
-      // Check if pattern contains regex special characters
-      const hasRegexChars = /[.*+?^${}()|[\]\\]/.test(patternLower);
-      
-      if (hasRegexChars) {
-        // Treat as regex pattern
-        try {
-          const regex = new RegExp(patternLower, 'i');
-          isMatch = regex.test(lowerQuery);
-        } catch (e) {
-          console.log(`[KB] Invalid regex pattern: ${patternLower}`);
-          // Invalid regex, fall back to simple includes
-          isMatch = lowerQuery.includes(patternLower.replace(/[.*+?^${}()|[\]\\]/g, ''));
-        }
-      } else {
-        // Simple keyword matching - check if query contains the pattern as a word/phrase
-        isMatch = lowerQuery.includes(patternLower);
-      }
-      
-      if (isMatch) {
-        console.log(`[KB] Matched pattern "${pattern}" for entry "${entry.id}"`);
-        const response = entry.answer || entry.response || '';
-        if (response) {
-          matches.push(response);
-        }
-        break; // Found a match in this entry, move to next entry
-      }
-    }
-  }
-  
-  console.log(`[KB] Found ${matches.length} matches`);
-  return matches;
+  return kbModule.retrieveKB(query, kb);
 }
 
 // Chat endpoint
@@ -282,7 +276,10 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         
         return res.json({ 
           response: visitorWelcome, 
-          sessionId: effectiveSessionId 
+          sessionId: effectiveSessionId,
+          buttons: [
+            { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' }
+          ]
         });
       }
     }
@@ -405,6 +402,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
           { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
           { text: 'Loan information', action: 'send', value: 'Tell me about my loan' },
+          { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' },
           { text: 'Other inquiry', action: 'send', value: 'I have another question' }
         ];
       }
@@ -462,6 +460,22 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       console.log(`[Chat] KB matches found: ${kbMatches.length}`);
     } else {
       console.log('[Chat] Message is falsy, skipping KB');
+    }
+
+    // Loan application form (web chatbot will render inline form)
+    if (loanApplications.shouldOpenLoanApplicationForm(message)) {
+      const reply = `Sure — please fill the loan application form below.`;
+
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+
+      return res.json({
+        reply,
+        source: 'loan-application',
+        sessionId: effectiveSessionId,
+        openLoanApplicationForm: true
+      });
     }
 
     // If KB has matches, return those

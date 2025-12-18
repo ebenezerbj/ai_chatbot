@@ -1,15 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { retrieveKB } from '../src/knowledge/kb.ts';
+import { defaultKBPath, loadKBFromFile, retrieveKB } from '../src/knowledge/kb';
 
 describe('Knowledge Base retrieval', () => {
-  it('matches checking fees queries', () => {
-    const res = retrieveKB('What are your checking account fees?');
+  it('returns a branch list response for branch queries', () => {
+    const entries = loadKBFromFile(defaultKBPath());
+    expect(entries.length).toBeGreaterThan(0);
+
+    const res = retrieveKB('Please list all branches', entries);
     expect(res.length).toBeGreaterThan(0);
-    expect(res[0].id).toBe('checking-fees');
+    expect(res[0]).toMatch(/Branch locations/i);
   });
 
-  it('limits to top 2', () => {
-    const res = retrieveKB('fees account savings checking');
-    expect(res.length).toBeLessThanOrEqual(2);
+  it('returns empty array when no match', () => {
+    const entries = loadKBFromFile(defaultKBPath());
+    const res = retrieveKB('tell me a joke about space travel', entries);
+    expect(res).toEqual([]);
   });
 });

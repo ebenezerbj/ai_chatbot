@@ -2868,6 +2868,13 @@
         if (messageText) {
           addMsg('assistant', messageText, messageOptions);
           try {
+            if (data?.openLoanApplicationForm) {
+              setTimeout(() => {
+                openLoanApplicationForm();
+              }, 100);
+            }
+          } catch {}
+          try {
             if (data.suggestHandover) {
               // Check if user just said "yes" to a handover question
               const lastMessages = chatEl.querySelectorAll('.message');
@@ -2962,6 +2969,168 @@
       
       // Automatically request location when form opens
       requestLocationAutomatically();
+    }
+
+    function openLoanApplicationForm() {
+      // Create a simple inline loan application form under the last assistant message
+      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (last.querySelector('.loan-app-form')) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'loan-app-form';
+      wrap.style.marginTop = '0.5rem';
+      wrap.style.padding = '0.5rem';
+      wrap.style.border = '1px solid var(--gray-200)';
+      wrap.style.borderRadius = '8px';
+
+      wrap.innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+          <input type="text" id="loanFullName" placeholder="Full Name" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="loanPhone" placeholder="Phone Number" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanNationalId" placeholder="National ID Number" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanAccountNumber" placeholder="Account Number" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+
+          <input type="text" id="loanEmployer" placeholder="Employer Name" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanPosition" placeholder="Position" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanEmploymentType" placeholder="Employment Type" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanLengthService" placeholder="Length of Service" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="loanNetSalary" placeholder="Net Monthly Salary" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="loanAmount" placeholder="Loan Amount" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanPurpose" placeholder="Loan Purpose" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" inputmode="numeric" step="1" min="1" id="loanTenor" placeholder="Loan Tenor (months)" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanMonthlyInstalment" placeholder="Monthly Instalment (System)" readonly style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px; background: rgba(0,0,0,0.02);" />
+        </div>
+
+        <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.25rem;">
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="loanSalaryDeduction" /> Salary Deduction Consent
+          </label>
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="loanEmployerConfirmation" /> Employer Confirmation
+          </label>
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="loanBorrowerDeclaration" /> Borrower Declaration
+          </label>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center;">
+          <button id="loanSubmit" class="header-action-btn" style="white-space:nowrap" aria-label="Submit loan application" title="Submit loan application"><i class="fa fa-paper-plane" aria-hidden="true"></i><span class="label">Submit</span></button>
+          <div id="loanAppStatus" style="font-size:0.85rem; color:var(--gray-600);"></div>
+        </div>
+      `;
+
+      last.appendChild(wrap);
+
+      const loanAmountEl = wrap.querySelector('#loanAmount');
+      const loanTenorEl = wrap.querySelector('#loanTenor');
+      const monthlyEl = wrap.querySelector('#loanMonthlyInstalment');
+
+      const recalc = () => {
+        const amt = Number((loanAmountEl?.value || '').toString().replace(/,/g, ''));
+        const tenor = Number((loanTenorEl?.value || '').toString().replace(/,/g, ''));
+        if (!Number.isFinite(amt) || amt <= 0 || !Number.isFinite(tenor) || tenor <= 0) {
+          if (monthlyEl) monthlyEl.value = '';
+          return;
+        }
+        const monthly = Math.round((amt / tenor) * 100) / 100;
+        if (monthlyEl) monthlyEl.value = `GHS ${monthly.toFixed(2)}`;
+      };
+
+      loanAmountEl?.addEventListener('input', recalc);
+      loanTenorEl?.addEventListener('input', recalc);
+
+      const submitBtn = wrap.querySelector('#loanSubmit');
+      submitBtn?.addEventListener('click', submitLoanApplication);
+    }
+
+    async function submitLoanApplication() {
+      const statusEl = document.getElementById('loanAppStatus');
+      try {
+        const sid = await ensureSession();
+
+        const getVal = (id) => {
+          const el = document.getElementById(id);
+          return el ? (el.value || '') : '';
+        };
+        const getChecked = (id) => {
+          const el = document.getElementById(id);
+          return !!(el && el.checked);
+        };
+
+        const phone = getVal('loanPhone');
+        const phoneRaw = (phone || '').replace(/[^\d+]/g, '');
+        if (phoneRaw) {
+          let ok = false;
+          if (phoneRaw.startsWith('+233')) {
+            const digits = phoneRaw.replace(/\D/g, '');
+            ok = digits.length === 12;
+          } else if (phoneRaw.startsWith('233')) {
+            ok = phoneRaw.replace(/\D/g, '').length === 12;
+          } else if (phoneRaw.startsWith('0')) {
+            ok = phoneRaw.replace(/\D/g, '').length === 10;
+          }
+          if (!ok) {
+            if (statusEl) {
+              statusEl.style.color = 'var(--danger, #c62828)';
+              statusEl.textContent = 'Please enter a valid Ghana phone (e.g., 024XXXXXXX or +23324XXXXXXX).';
+            }
+            return;
+          }
+        }
+
+        const payload = {
+          sessionId: sid,
+          fullName: getVal('loanFullName'),
+          phoneNumber: getVal('loanPhone'),
+          nationalIdNumber: getVal('loanNationalId'),
+          accountNumber: getVal('loanAccountNumber'),
+          employerName: getVal('loanEmployer'),
+          position: getVal('loanPosition'),
+          employmentType: getVal('loanEmploymentType'),
+          lengthOfService: getVal('loanLengthService'),
+          netMonthlySalary: getVal('loanNetSalary'),
+          loanAmount: getVal('loanAmount'),
+          loanPurpose: getVal('loanPurpose'),
+          loanTenorMonths: getVal('loanTenor'),
+          salaryDeductionConsent: getChecked('loanSalaryDeduction'),
+          employerConfirmation: getChecked('loanEmployerConfirmation'),
+          borrowerDeclaration: getChecked('loanBorrowerDeclaration')
+        };
+
+        if (statusEl) {
+          statusEl.style.color = 'var(--gray-600)';
+          statusEl.textContent = 'Submitting…';
+        }
+
+        const resp = await fetch('/api/loan-application', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json().catch(() => ({}));
+
+        if (resp.ok && data?.ok) {
+          if (statusEl) {
+            statusEl.style.color = 'var(--success, #2e7d32)';
+            statusEl.textContent = `Submitted. Reference: ${data.applicationId}.`;
+          }
+          addMsg('assistant', `Thank you. Your loan application has been submitted. Reference: ${data.applicationId}.`);
+          return;
+        }
+
+        if (statusEl) {
+          statusEl.style.color = 'var(--danger, #c62828)';
+          statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+        }
+      } catch (e) {
+        if (statusEl) {
+          statusEl.style.color = 'var(--danger, #c62828)';
+          statusEl.textContent = 'Network error submitting application.';
+        }
+      }
     }
 
     let userLocation = null; // Store user's location

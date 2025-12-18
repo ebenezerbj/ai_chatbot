@@ -69,6 +69,36 @@ CREATE TABLE IF NOT EXISTS transactions (
 -- Sample Data (for testing)
 -- =====================================================
 
+-- =====================================================
+-- Table: loan_applications
+-- Stores loan application submissions from chatbot
+-- =====================================================
+CREATE TABLE IF NOT EXISTS loan_applications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(100),
+    ip_address VARCHAR(64),
+    user_agent VARCHAR(255),
+    full_name VARCHAR(150) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    national_id_number VARCHAR(50) NOT NULL,
+    account_number VARCHAR(16) NOT NULL,
+    employer_name VARCHAR(150) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    employment_type VARCHAR(50) NOT NULL,
+    length_of_service VARCHAR(50) NOT NULL,
+    net_monthly_salary DECIMAL(15,2) NOT NULL,
+    loan_amount DECIMAL(15,2) NOT NULL,
+    loan_purpose VARCHAR(300) NOT NULL,
+    loan_tenor_months INT NOT NULL,
+    monthly_instalment DECIMAL(15,2) NOT NULL,
+    salary_deduction_consent TINYINT(1) NOT NULL DEFAULT 0,
+    employer_confirmation TINYINT(1) NOT NULL DEFAULT 0,
+    borrower_declaration TINYINT(1) NOT NULL DEFAULT 0,
+    status VARCHAR(30) NOT NULL DEFAULT 'submitted',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_loan_apps_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Insert sample customers
 INSERT INTO customers (account_number, account_name, phone_number, date_of_birth, account_type, branch_code, status) VALUES
 ('1234567890', 'John Doe', '0242123456', '1990-05-15', 'Savings', 'AMANTIN', 'Active'),

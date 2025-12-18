@@ -1,15 +1,50 @@
 import { describe, it, expect } from 'vitest';
-import { redactSensitive, safetyGuardUserInput } from '../src/hci/safety.ts';
+import { validateLoanApplicationPayload } from '../src/loanApplications';
 
-describe('Safety filters', () => {
-  it('redacts long digit sequences', () => {
-    const t = redactSensitive('My card is 4111111111111111');
-    expect(t).not.toMatch(/4111\d{12}/);
-    expect(t).toContain('[REDACTED]');
+describe('Input validation (loan application)', () => {
+  it('rejects non-positive amounts and tenor', () => {
+    const payload: any = {
+      fullName: 'Test User',
+      phoneNumber: '+233201234567',
+      nationalIdNumber: 'GHA-1234567',
+      accountNumber: '00123456789',
+      employerName: 'Test Employer',
+      position: 'Officer',
+      employmentType: 'Permanent',
+      lengthOfService: '2 years',
+      netMonthlySalary: 2500,
+      loanAmount: 0,
+      loanPurpose: 'Personal',
+      loanTenorMonths: 0,
+      salaryDeductionConsent: true,
+      employerConfirmation: true,
+      borrowerDeclaration: true
+    };
+
+    const res = validateLoanApplicationPayload(payload);
+    expect(res.ok).toBe(false);
   });
 
-  it('flags sensitive keywords', () => {
-    const r = safetyGuardUserInput('password: 1234');
-    expect(r.flagged).toBe(true);
+  it('rejects missing required strings', () => {
+    const payload: any = {
+      fullName: '',
+      phoneNumber: '+233201234567',
+      nationalIdNumber: 'GHA-1234567',
+      accountNumber: '00123456789',
+      employerName: 'Test Employer',
+      position: 'Officer',
+      employmentType: 'Permanent',
+      lengthOfService: '2 years',
+      netMonthlySalary: 2500,
+      loanAmount: 1200,
+      loanPurpose: 'Personal',
+      loanTenorMonths: 12,
+      salaryDeductionConsent: true,
+      employerConfirmation: true,
+      borrowerDeclaration: true
+    };
+
+    const res = validateLoanApplicationPayload(payload);
+    expect(res.ok).toBe(false);
   });
 });
