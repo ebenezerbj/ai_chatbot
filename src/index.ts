@@ -736,6 +736,9 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     // Get user profile
     const userProfile = await analytics.getOrCreateUserProfile(ipAddress);
     
+    // Start session in database (so feedback can reference it)
+    await analytics.startSession(effectiveSessionId, userProfile.userId);
+    
     // Generate personalized greeting
     const greeting = await analytics.getPersonalizedGreeting(userProfile.userId);
     
