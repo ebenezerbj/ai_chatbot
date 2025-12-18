@@ -1681,19 +1681,30 @@
           .replace(/\"/g, '&quot;')
           .replace(/'/g, '&#39;');
 
+        // Process markdown BEFORE escaping HTML
+        let text = String(input);
+        
+        // Extract and protect markdown links first
+        const linkPlaceholders = [];
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+          const placeholder = `___LINK_${linkPlaceholders.length}___`;
+          linkPlaceholders.push({ text: linkText, url: url });
+          return placeholder;
+        });
+
         const applyInline = (str) => {
           // Bold: **text**
           let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-          // Markdown links: [text](url)
-          out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-            try {
-              const safeUrl = escapeHtml(url);
-              const safeText = text; // text is already escaped by escapeHtml(String(input))
-              return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${safeText}</a>`;
-            } catch { return match; }
+          // Restore markdown links with proper HTML
+          out = out.replace(/___LINK_(\d+)___/g, (match, index) => {
+            const link = linkPlaceholders[parseInt(index)];
+            if (link) {
+              return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${link.text}</a>`;
+            }
+            return match;
           });
           // Auto-link plain URLs (http/https only)
-                  out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
+          out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
             try {
               const safe = escapeHtml(url);
               return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
@@ -1702,7 +1713,7 @@
           return out;
         };
 
-        const src = escapeHtml(String(input));
+        const src = escapeHtml(text);
         const lines = src.split('\n');
         let out = '';
         let listType = null; // 'ul' | 'ol' | null
