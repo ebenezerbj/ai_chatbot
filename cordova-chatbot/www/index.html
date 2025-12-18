@@ -861,7 +861,7 @@
         });
 
         const applyInline = (str) => {
-          // First, restore markdown links (don't escape placeholders!)
+          // First, restore markdown links to markers (don't escape placeholders!)
           let out = str.replace(/__MDLINK(\d+)MDLINK__/g, (match, index) => {
             const link = linkPlaceholders[parseInt(index)];
             if (link) {
@@ -875,19 +875,10 @@
           // NOW escape HTML for the rest of the content
           out = escapeHtml(out);
           
-          // Replace markers with actual HTML links
-          out = out.replace(/%%LINK(\d+)%%/g, (match, index) => {
-            const link = linkPlaceholders[parseInt(index)];
-            if (link) {
-              return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${link.text}</a>`;
-            }
-            return match;
-          });
-          
           // Bold: **text**
           out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
           
-          // Auto-link plain URLs (but skip our link markers)
+          // Auto-link plain URLs BEFORE inserting markdown links (skip markers)
           out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
             // Skip if this is part of our link marker
             if (m.includes('%%LINK') || m.includes('MDLINK')) return m;
@@ -895,6 +886,15 @@
               const safeUrl = url.replace(/&amp;/g, '&'); // Unescape URLs that got escaped
               return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
             } catch { return url; }
+          });
+          
+          // FINALLY replace markers with actual HTML links (after auto-linking is done)
+          out = out.replace(/%%LINK(\d+)%%/g, (match, index) => {
+            const link = linkPlaceholders[parseInt(index)];
+            if (link) {
+              return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${link.text}</a>`;
+            }
+            return match;
           });
           
           return out;
