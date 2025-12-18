@@ -215,6 +215,78 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       console.error('[Analytics] Failed to log user message:', e)
     );
 
+    // ===== Customer Identification Check =====
+    const userSession = customerAuth.getOrCreateSession(effectiveSessionId);
+    
+    // If user hasn't been asked if they're a customer yet, ask now
+    if (!userSession.customerIdentified) {
+      userSession.customerIdentified = true;
+      
+      const welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?\n\nPlease reply:\n• **Yes** - I'm a customer (for account & loan inquiries)\n• **No** - I'm not a customer (for general banking information)`;
+      
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', welcomeMessage).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
+      return res.json({ 
+        response: welcomeMessage, 
+        sessionId: effectiveSessionId 
+      });
+    }
+    
+    // If user is responding to the customer identification question
+    if (userSession.customerIdentified && userSession.isCustomer === undefined) {
+      const normalizedMessage = message.toLowerCase().trim();
+      
+      if (/^(yes|yeah|yep|sure|i am|im a customer|customer)/i.test(normalizedMessage)) {
+        userSession.isCustomer = true;
+        
+        const customerWelcome = `Great! Welcome back! 🏦\n\nTo assist you with your account or loan inquiries, I'll need to verify your identity.\n\nPlease provide:\n• Your **account number**, or\n• Your **phone number**\n\nFor security, you'll receive a verification code via SMS.`;
+        
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', customerWelcome).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
+        );
+        
+        return res.json({ 
+          response: customerWelcome, 
+          sessionId: effectiveSessionId 
+        });
+      } 
+      else if (/^(no|nope|not a customer|not yet|general|information)/i.test(normalizedMessage)) {
+        userSession.isCustomer = false;
+        
+        const visitorWelcome = `Welcome to Amantin and Kasei Community Bank! 🏦\n\nI'm happy to help you with:\n• Branch locations and hours\n• Our banking products and services\n• Loan application information\n• Account opening requirements\n• General banking questions\n\nWhat would you like to know?`;
+        
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', visitorWelcome).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
+        );
+        
+        return res.json({ 
+          response: visitorWelcome, 
+          sessionId: effectiveSessionId 
+        });
+      }
+    }
+    
+    // Block authentication for non-customers
+    if (userSession.isCustomer === false) {
+      const authDetails = customerAuth.extractAuthDetails(message);
+      const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
+      
+      if (customerAuth.needsAuthentication(message) || hasAuthCredentials) {
+        const blockMessage = `I'm sorry, but account and loan details are only available to AKCB customers.\n\nIf you'd like to become a customer, I can help you with:\n• Account opening requirements\n• Required documents\n• Branch locations\n\nOr call us at 0542428935 / 0501290952 to speak with a representative.`;
+        
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', blockMessage).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
+        );
+        
+        return res.json({ 
+          response: blockMessage, 
+          sessionId: effectiveSessionId 
+        });
+      }
+    }
+
     // ===== Phase 3: ML Analysis (non-blocking) =====
     // Analyze sentiment and intent in parallel
     Promise.all([
@@ -235,41 +307,46 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     const authDetails = customerAuth.extractAuthDetails(message);
     const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
     
-    if (customerAuth.needsAuthentication(message) || hasAuthCredentials) {
+    // Only allow authentication for identified customers
+    if ((customerAuth.needsAuthentication(message) || hasAuthCredentials) && userSession.isCustomer !== false) {
       console.log('[Chat] Authentication required for this query or credentials detected');
-      
-      // Get or create session
-      const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       // Check if already authenticated
       if (customerAuth.isSessionAuthenticated(effectiveSessionId)) {
         console.log('[Chat] Session authenticated, fetching account data');
         
-        const session = customerAuth.getOrCreateSession(effectiveSessionId);
-        const accountData = await customerAuth.getCustomerAccountData(session.accountNumber!);
+        const authSession = customerAuth.getOrCreateSession(effectiveSessionId);
+        const accountData = await customerAuth.getCustomerAccountData(authSession.accountNumber!);
+        
+        // Add personalized greeting if this is first query after authentication
+        let greeting = '';
+        if (authSession.authenticatedAt && 
+            (Date.now() - authSession.authenticatedAt.getTime()) < 60000) { // Within 1 minute of auth
+          greeting = `Welcome, ${authSession.customerName || 'valued customer'}! ✨\n\n`;
+        }
         
         // Determine what info they want - distinguish between account, loan, or both
         let response: string;
         
         // Check if specifically asking about loans only
         if (/\b(loan|owe)\b/i.test(message) && !/\baccount\b/i.test(message)) {
-          response = customerAuth.formatLoanResponse(accountData);
+          response = greeting + customerAuth.formatLoanResponse(accountData);
         }
         // Check if specifically asking about account balance only (not loans)
         else if (/\baccount\s+(balance|details|info)/i.test(message) && !/\bloan/i.test(message)) {
-          response = customerAuth.formatAccountBalanceOnly(accountData);
+          response = greeting + customerAuth.formatAccountBalanceOnly(accountData);
         }
         // Check for transaction/statement requests
         else if (/(transaction|statement|history)/i.test(message)) {
-          response = customerAuth.formatTransactionsResponse(accountData);
+          response = greeting + customerAuth.formatTransactionsResponse(accountData);
         }
         // Default: show both account and loans for general "balance" queries
         else if (/balance/i.test(message)) {
-          response = customerAuth.formatBalanceResponse(accountData);
+          response = greeting + customerAuth.formatBalanceResponse(accountData);
         }
         // Fallback: show complete info
         else {
-          response = customerAuth.formatBalanceResponse(accountData);
+          response = greeting + customerAuth.formatBalanceResponse(accountData);
         }
           
         // Log bot response

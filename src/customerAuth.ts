@@ -21,6 +21,8 @@ export interface CustomerSession {
   otpSessionKey?: string;
   awaitingOTP?: boolean;
   customerName?: string;
+  isCustomer?: boolean; // Track if user identified as customer or not
+  customerIdentified?: boolean; // Track if we've asked the question
 }
 
 // In-memory session store (for production, use Redis or database)
