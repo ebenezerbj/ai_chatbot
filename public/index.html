@@ -1906,14 +1906,19 @@
             shareBtn.style.cssText = 'padding: 8px 14px; border-radius: 8px; border: 1px solid var(--primary-200); background: var(--primary-50); color: var(--primary-700); cursor: pointer; font-weight: 500;';
             shareBtn.addEventListener('click', async () => {
               const branchName = processed.match(/Nearest Branch:\s*([^\n*]+)/)?.[1]?.trim() || 'Branch';
-              const shareText = `${branchName}\nGPS: ${latStr}, ${lngStr}\n\nPaste these coordinates into Google Maps, Waze, or any map app for directions.`;
+              const phone = processed.match(/Phone:\s*([^\n]+)/)?.[1]?.trim() || '';
+              // Clean shareable format that works in Google Maps search
+              const shareText = `📍 ${branchName}\n${latStr}, ${lngStr}\n${phone ? '📞 ' + phone : ''}`.trim();
               
               let success = false;
               
               // Try native share API first (mobile)
               if (navigator.share) {
                 try {
-                  await navigator.share({ text: shareText });
+                  await navigator.share({ 
+                    title: branchName,
+                    text: shareText 
+                  });
                   console.log('[Share] Shared successfully');
                   return; // Success, exit early
                 } catch (err) {
