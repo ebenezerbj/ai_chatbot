@@ -560,7 +560,20 @@ function getAccountTypeName(code: string): string {
 export function formatLoanResponse(accountData: any): string {
   try {
     if (!accountData || !accountData.loans || accountData.loans.length === 0) {
-      return `**Loan Information**\n\nYou have no loan account associated with the bank.\n\nIf you would like to apply for a loan, please contact us at +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch.`;
+      // Polite message for customers with no loans
+      let response = `**Loan Information**\n\n`;
+      response += `Thank you for your inquiry! 🏦\n\n`;
+      response += `Our records indicate that you currently do not have an active loan account with us.\n\n`;
+      response += `If you would like to:\n`;
+      response += `• Apply for a new loan\n`;
+      response += `• Learn about our loan products\n`;
+      response += `• Discuss loan requirements and rates\n\n`;
+      response += `We kindly invite you to:\n\n`;
+      response += `📍 **Visit your nearest AKCB branch**\n`;
+      response += `📞 **Call us at:** +233 54 242 8935 / +233 50 129 0952\n\n`;
+      response += `Our loan officers will be delighted to assist you with your financial needs.\n\n`;
+      response += `Thank you for choosing AKCB! ✨`;
+      return response;
     }
     
     // Polite message for customers - loan balances are being updated
