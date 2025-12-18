@@ -760,6 +760,7 @@
     }
 
     async function viewConversation(sessionId) {
+      console.log('[Modal] Opening conversation for session:', sessionId);
       const modal = document.getElementById('conversationModal');
       const content = document.getElementById('conversationContent');
       
@@ -778,8 +779,10 @@
         }
 
         const data = await response.json();
+        console.log('[Modal] Conversation data loaded:', data);
         renderConversation(data);
       } catch (error) {
+        console.error('[Modal] Error loading conversation:', error);
         content.innerHTML = '<p class="error">Failed to load conversation details</p>';
       }
     }
@@ -789,8 +792,8 @@
       
       let html = `
         <div style="margin-bottom: 20px;">
-          <strong>Session ID:</strong> ${data.session.sessionId}<br>
-          <strong>Started:</strong> ${new Date(data.session.startTime).toLocaleString()}<br>
+          <strong>Session ID:</strong> ${data.session.session_id}<br>
+          <strong>Started:</strong> ${new Date(data.session.start_time).toLocaleString()}<br>
           <strong>Total Messages:</strong> ${data.messages.length}
         </div>
         <h3>Messages:</h3>
@@ -803,7 +806,7 @@
             <div class="message-meta">
               <strong>${isUser ? '👤 User' : '🤖 Assistant'}</strong> - ${new Date(msg.timestamp).toLocaleString()}
             </div>
-            <div>${msg.message}</div>
+            <div>${msg.content}</div>
           </div>
         `;
       });
