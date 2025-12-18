@@ -13,6 +13,7 @@ import * as customerImporter from './customerImporter';
 import { WebCrawler, CrawlConfig, CrawlResult, convertToKBEntries, updateKnowledgeBase } from './webCrawler';
 import * as analytics from './analytics';
 import * as loanApplications from './loanApplications';
+import * as accountOpenings from './accountOpenings';
 import * as kbModule from './knowledge/kb';
 
 // Load environment variables
@@ -100,6 +101,67 @@ app.get('/api/admin/loan-applications', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Loan applications list error:', error?.message || error);
     return res.status(500).json({ ok: false, error: 'Failed to load loan applications' });
+  }
+});
+
+// Account opening submit endpoint (used by chatbot UI - non-customers only)
+app.post('/api/account-opening', async (req: Request, res: Response) => {
+  try {
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    const sessionId = (body as any)?.sessionId as string | undefined;
+    const ipAddress = req.ip || (req.headers['x-forwarded-for'] as string | undefined);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    console.log('[AccountOpening] Received payload:', JSON.stringify(body, null, 2));
+
+    const validation = accountOpenings.validateAccountOpeningPayload({
+      ...body,
+      sessionId,
+      ipAddress,
+      userAgent
+    });
+
+    if (!validation.ok) {
+      console.log('[AccountOpening] Validation failed:', validation.error);
+      return res.status(400).json({ ok: false, error: validation.error });
+    }
+
+    const result = await accountOpenings.createAccountOpening({
+      ...body,
+      sessionId,
+      ipAddress,
+      userAgent
+    });
+
+    if (!result.ok) {
+      return res.status(400).json({ ok: false, error: result.error });
+    }
+
+    return res.json({
+      ok: true,
+      applicationId: result.applicationId
+    });
+  } catch (error: any) {
+    console.error('[AccountOpening] Error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: 'Failed to submit account opening application. Please try again.' });
+  }
+});
+
+// Admin: list account opening applications
+app.get('/api/admin/account-openings', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const limit = Number((req.query as any)?.limit ?? 100);
+    const applications = await accountOpenings.listAccountOpenings(limit);
+    return res.json({ ok: true, applications });
+  } catch (error: any) {
+    console.error('[Admin] Account openings list error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: 'Failed to load account openings' });
   }
 });
 
@@ -281,6 +343,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           response: visitorWelcome, 
           sessionId: effectiveSessionId,
           buttons: [
+            { text: 'Open an account', action: 'send', value: 'I want to open an account' },
             { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' }
           ]
         });
@@ -478,6 +541,22 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         source: 'loan-application',
         sessionId: effectiveSessionId,
         openLoanApplicationForm: true
+      });
+    }
+
+    // Account opening form (non-customers only - web chatbot will render inline form)
+    if (accountOpenings.shouldOpenAccountOpeningForm(message, userSession.isCustomer)) {
+      const reply = `Great! Let's help you open an account. Please fill in the form below.`;
+
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+
+      return res.json({
+        reply,
+        source: 'account-opening',
+        sessionId: effectiveSessionId,
+        openAccountOpeningForm: true
       });
     }
 

@@ -2875,6 +2875,13 @@
             }
           } catch {}
           try {
+            if (data?.openAccountOpeningForm) {
+              setTimeout(() => {
+                openAccountOpeningForm();
+              }, 100);
+            }
+          } catch {}
+          try {
             if (data.suggestHandover) {
               // Check if user just said "yes" to a handover question
               const lastMessages = chatEl.querySelectorAll('.message');
@@ -3241,6 +3248,304 @@
           addMsg('assistant', `✓ Thank you. Your loan application has been submitted successfully.\n\nReference Number: ${data.applicationId}\nMonthly Instalment: GHS ${data.monthlyInstalment?.toFixed(2) || 'N/A'}\n\nYou will be contacted shortly for verification.`);
           
           // Remove the form after successful submission
+          setTimeout(() => {
+            wrapElement.remove();
+          }, 1500);
+          
+          if (statusEl) {
+            statusEl.style.color = 'var(--success, #2e7d32)';
+            statusEl.innerHTML = '<i class="fa fa-check-circle"></i> Submitted successfully! Closing form...';
+          }
+          return;
+        }
+
+        if (statusEl) {
+          statusEl.style.color = 'var(--danger, #c62828)';
+          statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+        }
+      } catch (e) {
+        if (statusEl) {
+          statusEl.style.color = 'var(--danger, #c62828)';
+          statusEl.textContent = 'Network error submitting application.';
+        }
+      }
+    }
+
+    // ============================================
+    // Account Opening Form (Non-Customers Only)
+    // ============================================
+    function openAccountOpeningForm() {
+      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (last.querySelector('.account-opening-form')) return;
+
+      // Ensure only one account opening form exists at a time
+      try {
+        chatEl.querySelectorAll('.account-opening-form').forEach(el => el.remove());
+      } catch {}
+
+      const wrap = document.createElement('div');
+      wrap.className = 'account-opening-form';
+      wrap.style.marginTop = '0.5rem';
+      wrap.style.padding = '0.5rem';
+      wrap.style.border = '1px solid var(--gray-200)';
+      wrap.style.borderRadius = '8px';
+
+      wrap.innerHTML = `
+        <p style="font-size:0.9rem; margin:0 0 0.5rem 0; padding:0.5rem; background:rgba(255,193,7,0.1); border-left:3px solid #ffc107; border-radius:4px;">
+          <strong>⚠️ All fields are required.</strong> Please fill in every field before submitting.
+        </p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+          <!-- Personal Information -->
+          <input type="text" id="accFullName" placeholder="Full Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="date" id="accDateOfBirth" placeholder="Date of Birth *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="accGender" list="genderOptions" placeholder="Gender *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="genderOptions">
+            <option value="Male"></option>
+            <option value="Female"></option>
+            <option value="Other"></option>
+          </datalist>
+          <input type="text" id="accMaritalStatus" list="maritalOptions" placeholder="Marital Status *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="maritalOptions">
+            <option value="Single"></option>
+            <option value="Married"></option>
+            <option value="Divorced"></option>
+            <option value="Widowed"></option>
+          </datalist>
+
+          <!-- Contact Information -->
+          <input type="tel" id="accPhone" placeholder="Mobile Phone Number *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="email" id="accEmail" placeholder="Email Address *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <textarea id="accResidentialAddress" placeholder="Residential Address *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px; min-height:60px;"></textarea>
+          <input type="text" id="accDigitalAddress" placeholder="Digital Address (Ghana Post GPS) *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="accPostalAddress" placeholder="Postal Address *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+
+          <!-- Identification -->
+          <input type="text" id="accGhanaCard" placeholder="Ghana Card Number *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+
+          <!-- Employment Information -->
+          <input type="text" id="accOccupation" placeholder="Occupation *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="accEmployer" placeholder="Employer Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" id="accMonthlyIncome" placeholder="Monthly Income (GHS) *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="accSourceOfFunds" list="sourceOfFundsOptions" placeholder="Source of Funds *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="sourceOfFundsOptions">
+            <option value="Salary"></option>
+            <option value="Business"></option>
+            <option value="Investment"></option>
+            <option value="Inheritance"></option>
+            <option value="Gift"></option>
+            <option value="Other"></option>
+          </datalist>
+
+          <!-- Account Details -->
+          <input type="text" id="accAccountType" list="accountTypeOptions" placeholder="Account Type *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="accountTypeOptions">
+            <option value="Savings"></option>
+            <option value="Current"></option>
+            <option value="Susu"></option>
+            <option value="Salary"></option>
+          </datalist>
+          <input type="text" id="accModeOfOperation" list="modeOfOperationOptions" placeholder="Mode of Operation *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="modeOfOperationOptions">
+            <option value="Individual"></option>
+            <option value="Joint - Any to Sign"></option>
+            <option value="Joint - All to Sign"></option>
+          </datalist>
+          <input type="number" id="accInitialDeposit" placeholder="Initial Deposit (GHS) *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+
+          <!-- Next of Kin -->
+          <input type="text" id="accNextOfKinName" placeholder="Next of Kin Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="accNextOfKinRelationship" placeholder="Relationship *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="accNextOfKinPhone" placeholder="Next of Kin Phone *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+        </div>
+
+        <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.25rem;">
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="accSpecimenSignature" required /> <span>I acknowledge that specimen signature will be provided at branch *</span>
+          </label>
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="accCustomerDeclaration" required /> <span>I declare all information provided is true and accurate *</span>
+          </label>
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="accTermsAccepted" required /> <span>I accept the Terms and Conditions *</span>
+          </label>
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="accDataConsent" required /> <span>I consent to data processing *</span>
+          </label>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center; flex-wrap:wrap;">
+          <button type="button" id="accSubmit" class="msg-action-btn" style="white-space:nowrap; background: var(--primary-color); border-color: var(--primary-color); color: var(--white);" aria-label="Submit account opening" title="Submit account opening"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button>
+          <button type="button" id="accCancel" class="msg-action-btn" style="white-space:nowrap;" aria-label="Cancel account opening" title="Cancel account opening"><i class="fa fa-xmark" aria-hidden="true"></i><span>Cancel</span></button>
+          <div id="accStatus" style="font-size:0.85rem; color:var(--gray-600);"></div>
+        </div>
+      `;
+
+      last.appendChild(wrap);
+
+      const submitBtn = wrap.querySelector('#accSubmit');
+      submitBtn?.addEventListener('click', () => submitAccountOpening(wrap));
+
+      const cancelBtn = wrap.querySelector('#accCancel');
+      cancelBtn?.addEventListener('click', () => wrap.remove());
+
+      const DRAFT_KEY = 'accountOpeningDraft';
+      const getField = (id) => wrap.querySelector(`#${id}`);
+      const setValue = (id, val) => {
+        const el = getField(id);
+        if (el && val != null) el.value = val;
+      };
+      const setChecked = (id, val) => {
+        const el = getField(id);
+        if (el && val != null) el.checked = !!val;
+      };
+
+      // Restore draft
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (raw) {
+          const d = JSON.parse(raw);
+          setValue('accFullName', d.fullName);
+          setValue('accDateOfBirth', d.dateOfBirth);
+          setValue('accGender', d.gender);
+          setValue('accMaritalStatus', d.maritalStatus);
+          setValue('accPhone', d.phoneNumber);
+          setValue('accEmail', d.email);
+          setValue('accResidentialAddress', d.residentialAddress);
+          setValue('accDigitalAddress', d.digitalAddress);
+          setValue('accPostalAddress', d.postalAddress);
+          setValue('accGhanaCard', d.ghanaCardNumber);
+          setValue('accOccupation', d.occupation);
+          setValue('accEmployer', d.employerName);
+          setValue('accMonthlyIncome', d.monthlyIncome);
+          setValue('accSourceOfFunds', d.sourceOfFunds);
+          setValue('accAccountType', d.accountType);
+          setValue('accModeOfOperation', d.modeOfOperation);
+          setValue('accInitialDeposit', d.initialDeposit);
+          setValue('accNextOfKinName', d.nextOfKinName);
+          setValue('accNextOfKinRelationship', d.nextOfKinRelationship);
+          setValue('accNextOfKinPhone', d.nextOfKinPhone);
+          setChecked('accSpecimenSignature', d.specimenSignatureAcknowledged);
+          setChecked('accCustomerDeclaration', d.customerDeclaration);
+          setChecked('accTermsAccepted', d.termsAccepted);
+          setChecked('accDataConsent', d.dataProcessingConsent);
+        }
+      } catch {}
+
+      // Persist draft
+      const persistDraft = () => {
+        try {
+          const readVal = (id) => {
+            const el = getField(id);
+            return el ? (el.value || '') : '';
+          };
+          const readChecked = (id) => {
+            const el = getField(id);
+            return !!(el && el.checked);
+          };
+          const draft = {
+            fullName: readVal('accFullName'),
+            dateOfBirth: readVal('accDateOfBirth'),
+            gender: readVal('accGender'),
+            maritalStatus: readVal('accMaritalStatus'),
+            phoneNumber: readVal('accPhone'),
+            email: readVal('accEmail'),
+            residentialAddress: readVal('accResidentialAddress'),
+            digitalAddress: readVal('accDigitalAddress'),
+            postalAddress: readVal('accPostalAddress'),
+            ghanaCardNumber: readVal('accGhanaCard'),
+            occupation: readVal('accOccupation'),
+            employerName: readVal('accEmployer'),
+            monthlyIncome: readVal('accMonthlyIncome'),
+            sourceOfFunds: readVal('accSourceOfFunds'),
+            accountType: readVal('accAccountType'),
+            modeOfOperation: readVal('accModeOfOperation'),
+            initialDeposit: readVal('accInitialDeposit'),
+            nextOfKinName: readVal('accNextOfKinName'),
+            nextOfKinRelationship: readVal('accNextOfKinRelationship'),
+            nextOfKinPhone: readVal('accNextOfKinPhone'),
+            specimenSignatureAcknowledged: readChecked('accSpecimenSignature'),
+            customerDeclaration: readChecked('accCustomerDeclaration'),
+            termsAccepted: readChecked('accTermsAccepted'),
+            dataProcessingConsent: readChecked('accDataConsent')
+          };
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        } catch {}
+      };
+
+      wrap.addEventListener('input', persistDraft);
+      wrap.addEventListener('change', persistDraft);
+    }
+
+    async function submitAccountOpening(wrapElement) {
+      if (!wrapElement) {
+        console.error('[AccountOpening] No wrap element provided');
+        return;
+      }
+      const statusEl = wrapElement.querySelector('#accStatus');
+      try {
+        const sid = await ensureSession();
+
+        const getVal = (id) => {
+          const el = wrapElement.querySelector(`#${id}`);
+          const value = el ? (el.value || '') : '';
+          console.log(`[AccountOpening] getVal('${id}') = "${value}"`);
+          return value;
+        };
+        const getChecked = (id) => {
+          const el = wrapElement.querySelector(`#${id}`);
+          const checked = !!(el && el.checked);
+          console.log(`[AccountOpening] getChecked('${id}') = ${checked}`);
+          return checked;
+        };
+
+        const payload = {
+          sessionId: sid,
+          fullName: getVal('accFullName'),
+          dateOfBirth: getVal('accDateOfBirth'),
+          gender: getVal('accGender'),
+          maritalStatus: getVal('accMaritalStatus'),
+          phoneNumber: getVal('accPhone'),
+          email: getVal('accEmail'),
+          residentialAddress: getVal('accResidentialAddress'),
+          digitalAddress: getVal('accDigitalAddress'),
+          postalAddress: getVal('accPostalAddress'),
+          ghanaCardNumber: getVal('accGhanaCard'),
+          occupation: getVal('accOccupation'),
+          employerName: getVal('accEmployer'),
+          monthlyIncome: getVal('accMonthlyIncome'),
+          sourceOfFunds: getVal('accSourceOfFunds'),
+          accountType: getVal('accAccountType'),
+          modeOfOperation: getVal('accModeOfOperation'),
+          initialDeposit: getVal('accInitialDeposit'),
+          nextOfKinName: getVal('accNextOfKinName'),
+          nextOfKinRelationship: getVal('accNextOfKinRelationship'),
+          nextOfKinPhone: getVal('accNextOfKinPhone'),
+          specimenSignatureAcknowledged: getChecked('accSpecimenSignature'),
+          customerDeclaration: getChecked('accCustomerDeclaration'),
+          termsAccepted: getChecked('accTermsAccepted'),
+          dataProcessingConsent: getChecked('accDataConsent')
+        };
+
+        console.log('[AccountOpening] Payload being sent:', JSON.stringify(payload, null, 2));
+
+        if (statusEl) {
+          statusEl.style.color = 'var(--gray-600)';
+          statusEl.textContent = 'Submitting…';
+        }
+
+        const resp = await fetch('/api/account-opening', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json().catch(() => ({}));
+
+        if (resp.ok && data?.ok) {
+          try { localStorage.removeItem('accountOpeningDraft'); } catch {}
+          addMsg('assistant', `✓ Thank you! Your account opening application has been submitted successfully.\\n\\nApplication Reference: ${data.applicationId}\\n\\nOur team will contact you within 1-2 business days to complete the process. Please have your ID ready.`);
+          
           setTimeout(() => {
             wrapElement.remove();
           }, 1500);

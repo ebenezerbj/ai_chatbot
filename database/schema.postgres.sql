@@ -120,6 +120,65 @@ CREATE TABLE IF NOT EXISTS loan_applications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_loan_apps_created ON loan_applications(created_at);
+
+-- =====================================================
+-- Table: account_openings
+-- Stores account opening applications from non-customers
+-- =====================================================
+CREATE TABLE IF NOT EXISTS account_openings (
+    id BIGSERIAL PRIMARY KEY,
+    session_id VARCHAR(100),
+    ip_address VARCHAR(64),
+    user_agent VARCHAR(255),
+    
+    -- Personal Information
+    full_name VARCHAR(150) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    gender VARCHAR(20) NOT NULL,
+    marital_status VARCHAR(30) NOT NULL,
+    
+    -- Contact Information
+    phone_number VARCHAR(20) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    residential_address TEXT NOT NULL,
+    digital_address VARCHAR(50) NOT NULL,
+    postal_address VARCHAR(255) NOT NULL,
+    
+    -- Identification
+    ghana_card_number VARCHAR(50) NOT NULL,
+    
+    -- Employment Information
+    occupation VARCHAR(100) NOT NULL,
+    employer_name VARCHAR(150) NOT NULL,
+    monthly_income DECIMAL(15,2) NOT NULL,
+    source_of_funds VARCHAR(150) NOT NULL,
+    
+    -- Account Details
+    account_type VARCHAR(50) NOT NULL,
+    mode_of_operation VARCHAR(50) NOT NULL,
+    initial_deposit DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    
+    -- Next of Kin
+    next_of_kin_name VARCHAR(150) NOT NULL,
+    next_of_kin_relationship VARCHAR(50) NOT NULL,
+    next_of_kin_phone VARCHAR(20) NOT NULL,
+    
+    -- Consents and Declarations
+    specimen_signature_acknowledged BOOLEAN NOT NULL DEFAULT FALSE,
+    customer_declaration BOOLEAN NOT NULL DEFAULT FALSE,
+    terms_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    data_processing_consent BOOLEAN NOT NULL DEFAULT FALSE,
+    
+    status VARCHAR(30) NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_openings_created ON account_openings(created_at);
+CREATE INDEX IF NOT EXISTS idx_account_openings_status ON account_openings(status);
+CREATE INDEX IF NOT EXISTS idx_account_openings_phone ON account_openings(phone_number);
+CREATE INDEX IF NOT EXISTS idx_account_openings_email ON account_openings(email);
+
 -- Insert sample customers
 INSERT INTO customers (account_number, account_name, phone_number, date_of_birth, account_type, branch_code, status) VALUES
 ('1234567890', 'John Doe', '0242123456', '1990-05-15', 'Savings', 'AMANTIN', 'Active'),
