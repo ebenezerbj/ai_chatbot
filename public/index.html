@@ -1790,14 +1790,42 @@
       }
 
       if (role === 'assistant') {
-        content.innerHTML = renderMarkdownSafe(processed);
+        console.log('[Render] Input text:', processed);
+        const rendered = renderMarkdownSafe(processed);
+        console.log('[Render] Output HTML:', rendered);
+        content.innerHTML = rendered;
+        
+        // DEBUG: Log all links found
+        console.log('[Links] Found', content.querySelectorAll('a').length, 'links');
+        content.querySelectorAll('a').forEach((link, idx) => {
+          console.log(`[Link ${idx}]`, 'href:', link.getAttribute('href'), 'text:', link.textContent);
+        });
         
         // Intercept Google Maps links to open with window.open() (fixes ERR_BLOCKED_BY_RESPONSE)
         content.querySelectorAll('a[href*="google.com/maps"]').forEach(link => {
           link.addEventListener('click', (e) => {
             e.preventDefault();
-            window.open(link.href, '_blank', 'noopener,noreferrer');
+            console.log('[Maps Link] Clicked:', link.href);
+            if (link.href && link.href.startsWith('http')) {
+              window.open(link.href, '_blank', 'noopener,noreferrer');
+            } else {
+              console.error('[Maps Link] Invalid href:', link.href);
+            }
           });
+        });
+        
+        // Global link validator - prevent navigation to malformed hrefs (escaped HTML, etc.)
+        content.querySelectorAll('a').forEach(link => {
+          const href = link.getAttribute('href');
+          if (href && (href.includes('%3C') || href.includes('<') || href.includes('&lt;') || href.startsWith('&lt;'))) {
+            console.error('[Link Validator] ⚠️ MALFORMED HREF:', href);
+            link.style.cssText = 'background: red; color: white; text-decoration: line-through;';
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              alert('This link is malformed and has been blocked:\n' + href);
+              console.error('[Link Validator] Blocked navigation to:', href);
+            });
+          }
         });
         
         // After rendering, append mobile-only call/WhatsApp actions if a phone number is present
