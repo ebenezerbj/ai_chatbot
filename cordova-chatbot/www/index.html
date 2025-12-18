@@ -862,20 +862,22 @@
         const applyInline = (str) => {
           // Bold: **text**
           let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-          // Restore markdown links with proper HTML
+          // Auto-link plain URLs FIRST (before restoring markdown links to avoid double-linking)
+          out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
+            // Skip if this URL is part of a link placeholder
+            if (/__LINK_\d+__/.test(m)) return m;
+            try {
+              const safe = escapeHtml(url);
+              return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+            } catch { return url; }
+          });
+          // Restore markdown links with proper HTML AFTER auto-linking
           out = out.replace(/___LINK_(\d+)___/g, (match, index) => {
             const link = linkPlaceholders[parseInt(index)];
             if (link) {
               return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${link.text}</a>`;
             }
             return match;
-          });
-          // Auto-link plain URLs (http/https only)
-          out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
-            try {
-              const safe = escapeHtml(url);
-              return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
-            } catch { return url; }
           });
           return out;
         };
