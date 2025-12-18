@@ -694,6 +694,13 @@ app.get('/api/admin/analytics/export', async (req: Request, res: Response) => {
 app.post('/api/greeting', async (req: Request, res: Response) => {
   try {
     const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+    const sessionId = (req.body as any)?.sessionId;
+    
+    // Mark that this session has been shown the welcome message
+    if (sessionId) {
+      const userSession = customerAuth.getOrCreateSession(sessionId);
+      userSession.customerIdentified = true; // Mark as identified (question has been asked)
+    }
     
     // Get user profile
     const userProfile = await analytics.getOrCreateUserProfile(ipAddress);
@@ -713,12 +720,16 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     // Get pending follow-ups
     const followUps = await analytics.getPendingFollowUps(userProfile.userId);
     
+    // Generate session ID if not provided
+    const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     res.json({
       greeting: greeting || `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`,
       userSegment: userProfile.segment,
       recommendations,
       followUps,
       returning: userProfile.totalSessions > 0,
+      sessionId: effectiveSessionId,
       buttons: [
         { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
         { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
@@ -726,8 +737,10 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('[Greeting] Error:', error);
+    const effectiveSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     res.json({ 
       greeting: `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`,
+      sessionId: effectiveSessionId,
       buttons: [
         { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
         { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }

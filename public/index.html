@@ -1586,10 +1586,18 @@
       try {
         const greetingResp = await fetch('/api/greeting', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
         });
         if (greetingResp.ok) {
           const greetingData = await greetingResp.json();
+          
+          // Store session ID from server
+          if (greetingData.sessionId) {
+            sessionId = greetingData.sessionId;
+            console.log('[Session] Initialized with ID:', sessionId);
+          }
+          
           if (greetingData.greeting) {
             welcomeMessage = greetingData.greeting;
           }
