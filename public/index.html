@@ -2991,15 +2991,18 @@
       wrap.style.borderRadius = '8px';
 
       wrap.innerHTML = `
+        <p style="font-size:0.9rem; margin:0 0 0.5rem 0; padding:0.5rem; background:rgba(255,193,7,0.1); border-left:3px solid #ffc107; border-radius:4px;">
+          <strong>⚠️ All fields are required.</strong> Please fill in every field before submitting.
+        </p>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
-          <input type="text" id="loanFullName" placeholder="Full Name" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="tel" id="loanPhone" placeholder="Phone Number" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="text" id="loanNationalId" placeholder="National ID Number" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="text" id="loanAccountNumber" placeholder="Account Number" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanFullName" placeholder="Full Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="loanPhone" placeholder="Phone Number *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanNationalId" placeholder="National ID Number *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanAccountNumber" placeholder="Account Number *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
 
-          <input type="text" id="loanEmployer" placeholder="Employer Name" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="text" id="loanPosition" placeholder="Position" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="text" id="loanEmploymentType" list="loanEmploymentTypeOptions" placeholder="Employment Type" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanEmployer" placeholder="Employer Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanPosition" placeholder="Position *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanEmploymentType" list="loanEmploymentTypeOptions" placeholder="Employment Type *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <datalist id="loanEmploymentTypeOptions">
             <option value="Permanent"></option>
             <option value="Contract"></option>
@@ -3008,11 +3011,11 @@
             <option value="Self-employed"></option>
             <option value="Other"></option>
           </datalist>
-          <input type="text" id="loanLengthService" placeholder="Length of Service" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanLengthService" placeholder="Length of Service *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
 
-          <input type="number" inputmode="decimal" step="0.01" min="0" id="loanNetSalary" placeholder="Net Monthly Salary" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="number" inputmode="decimal" step="0.01" min="0" id="loanAmount" placeholder="Loan Amount" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="text" id="loanPurpose" list="loanPurposeOptions" placeholder="Loan Purpose" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="loanNetSalary" placeholder="Net Monthly Salary *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="loanAmount" placeholder="Loan Amount *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanPurpose" list="loanPurposeOptions" placeholder="Loan Purpose *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <datalist id="loanPurposeOptions">
             <option value="Personal"></option>
             <option value="Business"></option>
@@ -3022,7 +3025,7 @@
             <option value="Home improvement"></option>
             <option value="Other"></option>
           </datalist>
-          <input type="number" inputmode="numeric" step="1" min="1" id="loanTenor" list="loanTenorOptions" placeholder="Loan Tenor (months)" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" inputmode="numeric" step="1" min="1" id="loanTenor" list="loanTenorOptions" placeholder="Loan Tenor (months) *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <datalist id="loanTenorOptions">
             <option value="3"></option>
             <option value="6"></option>
@@ -3037,13 +3040,13 @@
 
         <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.25rem;">
           <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
-            <input type="checkbox" id="loanSalaryDeduction" /> Salary Deduction Consent
+            <input type="checkbox" id="loanSalaryDeduction" required /> <span>Salary Deduction Consent *</span>
           </label>
           <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
-            <input type="checkbox" id="loanEmployerConfirmation" /> Employer Confirmation
+            <input type="checkbox" id="loanEmployerConfirmation" required /> <span>Employer Confirmation *</span>
           </label>
           <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
-            <input type="checkbox" id="loanBorrowerDeclaration" /> Borrower Declaration
+            <input type="checkbox" id="loanBorrowerDeclaration" required /> <span>Borrower Declaration *</span>
           </label>
         </div>
 

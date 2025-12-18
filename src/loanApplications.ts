@@ -118,35 +118,41 @@ export function validateLoanApplicationPayload(payload: any): { ok: true; value:
   const loanPurpose = requiredString(payload?.loanPurpose);
   const loanTenorMonths = Math.trunc(requiredNumber(payload?.loanTenorMonths));
 
-  if (!fullName) return { ok: false, error: 'Full Name is required.' };
-  if (!phoneNumber) return { ok: false, error: 'Phone Number is required.' };
-  if (!nationalIdNumber) return { ok: false, error: 'National ID Number is required.' };
-  if (!accountNumber) return { ok: false, error: 'Account Number is required.' };
-  if (!employerName) return { ok: false, error: 'Employer Name is required.' };
-  if (!position) return { ok: false, error: 'Position is required.' };
-  if (!employmentType) return { ok: false, error: 'Employment Type is required.' };
-  if (!lengthOfService) return { ok: false, error: 'Length of Service is required.' };
+  // Collect all validation errors
+  const errors: string[] = [];
+  
+  if (!fullName) errors.push('Full Name');
+  if (!phoneNumber) errors.push('Phone Number');
+  if (!nationalIdNumber) errors.push('National ID Number');
+  if (!accountNumber) errors.push('Account Number');
+  if (!employerName) errors.push('Employer Name');
+  if (!position) errors.push('Position');
+  if (!employmentType) errors.push('Employment Type');
+  if (!lengthOfService) errors.push('Length of Service');
 
   if (!Number.isFinite(netMonthlySalary) || netMonthlySalary <= 0) {
-    return { ok: false, error: 'Net Monthly Salary must be a valid amount.' };
+    errors.push('Net Monthly Salary (must be a valid amount)');
   }
   if (!Number.isFinite(loanAmount) || loanAmount <= 0) {
-    return { ok: false, error: 'Loan Amount must be a valid amount.' };
+    errors.push('Loan Amount (must be a valid amount)');
   }
-  if (!loanPurpose) return { ok: false, error: 'Loan Purpose is required.' };
+  if (!loanPurpose) errors.push('Loan Purpose');
   if (!Number.isFinite(loanTenorMonths) || loanTenorMonths <= 0) {
-    return { ok: false, error: 'Loan Tenor must be a valid number of months.' };
+    errors.push('Loan Tenor (must be a valid number of months)');
   }
 
   const salaryDeductionConsent = !!payload?.salaryDeductionConsent;
   const employerConfirmation = !!payload?.employerConfirmation;
   const borrowerDeclaration = !!payload?.borrowerDeclaration;
 
-  if (!salaryDeductionConsent) {
-    return { ok: false, error: 'Salary Deduction Consent is required.' };
-  }
-  if (!employerConfirmation) {
-    return { ok: false, error: 'Employer Confirmation is required.' };
+  if (!salaryDeductionConsent) errors.push('Salary Deduction Consent');
+  if (!employerConfirmation) errors.push('Employer Confirmation');
+  
+  if (errors.length > 0) {
+    const errorMsg = errors.length === 1 
+      ? `${errors[0]} is required.`
+      : `Please fill in the following fields: ${errors.join(', ')}.`;
+    return { ok: false, error: errorMsg };
   }
   if (!borrowerDeclaration) {
     return { ok: false, error: 'Borrower Declaration is required.' };
