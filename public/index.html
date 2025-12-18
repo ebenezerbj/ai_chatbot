@@ -3238,11 +3238,17 @@
 
         if (resp.ok && data?.ok) {
           try { localStorage.removeItem('loanApplicationDraft'); } catch {}
+          addMsg('assistant', `✓ Thank you. Your loan application has been submitted successfully.\n\nReference Number: ${data.applicationId}\nMonthly Instalment: GHS ${data.monthlyInstalment?.toFixed(2) || 'N/A'}\n\nYou will be contacted shortly for verification.`);
+          
+          // Remove the form after successful submission
+          setTimeout(() => {
+            wrapElement.remove();
+          }, 1500);
+          
           if (statusEl) {
             statusEl.style.color = 'var(--success, #2e7d32)';
-            statusEl.textContent = `Submitted. Reference: ${data.applicationId}.`;
+            statusEl.innerHTML = '<i class="fa fa-check-circle"></i> Submitted successfully! Closing form...';
           }
-          addMsg('assistant', `Thank you. Your loan application has been submitted. Reference: ${data.applicationId}.`);
           return;
         }
 
