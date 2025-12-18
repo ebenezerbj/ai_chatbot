@@ -1034,31 +1034,30 @@
           .replace(/\"/g, '&quot;')
           .replace(/'/g, '&#39;');
 
-        // Process markdown BEFORE escaping HTML
+        // Process markdown links FIRST, before any escaping
         let text = String(input);
-        
-        // Extract and protect markdown links first
         const linkPlaceholders = [];
+        
+        // Extract markdown links and create unique placeholders
         text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
-          const placeholder = `___LINK_${linkPlaceholders.length}___`;
-          linkPlaceholders.push({ text: linkText, url: url });
+          const placeholder = `__MDLINK${linkPlaceholders.length}MDLINK__`;
+          linkPlaceholders.push({ text: escapeHtml(linkText), url: url });
           return placeholder;
         });
 
         const applyInline = (str) => {
           // Bold: **text**
           let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-          // Auto-link plain URLs FIRST (before restoring markdown links to avoid double-linking)
-          out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
-            // Skip if this URL is part of a link placeholder
-            if (/__LINK_\d+__/.test(m)) return m;
+          // Auto-link plain URLs (but skip our placeholders)
+          out = out.replace(/\b(https?:\/\/[^\s<)_]+)(?=[)\s]|$)/g, (m, url) => {
+            // Skip if this is part of our markdown link placeholder
+            if (m.includes('MDLINK')) return m;
             try {
-              const safe = escapeHtml(url);
-              return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+              return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
             } catch { return url; }
           });
-          // Restore markdown links with proper HTML AFTER auto-linking
-          out = out.replace(/___LINK_(\d+)___/g, (match, index) => {
+          // Restore markdown links - these are inserted as-is since text is already escaped
+          out = out.replace(/__MDLINK(\d+)MDLINK__/g, (match, index) => {
             const link = linkPlaceholders[parseInt(index)];
             if (link) {
               return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${link.text}</a>`;
