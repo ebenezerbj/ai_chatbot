@@ -1801,15 +1801,27 @@
           console.log(`[Link ${idx}]`, 'href:', link.getAttribute('href'), 'text:', link.textContent);
         });
         
-        // Intercept Google Maps links to open with window.open() (fixes ERR_BLOCKED_BY_RESPONSE)
-        content.querySelectorAll('a[href*="google.com/maps"]').forEach(link => {
+        // Intercept external map links to open safely in new tab; handle geo: on mobile
+        content.querySelectorAll(
+          'a[href*="google.com/maps"], a[href*="openstreetmap.org"], a[href*="maps.apple.com"], a[href^="geo:"]'
+        ).forEach(link => {
           link.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('[Maps Link] Clicked:', link.href);
-            if (link.href && link.href.startsWith('http')) {
-              window.open(link.href, '_blank', 'noopener,noreferrer');
+            const href = link.getAttribute('href') || '';
+            console.log('[Map Link] Clicked:', href);
+            if (href.startsWith('geo:')) {
+              // geo: should be handled by OS (mostly mobile)
+              try {
+                window.location.href = href;
+              } catch (err) {
+                console.error('[Map Link] geo: navigation failed', err);
+              }
+              return;
+            }
+            if (href.startsWith('http')) {
+              window.open(href, '_blank', 'noopener,noreferrer');
             } else {
-              console.error('[Maps Link] Invalid href:', link.href);
+              console.error('[Map Link] Invalid href:', href);
             }
           });
         });
@@ -1827,6 +1839,31 @@
             });
           }
         });
+
+        // Convenience: Add Copy Coordinates button if present in message
+        try {
+          const coordsMatch = processed.match(/Coordinates:\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/i);
+          if (coordsMatch) {
+            const latStr = coordsMatch[1];
+            const lngStr = coordsMatch[2];
+            const actions = document.createElement('div');
+            actions.style.cssText = 'margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;';
+            const copyBtn = document.createElement('button');
+            copyBtn.textContent = 'Copy Coordinates';
+            copyBtn.style.cssText = 'padding: 6px 10px; border-radius: 8px; border: 1px solid var(--primary-200); background: var(--primary-50); color: var(--primary-700); cursor: pointer;';
+            copyBtn.addEventListener('click', async () => {
+              const text = `${latStr}, ${lngStr}`;
+              try {
+                await navigator.clipboard.writeText(text);
+                console.log('[Coords] Copied to clipboard:', text);
+              } catch (err) {
+                console.error('[Coords] Clipboard write failed:', err);
+              }
+            });
+            actions.appendChild(copyBtn);
+            content.appendChild(actions);
+          }
+        } catch (err) { /* non-fatal */ }
         
         // After rendering, append mobile-only call/WhatsApp actions if a phone number is present
         try {
