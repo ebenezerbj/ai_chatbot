@@ -1578,7 +1578,7 @@
       if (titleEl) titleEl.textContent = assistantName;
 
       // Fetch personalized greeting (Phase 2)
-      let welcomeMessage = `Hi, I'm Ama! 👋\n\nHow can I assist you today?`;
+      let welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?\n\nListen\n\nYes - I'm a customer\n\nNo - General inquiry`;
       try {
         const greetingResp = await fetch('/api/greeting', {
           method: 'POST',
