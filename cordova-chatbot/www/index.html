@@ -851,6 +851,14 @@
         const applyInline = (str) => {
           // Bold: **text**
           let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          // Markdown links: [text](url)
+          out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+            try {
+              const safeUrl = escapeHtml(url);
+              const safeText = text; // text is already escaped by escapeHtml(String(input))
+              return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${safeText}</a>`;
+            } catch { return match; }
+          });
           // Auto-link plain URLs (http/https only)
                   out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
             try {
