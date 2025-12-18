@@ -2958,7 +2958,7 @@
         </div>
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
           <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <button id="handoverSend" class="header-action-btn" style="white-space:nowrap" aria-label="Request callback from human agent" title="Request callback from human agent"><i class="fa fa-paper-plane" aria-hidden="true"></i><span class="label">Request callback</span></button>
+          <button type="button" id="handoverSend" class="msg-action-btn" style="white-space:nowrap; background: var(--primary-color); border-color: var(--primary-color); color: var(--white);" aria-label="Request callback from human agent" title="Request callback from human agent"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Request callback</span></button>
         </div>
         <div id="locationStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color);"></div>
         <div id="handoverStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--gray-600);"></div>
@@ -2994,13 +2994,39 @@
 
           <input type="text" id="loanEmployer" placeholder="Employer Name" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <input type="text" id="loanPosition" placeholder="Position" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="text" id="loanEmploymentType" placeholder="Employment Type" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanEmploymentType" list="loanEmploymentTypeOptions" placeholder="Employment Type" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="loanEmploymentTypeOptions">
+            <option value="Permanent"></option>
+            <option value="Contract"></option>
+            <option value="Temporary"></option>
+            <option value="Casual"></option>
+            <option value="Self-employed"></option>
+            <option value="Other"></option>
+          </datalist>
           <input type="text" id="loanLengthService" placeholder="Length of Service" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
 
           <input type="number" inputmode="decimal" step="0.01" min="0" id="loanNetSalary" placeholder="Net Monthly Salary" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <input type="number" inputmode="decimal" step="0.01" min="0" id="loanAmount" placeholder="Loan Amount" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="text" id="loanPurpose" placeholder="Loan Purpose" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="number" inputmode="numeric" step="1" min="1" id="loanTenor" placeholder="Loan Tenor (months)" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="loanPurpose" list="loanPurposeOptions" placeholder="Loan Purpose" style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="loanPurposeOptions">
+            <option value="Personal"></option>
+            <option value="Business"></option>
+            <option value="Education"></option>
+            <option value="Medical"></option>
+            <option value="Agriculture"></option>
+            <option value="Home improvement"></option>
+            <option value="Other"></option>
+          </datalist>
+          <input type="number" inputmode="numeric" step="1" min="1" id="loanTenor" list="loanTenorOptions" placeholder="Loan Tenor (months)" style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="loanTenorOptions">
+            <option value="3"></option>
+            <option value="6"></option>
+            <option value="9"></option>
+            <option value="12"></option>
+            <option value="18"></option>
+            <option value="24"></option>
+            <option value="36"></option>
+          </datalist>
           <input type="text" id="loanMonthlyInstalment" placeholder="Monthly Instalment (System)" readonly style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px; background: rgba(0,0,0,0.02);" />
         </div>
 
@@ -3016,8 +3042,9 @@
           </label>
         </div>
 
-        <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center;">
-          <button id="loanSubmit" class="header-action-btn" style="white-space:nowrap" aria-label="Submit loan application" title="Submit loan application"><i class="fa fa-paper-plane" aria-hidden="true"></i><span class="label">Submit</span></button>
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center; flex-wrap:wrap;">
+          <button type="button" id="loanSubmit" class="msg-action-btn" style="white-space:nowrap; background: var(--primary-color); border-color: var(--primary-color); color: var(--white);" aria-label="Submit loan application" title="Submit loan application"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button>
+          <button type="button" id="loanCancel" class="msg-action-btn" style="white-space:nowrap;" aria-label="Cancel loan application" title="Cancel loan application"><i class="fa fa-xmark" aria-hidden="true"></i><span>Cancel</span></button>
           <div id="loanAppStatus" style="font-size:0.85rem; color:var(--gray-600);"></div>
         </div>
       `;
@@ -3044,6 +3071,85 @@
 
       const submitBtn = wrap.querySelector('#loanSubmit');
       submitBtn?.addEventListener('click', submitLoanApplication);
+
+      const cancelBtn = wrap.querySelector('#loanCancel');
+      cancelBtn?.addEventListener('click', () => {
+        wrap.remove();
+      });
+
+      // Simple automation: restore/save a draft so users don't retype if they close/reopen.
+      const DRAFT_KEY = 'loanApplicationDraft';
+      const getField = (id) => document.getElementById(id);
+      const setValue = (id, value) => {
+        const el = getField(id);
+        if (!el) return;
+        if (typeof value === 'undefined' || value === null) return;
+        if ('value' in el) el.value = String(value);
+      };
+      const setChecked = (id, value) => {
+        const el = getField(id);
+        if (!el) return;
+        el.checked = !!value;
+      };
+
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (raw) {
+          const d = JSON.parse(raw);
+          setValue('loanFullName', d.fullName);
+          setValue('loanPhone', d.phoneNumber);
+          setValue('loanNationalId', d.nationalIdNumber);
+          setValue('loanAccountNumber', d.accountNumber);
+          setValue('loanEmployer', d.employerName);
+          setValue('loanPosition', d.position);
+          setValue('loanEmploymentType', d.employmentType);
+          setValue('loanLengthService', d.lengthOfService);
+          setValue('loanNetSalary', d.netMonthlySalary);
+          setValue('loanAmount', d.loanAmount);
+          setValue('loanPurpose', d.loanPurpose);
+          setValue('loanTenor', d.loanTenorMonths);
+          setChecked('loanSalaryDeduction', d.salaryDeductionConsent);
+          setChecked('loanEmployerConfirmation', d.employerConfirmation);
+          setChecked('loanBorrowerDeclaration', d.borrowerDeclaration);
+        }
+      } catch {}
+
+      const persistDraft = () => {
+        try {
+          const readVal = (id) => {
+            const el = getField(id);
+            return el ? (el.value || '') : '';
+          };
+          const readChecked = (id) => {
+            const el = getField(id);
+            return !!(el && el.checked);
+          };
+          const draft = {
+            fullName: readVal('loanFullName'),
+            phoneNumber: readVal('loanPhone'),
+            nationalIdNumber: readVal('loanNationalId'),
+            accountNumber: readVal('loanAccountNumber'),
+            employerName: readVal('loanEmployer'),
+            position: readVal('loanPosition'),
+            employmentType: readVal('loanEmploymentType'),
+            lengthOfService: readVal('loanLengthService'),
+            netMonthlySalary: readVal('loanNetSalary'),
+            loanAmount: readVal('loanAmount'),
+            loanPurpose: readVal('loanPurpose'),
+            loanTenorMonths: readVal('loanTenor'),
+            salaryDeductionConsent: readChecked('loanSalaryDeduction'),
+            employerConfirmation: readChecked('loanEmployerConfirmation'),
+            borrowerDeclaration: readChecked('loanBorrowerDeclaration')
+          };
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        } catch {}
+      };
+
+      wrap.addEventListener('input', persistDraft);
+      wrap.addEventListener('change', persistDraft);
+
+      // Trigger first recalculation after draft restore.
+      try { recalc(); } catch {}
     }
 
     async function submitLoanApplication() {
@@ -3113,6 +3219,7 @@
         const data = await resp.json().catch(() => ({}));
 
         if (resp.ok && data?.ok) {
+          try { localStorage.removeItem('loanApplicationDraft'); } catch {}
           if (statusEl) {
             statusEl.style.color = 'var(--success, #2e7d32)';
             statusEl.textContent = `Submitted. Reference: ${data.applicationId}.`;
