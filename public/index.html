@@ -1775,6 +1775,15 @@
 
       if (role === 'assistant') {
         content.innerHTML = renderMarkdownSafe(processed);
+        
+        // Intercept Google Maps links to open with window.open() (fixes ERR_BLOCKED_BY_RESPONSE)
+        content.querySelectorAll('a[href*="google.com/maps"]').forEach(link => {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.open(link.href, '_blank', 'noopener,noreferrer');
+          });
+        });
+        
         // After rendering, append mobile-only call/WhatsApp actions if a phone number is present
         try {
           addMobileContactActionsIfAny(content, processed);
