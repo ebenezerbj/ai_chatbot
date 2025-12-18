@@ -1907,24 +1907,61 @@
             shareBtn.addEventListener('click', async () => {
               const branchName = processed.match(/Nearest Branch:\s*([^\n*]+)/)?.[1]?.trim() || 'Branch';
               const shareText = `${branchName}\nGPS: ${latStr}, ${lngStr}\n\nPaste these coordinates into Google Maps, Waze, or any map app for directions.`;
+              
+              let success = false;
+              
+              // Try native share API first (mobile)
               if (navigator.share) {
                 try {
                   await navigator.share({ text: shareText });
                   console.log('[Share] Shared successfully');
+                  return; // Success, exit early
                 } catch (err) {
-                  console.log('[Share] Share cancelled or failed', err);
+                  console.log('[Share] Share cancelled or failed:', err);
+                  // Fall through to clipboard fallback
                 }
-              } else {
-                // Fallback: copy to clipboard
+              }
+              
+              // Fallback: try Clipboard API
+              if (navigator.clipboard && navigator.clipboard.writeText) {
                 try {
                   await navigator.clipboard.writeText(shareText);
-                  shareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                  setTimeout(() => {
-                    shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Location';
-                  }, 2000);
+                  success = true;
+                  console.log('[Share] Copied via Clipboard API');
                 } catch (err) {
-                  console.error('[Share] Clipboard write failed:', err);
+                  console.warn('[Share] Clipboard API failed:', err);
                 }
+              }
+              
+              // Final fallback: execCommand
+              if (!success) {
+                try {
+                  const textArea = document.createElement('textarea');
+                  textArea.value = shareText;
+                  textArea.style.position = 'fixed';
+                  textArea.style.left = '-999999px';
+                  textArea.style.top = '-999999px';
+                  document.body.appendChild(textArea);
+                  textArea.focus();
+                  textArea.select();
+                  success = document.execCommand('copy');
+                  document.body.removeChild(textArea);
+                  console.log('[Share] Copied via execCommand');
+                } catch (err) {
+                  console.error('[Share] execCommand failed:', err);
+                }
+              }
+              
+              if (success) {
+                shareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                  shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Location';
+                }, 2000);
+              } else {
+                shareBtn.innerHTML = '<i class="fas fa-times"></i> Failed';
+                setTimeout(() => {
+                  shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Location';
+                }, 3000);
               }
             });
             actions.appendChild(shareBtn);
