@@ -217,6 +217,11 @@ app.post('/api/chat', async (req: Request, res: Response) => {
 
     // ===== Customer Identification Check =====
     const userSession = customerAuth.getOrCreateSession(effectiveSessionId);
+    console.log('[Chat] Session state:', {
+      sessionId: effectiveSessionId,
+      customerIdentified: userSession.customerIdentified,
+      isCustomer: userSession.isCustomer
+    });
     
     // If user hasn't been asked if they're a customer yet, ask now
     if (!userSession.customerIdentified) {
@@ -696,11 +701,13 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
     const sessionId = (req.body as any)?.sessionId;
     
+    // Generate session ID if not provided
+    const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     // Mark that this session has been shown the welcome message
-    if (sessionId) {
-      const userSession = customerAuth.getOrCreateSession(sessionId);
-      userSession.customerIdentified = true; // Mark as identified (question has been asked)
-    }
+    const userSession = customerAuth.getOrCreateSession(effectiveSessionId);
+    userSession.customerIdentified = true; // Mark as identified (question has been asked)
+    console.log('[Greeting] Session initialized:', effectiveSessionId, 'customerIdentified:', userSession.customerIdentified);
     
     // Get user profile
     const userProfile = await analytics.getOrCreateUserProfile(ipAddress);
@@ -719,9 +726,6 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     
     // Get pending follow-ups
     const followUps = await analytics.getPendingFollowUps(userProfile.userId);
-    
-    // Generate session ID if not provided
-    const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     res.json({
       greeting: greeting || `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`,
