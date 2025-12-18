@@ -1517,15 +1517,25 @@ export async function getIntentDistribution(): Promise<{ intent: string; count: 
  */
 export async function getEscalationQueue(): Promise<any[]> {
   const query = DB_TYPE === 'postgres'
-    ? `SELECT DISTINCT cs.session_id, cs.start_time, sa.sentiment, sa.score, sa.emotion_tags
+    ? `SELECT 
+         sa.session_id, 
+         sa.timestamp as start_time, 
+         sa.sentiment, 
+         sa.score, 
+         sa.emotion_tags,
+         sa.message_id
        FROM sentiment_analysis sa
-       JOIN chat_sessions cs ON sa.session_id = cs.session_id
        WHERE sa.needs_escalation = TRUE
        ORDER BY sa.timestamp DESC
        LIMIT 50`
-    : `SELECT DISTINCT cs.session_id, cs.start_time, sa.sentiment, sa.score, sa.emotion_tags
+    : `SELECT 
+         sa.session_id, 
+         sa.timestamp as start_time, 
+         sa.sentiment, 
+         sa.score, 
+         sa.emotion_tags,
+         sa.message_id
        FROM sentiment_analysis sa
-       JOIN chat_sessions cs ON sa.session_id = cs.session_id
        WHERE sa.needs_escalation = 1
        ORDER BY sa.timestamp DESC
        LIMIT 50`;
