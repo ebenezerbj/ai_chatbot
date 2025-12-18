@@ -1689,6 +1689,7 @@
         text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
           const placeholder = `___LINK_${linkPlaceholders.length}___`;
           linkPlaceholders.push({ text: linkText, url: url });
+          console.log('[Markdown] Extracted link:', linkText, '→', url);
           return placeholder;
         });
 
@@ -1699,6 +1700,7 @@
           out = out.replace(/___LINK_(\d+)___/g, (match, index) => {
             const link = linkPlaceholders[parseInt(index)];
             if (link) {
+              console.log('[Markdown] Restoring link:', link.text, '→', link.url);
               return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${link.text}</a>`;
             }
             return match;
