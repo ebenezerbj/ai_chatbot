@@ -1393,17 +1393,25 @@ app.get('/api/admin/ml/sentiment-trends', async (req: Request, res: Response) =>
 
   try {
     // Get overall sentiment distribution
-    const sentimentQuery = `
-      SELECT 
-        sentiment,
-        COUNT(*) as count,
-        AVG(score) as avg_score,
-        COUNT(CASE WHEN needs_escalation = TRUE THEN 1 END) as escalations
-      FROM sentiment_analysis
-      WHERE timestamp >= NOW() - INTERVAL '30 days'
-      GROUP BY sentiment
-      ORDER BY count DESC
-    `;
+    const sentimentQuery = DB_TYPE === 'postgres'
+      ? `SELECT 
+          sentiment,
+          COUNT(*) as count,
+          AVG(score) as avg_score,
+          COUNT(CASE WHEN needs_escalation = TRUE THEN 1 END) as escalations
+        FROM sentiment_analysis
+        WHERE timestamp >= NOW() - INTERVAL '30 days'
+        GROUP BY sentiment
+        ORDER BY count DESC`
+      : `SELECT 
+          sentiment,
+          COUNT(*) as count,
+          AVG(score) as avg_score,
+          COUNT(CASE WHEN needs_escalation = 1 THEN 1 END) as escalations
+        FROM sentiment_analysis
+        WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        GROUP BY sentiment
+        ORDER BY count DESC`;
     
     const distribution = await executeQuery(sentimentQuery, []);
     
