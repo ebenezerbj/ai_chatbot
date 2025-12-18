@@ -201,12 +201,20 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // Get or create session ID
     const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
     // Start analytics session if new
     if (!sessionId) {
-      const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
-      const userAgent = req.headers['user-agent'];
       await analytics.startSession(effectiveSessionId, ipAddress, userAgent).catch(e => 
         console.error('[Analytics] Failed to start session:', e)
+      );
+    }
+
+    // Keep user profile totals in sync (non-blocking)
+    if (ipAddress) {
+      analytics.refreshUserProfileStatsFromIp(ipAddress).catch(e =>
+        console.error('[Analytics] Failed to refresh user profile stats:', e)
       );
     }
     
@@ -305,13 +313,11 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       analytics.classifyIntent(message, effectiveSessionId, messageIndex)
     ]).catch(e => console.error('[ML] Analysis failed:', e));
     
-    // Get user ID for churn prediction
-    const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
-    const userId = ipAddress ? `user_${Buffer.from(ipAddress).toString('base64')}` : undefined;
-    
     // Trigger churn prediction asynchronously (non-blocking)
-    if (userId) {
-      analytics.predictChurn(userId).catch(e => console.error('[ML] Churn prediction failed:', e));
+    if (ipAddress) {
+      analytics.getOrCreateUserProfile(ipAddress)
+        .then(profile => analytics.predictChurn(profile.userId))
+        .catch(e => console.error('[ML] Churn prediction failed:', e));
     }
 
     // Check if customer needs authentication for account information
@@ -1583,6 +1589,40 @@ app.get('/api/admin/ml/churn-risk', async (req: Request, res: Response) => {
 });
 
 /**
+ * Churn stats (low/medium/high) for admin dashboard validation
+ */
+app.get('/api/admin/ml/churn-stats', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+
+  if (token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const distributionQuery = `
+      SELECT churn_risk, COUNT(*) as count, AVG(risk_score) as avg_risk
+      FROM churn_predictions
+      GROUP BY churn_risk
+      ORDER BY count DESC
+    `;
+    const distribution = await executeQuery(distributionQuery, []);
+
+    const totalsQuery = 'SELECT COUNT(*) as total, MAX(last_prediction) as last_prediction FROM churn_predictions';
+    const totals = await executeQuery<{ total: string | number; last_prediction: any }>(totalsQuery, []);
+
+    res.json({
+      distribution,
+      totalPredictions: Number(totals[0]?.total || 0),
+      lastPrediction: totals[0]?.last_prediction || null
+    });
+  } catch (error: any) {
+    console.error('[ML] Churn stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch churn stats' });
+  }
+});
+
+/**
  * Get engagement score for a user
  */
 app.post('/api/ml/engagement-score', async (req: Request, res: Response) => {
@@ -1611,10 +1651,15 @@ app.post('/api/ml/engagement-score', async (req: Request, res: Response) => {
  */
 app.post('/api/ml/predict-churn', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.body;
+    const { userId, ipAddress } = req.body;
     
     if (!userId) {
       return res.status(400).json({ error: 'userId required' });
+    }
+
+    // If caller provides ipAddress, ensure a profile exists for that IP first.
+    if (ipAddress) {
+      await analytics.refreshUserProfileStatsFromIp(ipAddress).catch(() => undefined);
     }
 
     const prediction = await analytics.predictChurn(userId);

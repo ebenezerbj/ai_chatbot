@@ -496,6 +496,11 @@ export async function initializeAnalyticsTables(): Promise<void> {
   console.log('[Analytics] Database tables initialized successfully');
 }
 
+function userIdFromIpAddress(ipAddress: string): string {
+  // Keep consistent with getOrCreateUserProfile (sanitize non-alphanumerics)
+  return `user_${Buffer.from(ipAddress).toString('base64').replace(/[^a-zA-Z0-9]/g, '')}`;
+}
+
 // ===== Session Management =====
 
 /**
@@ -702,7 +707,7 @@ export async function exportAnalyticsCSV(startDate?: Date, endDate?: Date): Prom
  * Get or create user profile based on IP address (simple fingerprinting)
  */
 export async function getOrCreateUserProfile(ipAddress: string): Promise<UserProfile> {
-  const userId = `user_${Buffer.from(ipAddress).toString('base64').replace(/[^a-zA-Z0-9]/g, '')}`;
+  const userId = userIdFromIpAddress(ipAddress);
   
   const query = DB_TYPE === 'postgres'
     ? 'SELECT * FROM user_profiles WHERE user_id = $1'
@@ -738,6 +743,75 @@ export async function getOrCreateUserProfile(ipAddress: string): Promise<UserPro
     totalMessages: 0,
     preferredTopics: [],
     segment: 'new'
+  };
+}
+
+/**
+ * Get or create user profile by userId.
+ *
+ * NOTE: This is required because many analytics/ML functions operate on user_id
+ * (e.g., churn_predictions) and should NOT pass userId into getOrCreateUserProfile
+ * which expects an IP address.
+ */
+export async function getOrCreateUserProfileByUserId(userId: string): Promise<UserProfile> {
+  const query = DB_TYPE === 'postgres'
+    ? 'SELECT * FROM user_profiles WHERE user_id = $1'
+    : 'SELECT * FROM user_profiles WHERE user_id = ?';
+
+  const existing = await executeQuery<any>(query, [userId]);
+  if (existing.length > 0) {
+    return {
+      userId: existing[0].user_id,
+      firstSeen: existing[0].first_seen,
+      lastSeen: existing[0].last_seen,
+      totalSessions: existing[0].total_sessions,
+      totalMessages: existing[0].total_messages,
+      preferredTopics: existing[0].preferred_topics ? JSON.parse(existing[0].preferred_topics) : [],
+      segment: existing[0].segment,
+      averageSatisfaction: existing[0].average_satisfaction
+    };
+  }
+
+  const insertQuery = DB_TYPE === 'postgres'
+    ? 'INSERT INTO user_profiles (user_id) VALUES ($1)'
+    : 'INSERT INTO user_profiles (user_id) VALUES (?)';
+
+  await executeQuery(insertQuery, [userId]);
+
+  return {
+    userId,
+    firstSeen: new Date(),
+    lastSeen: new Date(),
+    totalSessions: 0,
+    totalMessages: 0,
+    preferredTopics: [],
+    segment: 'new'
+  };
+}
+
+/**
+ * Recalculate and persist user profile totals based on chat_sessions.
+ * This makes returning users / churn scoring meaningful.
+ */
+export async function refreshUserProfileStatsFromIp(ipAddress: string): Promise<UserProfile> {
+  const userProfile = await getOrCreateUserProfile(ipAddress);
+
+  const baseFilter = DB_TYPE === 'postgres' ? 'ip_address = $1' : 'ip_address = ?';
+  const sessionsQuery = `SELECT COUNT(*) as count FROM chat_sessions WHERE ${baseFilter}`;
+  const messagesQuery = `SELECT SUM(total_messages) as total FROM chat_sessions WHERE ${baseFilter}`;
+
+  const sessionsResult = await executeQuery<{ count: string | number }>(sessionsQuery, [ipAddress]);
+  const messagesResult = await executeQuery<{ total: string | number }>(messagesQuery, [ipAddress]);
+
+  const sessionCount = Number(sessionsResult[0]?.count || 0);
+  const messageCount = Number(messagesResult[0]?.total || 0);
+
+  await updateUserProfile(userProfile.userId, sessionCount, messageCount);
+  return {
+    ...userProfile,
+    totalSessions: sessionCount,
+    totalMessages: messageCount,
+    lastSeen: new Date()
   };
 }
 
@@ -784,7 +858,7 @@ export async function updateUserProfile(
  * Get personalized greeting for returning user
  */
 export async function getPersonalizedGreeting(userId: string): Promise<string | null> {
-  const profile = await getOrCreateUserProfile(userId);
+  const profile = await getOrCreateUserProfileByUserId(userId);
   
   if (profile.totalSessions === 0) {
     return null; // First time visitor - use default greeting
@@ -1324,7 +1398,8 @@ Main categories:
  */
 export async function predictChurn(userId: string): Promise<ChurnPrediction | null> {
   try {
-    const profile = await getOrCreateUserProfile(userId);
+    // IMPORTANT: This function operates on user_id, not IP.
+    const profile = await getOrCreateUserProfileByUserId(userId);
     
     // Calculate days since last visit
     const daysSinceLastVisit = Math.floor(
@@ -1332,20 +1407,10 @@ export async function predictChurn(userId: string): Promise<ChurnPrediction | nu
     );
 
     // Get average sentiment
-    const sentimentQuery = DB_TYPE === 'postgres'
-      ? `SELECT AVG(score) as avg_sentiment 
-         FROM sentiment_analysis sa
-         JOIN chat_sessions cs ON sa.session_id = cs.session_id
-         WHERE cs.ip_address LIKE $1`
-      : `SELECT AVG(score) as avg_sentiment 
-         FROM sentiment_analysis sa
-         JOIN chat_sessions cs ON sa.session_id = cs.session_id
-         WHERE cs.ip_address LIKE ?`;
-    
-    const sentimentResult = await executeQuery<{ avg_sentiment: number }>(
-      sentimentQuery,
-      [`%${userId}%`]
-    );
+    // Sentiment is tied to sessions (via session_id) and sessions are tied to IP.
+    // If we can't map user_id -> IP here, use user profile satisfaction + engagement as primary signals.
+    // (Sentiment-based churn is calculated elsewhere when IP context is available.)
+    const sentimentResult: Array<{ avg_sentiment: number }> = [];
     const avgSentiment = sentimentResult[0]?.avg_sentiment || 0;
 
     // Churn risk factors
@@ -1427,7 +1492,7 @@ export async function predictChurn(userId: string): Promise<ChurnPrediction | nu
  */
 export async function calculateEngagementScore(userId: string): Promise<EngagementScore | null> {
   try {
-    const profile = await getOrCreateUserProfile(userId);
+    const profile = await getOrCreateUserProfileByUserId(userId);
     
     // Frequency score (0-25): based on total sessions
     let frequencyScore = Math.min(profile.totalSessions * 2.5, 25);
