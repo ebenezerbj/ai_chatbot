@@ -714,7 +714,7 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     const followUps = await analytics.getPendingFollowUps(userProfile.userId);
     
     res.json({
-      greeting: greeting || `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?\n\nListen\n\nYes - I'm a customer\n\nNo - General inquiry`,
+      greeting: greeting || `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`,
       userSegment: userProfile.segment,
       recommendations,
       followUps,
@@ -722,7 +722,7 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('[Greeting] Error:', error);
-    res.json({ greeting: `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?\n\nListen\n\nYes - I'm a customer\n\nNo - General inquiry` });
+    res.json({ greeting: `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?` });
   }
 });
 

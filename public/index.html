@@ -1578,7 +1578,7 @@
       if (titleEl) titleEl.textContent = assistantName;
 
       // Fetch personalized greeting (Phase 2)
-      let welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?\n\nListen\n\nYes - I'm a customer\n\nNo - General inquiry`;
+      let welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`;
       try {
         const greetingResp = await fetch('/api/greeting', {
           method: 'POST',
@@ -1608,7 +1608,12 @@
         console.log('[Greeting] Using default greeting');
       }
       
-      addMsg('assistant', welcomeMessage);
+      addMsg('assistant', `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`, {
+        buttons: [
+          { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
+          { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+        ]
+      });
       
       // Init TTS UI state
       initTTS();
