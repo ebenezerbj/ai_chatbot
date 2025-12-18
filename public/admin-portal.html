@@ -565,6 +565,12 @@
                     </svg>
                     <span>Loan Applications</span>
                 </div>
+                <div class="nav-item" data-page="account-openings">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span>Account Openings</span>
+                </div>
                 <a href="kb-admin.html" class="nav-item" style="text-decoration: none; color: inherit;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
@@ -839,6 +845,47 @@
                     </div>
                 </div>
 
+                <!-- Account Openings Page -->
+                <div class="page-section" id="page-account-openings">
+                    <div class="card">
+                        <h2>Account Opening Applications</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">View bank account opening applications from non-customers.</p>
+
+                        <div style="display:flex; gap: 12px; align-items:center; flex-wrap: wrap; margin-bottom: 16px;">
+                            <button class="btn btn-primary" onclick="loadAccountOpenings()">Refresh</button>
+                            <div style="color:#6b7280;">Total: <strong id="accountOpeningsTotal">-</strong></div>
+                        </div>
+
+                        <div id="accountOpeningsError" class="alert alert-error hidden"></div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Created</th>
+                                    <th>Full Name</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Ghana Card</th>
+                                    <th>Account Type</th>
+                                    <th>Initial Deposit</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountOpeningsTable">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: #6b7280;">No data loaded</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>Selected Application</h3>
+                        <p style="color: #6b7280; margin-bottom: 12px;">Click a row above to view full details.</p>
+                        <pre id="accountOpeningDetails" style="background: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto;">No application selected</pre>
+                    </div>
+                </div>
+
                 <!-- Knowledge Base Page -->
                 <div class="page-section" id="page-knowledge-base">
                     <div class="card">
@@ -1093,6 +1140,7 @@ https://example.com/products"></textarea>
                 'dashboard': 'Dashboard',
                 'balance-upload': 'Balance Upload',
                 'loan-applications': 'Loan Applications',
+                'account-openings': 'Account Opening Applications',
                 'knowledge-base': 'Knowledge Base',
                 'system-logs': 'System Logs',
                 'settings': 'Settings'
@@ -1105,6 +1153,9 @@ https://example.com/products"></textarea>
 
             if (page === 'loan-applications') {
                 loadLoanApplications();
+            }
+            if (page === 'account-openings') {
+                loadAccountOpenings();
             }
         }
 
@@ -1179,6 +1230,83 @@ https://example.com/products"></textarea>
             } catch (error) {
                 if (errorEl) {
                     errorEl.textContent = error?.message || 'Error loading loan applications';
+                    errorEl.classList.remove('hidden');
+                }
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No data</td></tr>`;
+            }
+        }
+
+        // Account Openings
+        async function loadAccountOpenings() {
+            const tbody = document.getElementById('accountOpeningsTable');
+            const totalEl = document.getElementById('accountOpeningsTotal');
+            const detailsEl = document.getElementById('accountOpeningDetails');
+            const errorEl = document.getElementById('accountOpeningsError');
+
+            if (!tbody) return;
+
+            if (errorEl) {
+                errorEl.classList.add('hidden');
+                errorEl.textContent = '';
+            }
+
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">Loading…</td></tr>`;
+
+            try {
+                const resp = await fetch('/api/admin/account-openings?limit=100&offset=0', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (resp.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || !data?.ok) {
+                    const msg = data?.error || data?.message || 'Failed to load account openings';
+                    if (errorEl) {
+                        errorEl.textContent = msg;
+                        errorEl.classList.remove('hidden');
+                    }
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No data</td></tr>`;
+                    return;
+                }
+
+                if (totalEl) totalEl.textContent = String(data.total ?? 0);
+                if (detailsEl) detailsEl.textContent = 'No application selected';
+
+                const items = Array.isArray(data.items) ? data.items : [];
+                if (!items.length) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No applications found</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                items.forEach((item) => {
+                    const created = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+                    const row = document.createElement('tr');
+                    row.style.cursor = 'pointer';
+                    row.innerHTML = `
+                        <td>${created}</td>
+                        <td>${escapeHtml(item.fullName || '')}</td>
+                        <td>${escapeHtml(item.phoneNumber || '')}</td>
+                        <td>${escapeHtml(item.email || '')}</td>
+                        <td>${escapeHtml(item.ghanaCardNumber || '')}</td>
+                        <td>${escapeHtml(item.accountType || '')}</td>
+                        <td>GHS ${Number(item.initialDeposit || 0).toFixed(2)}</td>
+                        <td>${escapeHtml(item.status || '')}</td>
+                    `;
+                    row.addEventListener('click', () => {
+                        if (detailsEl) {
+                            detailsEl.textContent = JSON.stringify(item, null, 2);
+                        }
+                    });
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                if (errorEl) {
+                    errorEl.textContent = error?.message || 'Error loading account openings';
                     errorEl.classList.remove('hidden');
                 }
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No data</td></tr>`;
