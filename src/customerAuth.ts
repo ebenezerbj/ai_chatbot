@@ -563,42 +563,15 @@ export function formatLoanResponse(accountData: any): string {
       return `**Loan Information**\n\nYou have no loan account associated with the bank.\n\nIf you would like to apply for a loan, please contact us at +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch.`;
     }
     
+    // Polite message for customers - loan balances are being updated
     let response = `**Loan Information**\n\n`;
-    
-    accountData.loans.forEach((loan: any, index: number) => {
-      const status = loan.status === 'A' ? 'Active' : loan.status === 'C' ? 'Closed' : 'Dormant';
-      const termMonths = loan.termMonths || 0;
-      const termYears = Math.floor(termMonths / 12);
-      const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${termMonths} months`;
-      
-      response += `Loan ${index + 1}: ${loan.loanNumber || 'N/A'}\n`;
-      response += `Original Amount: GHS ${(loan.originalAmount || 0).toFixed(2)}\n`;
-      response += `Current Balance: GHS ${(loan.currentBalance || 0).toFixed(2)}\n`;
-      response += `Monthly Payment: GHS ${(loan.monthlyInstallment || 0).toFixed(2)}\n`;
-      
-      if (loan.nextPaymentDate) {
-        const nextDate = new Date(loan.nextPaymentDate);
-        response += `Next Payment: ${nextDate.toLocaleDateString('en-GB')}\n`;
-      }
-      
-      if (loan.maturityDate) {
-        const matDate = new Date(loan.maturityDate);
-        const today = new Date();
-        const daysRemaining = Math.ceil((matDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        response += `Maturity Date: ${matDate.toLocaleDateString('en-GB')}${daysRemaining > 0 ? ` (${daysRemaining} days remaining)` : ''}\n`;
-      }
-      
-      response += `Duration: ${termText}\n`;
-      response += `Status: ${status}\n`;
-      
-      if (loan.amountInArrears && loan.amountInArrears > 0) {
-        response += `⚠️ Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;
-      }
-      
-      response += `\n`;
-    });
-    
-    response += `Need help with your loan? Call +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch.`;
+    response += `Thank you for your inquiry! 🏦\n\n`;
+    response += `We're currently updating our loan records to ensure you receive the most accurate and up-to-date information.\n\n`;
+    response += `For the latest details about your loan balance, payment schedule, and account status, we kindly request that you:\n\n`;
+    response += `📍 **Visit your nearest AKCB branch**\n`;
+    response += `📞 **Call us at:** +233 54 242 8935 / +233 50 129 0952\n\n`;
+    response += `Our friendly staff will be happy to provide you with comprehensive information about your loan account.\n\n`;
+    response += `We appreciate your understanding and patience as we work to serve you better. Thank you for banking with AKCB! ✨`;
     return response;
   } catch (error: any) {
     console.error('[Auth] Error formatting loan response:', error);
