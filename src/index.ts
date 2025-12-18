@@ -977,10 +977,11 @@ app.post('/api/nearest-branch', async (req: Request, res: Response) => {
       `📏 Distance: ~${distanceText}\n` +
       `📞 Phone: ${nearest.phone}\n` +
       `📌 Address: ${nearest.address}\n\n` +
-      `[Open in Google Maps](${mapsUrlGoogle})\n` +
-      `[Open in OpenStreetMap](${mapsUrlOSM})\n` +
-      `[Open in Apple Maps](${mapsUrlApple})\n` +
-      `Coordinates: ${nearest.lat}, ${nearest.lng}\n` +
+      `**📍 GPS Coordinates:**\n` +
+      `${nearest.lat}, ${nearest.lng}\n\n` +
+      `Copy the coordinates above and paste them into any map app (Google Maps, Waze, etc.) to get directions.\n\n` +
+      `Or try these links:\n` +
+      `[Google Maps](${mapsUrlGoogle}) • [OpenStreetMap](${mapsUrlOSM}) • [Apple Maps](${mapsUrlApple})\n` +
       `Mobile: [Open in Maps App](${geoUri})`;
 
     console.log('[NearestBranch] Found:', nearest.name, distanceText);

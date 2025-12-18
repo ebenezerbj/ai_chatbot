@@ -1842,25 +1842,61 @@
 
         // Convenience: Add Copy Coordinates button if present in message
         try {
-          const coordsMatch = processed.match(/Coordinates:\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/i);
+          const coordsMatch = processed.match(/([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/);
           if (coordsMatch) {
             const latStr = coordsMatch[1];
             const lngStr = coordsMatch[2];
             const actions = document.createElement('div');
-            actions.style.cssText = 'margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;';
+            actions.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;';
+            
             const copyBtn = document.createElement('button');
-            copyBtn.textContent = 'Copy Coordinates';
-            copyBtn.style.cssText = 'padding: 6px 10px; border-radius: 8px; border: 1px solid var(--primary-200); background: var(--primary-50); color: var(--primary-700); cursor: pointer;';
+            copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Coordinates';
+            copyBtn.style.cssText = 'padding: 8px 14px; border-radius: 8px; border: 1px solid var(--primary-300); background: var(--primary-600); color: white; cursor: pointer; font-weight: 500;';
             copyBtn.addEventListener('click', async () => {
               const text = `${latStr}, ${lngStr}`;
               try {
                 await navigator.clipboard.writeText(text);
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                  copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Coordinates';
+                }, 2000);
                 console.log('[Coords] Copied to clipboard:', text);
               } catch (err) {
                 console.error('[Coords] Clipboard write failed:', err);
+                copyBtn.innerHTML = '<i class="fas fa-times"></i> Failed';
               }
             });
             actions.appendChild(copyBtn);
+            
+            // Share button - creates a shareable text message
+            const shareBtn = document.createElement('button');
+            shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Location';
+            shareBtn.style.cssText = 'padding: 8px 14px; border-radius: 8px; border: 1px solid var(--primary-200); background: var(--primary-50); color: var(--primary-700); cursor: pointer; font-weight: 500;';
+            shareBtn.addEventListener('click', async () => {
+              const branchName = processed.match(/Nearest Branch:\s*([^\n*]+)/)?.[1]?.trim() || 'Branch';
+              const shareText = `${branchName}\nGPS: ${latStr}, ${lngStr}\n\nPaste these coordinates into Google Maps, Waze, or any map app for directions.`;
+              if (navigator.share) {
+                try {
+                  await navigator.share({ text: shareText });
+                  console.log('[Share] Shared successfully');
+                } catch (err) {
+                  console.log('[Share] Share cancelled or failed', err);
+                }
+              } else {
+                // Fallback: copy to clipboard
+                try {
+                  await navigator.clipboard.writeText(shareText);
+                  shareBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                  setTimeout(() => {
+                    shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Location';
+                  }, 2000);
+                } catch (err) {
+                  console.error('[Share] Clipboard write failed:', err);
+                }
+              }
+            });
+            actions.appendChild(shareBtn);
+            
             content.appendChild(actions);
           }
         } catch (err) { /* non-fatal */ }
