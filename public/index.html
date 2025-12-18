@@ -3075,7 +3075,7 @@
       loanTenorEl?.addEventListener('input', recalc);
 
       const submitBtn = wrap.querySelector('#loanSubmit');
-      submitBtn?.addEventListener('click', (e) => submitLoanApplication(e));
+      submitBtn?.addEventListener('click', () => submitLoanApplication(wrap));
 
       const cancelBtn = wrap.querySelector('#loanCancel');
       cancelBtn?.addEventListener('click', () => {
@@ -3157,19 +3157,26 @@
       try { recalc(); } catch {}
     }
 
-    async function submitLoanApplication(event) {
-      const wrap = event?.target?.closest?.('.loan-app-form') || chatEl.querySelector('.loan-app-form');
-      const statusEl = wrap?.querySelector?.('#loanAppStatus') || document.getElementById('loanAppStatus');
+    async function submitLoanApplication(wrapElement) {
+      if (!wrapElement) {
+        console.error('[LoanApp] No wrap element provided');
+        return;
+      }
+      const statusEl = wrapElement.querySelector('#loanAppStatus');
       try {
         const sid = await ensureSession();
 
         const getVal = (id) => {
-          const el = wrap?.querySelector?.(`#${id}`) || document.getElementById(id);
-          return el ? (el.value || '') : '';
+          const el = wrapElement.querySelector(`#${id}`);
+          const value = el ? (el.value || '') : '';
+          console.log(`[LoanApp] getVal('${id}') = "${value}"`);
+          return value;
         };
         const getChecked = (id) => {
-          const el = wrap?.querySelector?.(`#${id}`) || document.getElementById(id);
-          return !!(el && el.checked);
+          const el = wrapElement.querySelector(`#${id}`);
+          const checked = !!(el && el.checked);
+          console.log(`[LoanApp] getChecked('${id}') = ${checked}`);
+          return checked;
         };
 
         const phone = getVal('loanPhone');
@@ -3211,6 +3218,8 @@
           employerConfirmation: getChecked('loanEmployerConfirmation'),
           borrowerDeclaration: getChecked('loanBorrowerDeclaration')
         };
+
+        console.log('[LoanApp] Payload being sent:', JSON.stringify(payload, null, 2));
 
         if (statusEl) {
           statusEl.style.color = 'var(--gray-600)';

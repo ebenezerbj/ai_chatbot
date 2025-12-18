@@ -55,6 +55,8 @@ app.post('/api/loan-application', async (req: Request, res: Response) => {
     const ipAddress = req.ip || (req.headers['x-forwarded-for'] as string | undefined);
     const userAgent = req.headers['user-agent'] as string | undefined;
 
+    console.log('[LoanApplication] Received payload:', JSON.stringify(body, null, 2));
+
     const validation = loanApplications.validateLoanApplicationPayload({
       ...body,
       sessionId,
@@ -63,6 +65,7 @@ app.post('/api/loan-application', async (req: Request, res: Response) => {
     });
 
     if (!validation.ok) {
+      console.log('[LoanApplication] Validation failed:', validation.error);
       return res.status(400).json({ ok: false, error: validation.error });
     }
 
