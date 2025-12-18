@@ -1800,8 +1800,12 @@
           // Handle click
           button.onclick = () => {
             if (btn.action === 'send') {
-              inputEl.value = btn.value || btn.text;
-              btnSend.click();
+              const inputElement = document.getElementById('input');
+              const sendBtn = form.querySelector('button[type="submit"]');
+              if (inputElement && sendBtn) {
+                inputElement.value = btn.value || btn.text;
+                sendBtn.click();
+              }
             } else if (btn.action === 'callback' && btn.callback) {
               btn.callback();
             }
@@ -1853,8 +1857,12 @@
         select.onchange = (e) => {
           const value = e.target.value;
           if (value) {
-            inputEl.value = value;
-            btnSend.click();
+            const inputElement = document.getElementById('input');
+            const sendBtn = form.querySelector('button[type="submit"]');
+            if (inputElement && sendBtn) {
+              inputElement.value = value;
+              sendBtn.click();
+            }
           }
         };
         
