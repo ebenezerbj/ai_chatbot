@@ -1694,29 +1694,46 @@
         });
 
         const applyInline = (str) => {
-          // Bold: **text**
-          let out = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-          // Auto-link plain URLs (but skip our placeholders)
-          out = out.replace(/\b(https?:\/\/[^\s<)_]+)(?=[)\s]|$)/g, (m, url) => {
-            // Skip if this is part of our markdown link placeholder
-            if (m.includes('MDLINK')) return m;
-            try {
-              return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-            } catch { return url; }
-          });
-          // Restore markdown links - these are inserted as-is since text is already escaped
-          out = out.replace(/__MDLINK(\d+)MDLINK__/g, (match, index) => {
+          // First, restore markdown links (don't escape placeholders!)
+          let out = str.replace(/__MDLINK(\d+)MDLINK__/g, (match, index) => {
             const link = linkPlaceholders[parseInt(index)];
             if (link) {
               console.log('[Markdown] Restoring link:', link.text, '→', link.url);
+              // Return a unique marker that won't be escaped
+              return `%%LINK${index}%%`;
+            }
+            return match;
+          });
+          
+          // NOW escape HTML for the rest of the content
+          out = escapeHtml(out);
+          
+          // Replace markers with actual HTML links
+          out = out.replace(/%%LINK(\d+)%%/g, (match, index) => {
+            const link = linkPlaceholders[parseInt(index)];
+            if (link) {
               return `<a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">${link.text}</a>`;
             }
             return match;
           });
+          
+          // Bold: **text**
+          out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          
+          // Auto-link plain URLs (but skip our link markers)
+          out = out.replace(/\b(https?:\/\/[^\s<)]+)(?=[)\s]|$)/g, (m, url) => {
+            // Skip if this is part of our link marker
+            if (m.includes('%%LINK') || m.includes('MDLINK')) return m;
+            try {
+              const safeUrl = url.replace(/&amp;/g, '&'); // Unescape URLs that got escaped
+              return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+            } catch { return url; }
+          });
+          
           return out;
         };
 
-        const src = escapeHtml(text);
+        const src = text;
         const lines = src.split('\n');
         let out = '';
         let listType = null; // 'ul' | 'ol' | null
