@@ -245,7 +245,7 @@ export async function validateCredentials(
       console.log('[Auth] Account not active:', customer.status);
       return {
         valid: false,
-        reason: `Your account is ${customer.status.toLowerCase()}. Please visit any branch or call +233 54 242 8935 for assistance.`
+        reason: `Your account is ${customer.status.toLowerCase()}. Please visit any branch or call +233 54 242 8935 / +233 50 129 0952 for assistance.`
       };
     }
     
@@ -262,7 +262,7 @@ export async function validateCredentials(
     console.error('[Auth] Stack:', error.stack);
     return {
       valid: false,
-      reason: "Unable to verify your details at this time. Please try again later or contact customer service at +233 54 242 8935."
+      reason: "Unable to verify your details at this time. Please try again later or contact customer service at +233 54 242 8935 / +233 50 129 0952."
     };
   }
 }
@@ -337,7 +337,7 @@ export async function authenticateCustomer(
   if (session.attempts > MAX_AUTH_ATTEMPTS) {
     return {
       success: false,
-      message: "Maximum authentication attempts exceeded. Please visit any branch or call +233 54 242 8935 for assistance.",
+      message: "Maximum authentication attempts exceeded. Please visit any branch or call +233 54 242 8935 / +233 50 129 0952 for assistance.",
       session,
       awaitingOTP: false
     };
@@ -558,7 +558,7 @@ function getAccountTypeName(code: string): string {
 export function formatLoanResponse(accountData: any): string {
   try {
     if (!accountData || !accountData.loans || accountData.loans.length === 0) {
-      return `**Loan Information**\n\nYou have no loan account associated with the bank.\n\nIf you would like to apply for a loan, please contact us at +233 54 242 8935 or visit any AKCB branch.`;
+      return `**Loan Information**\n\nYou have no loan account associated with the bank.\n\nIf you would like to apply for a loan, please contact us at +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch.`;
     }
     
     let response = `**Loan Information**\n\n`;
@@ -596,11 +596,11 @@ export function formatLoanResponse(accountData: any): string {
       response += `\n`;
     });
     
-    response += `Need help with your loan? Call +233 54 242 8935 or visit any AKCB branch.`;
+    response += `Need help with your loan? Call +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch.`;
     return response;
   } catch (error: any) {
     console.error('[Auth] Error formatting loan response:', error);
-    return `**Loan Information**\n\nWe're experiencing technical difficulties retrieving your loan information. Please contact us at +233 54 242 8935 or visit any AKCB branch for assistance.`;
+    return `**Loan Information**\n\nWe're experiencing technical difficulties retrieving your loan information. Please contact us at +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch for assistance.`;
   }
 }
 
@@ -610,7 +610,7 @@ export function formatLoanResponse(accountData: any): string {
 export function formatAccountBalanceOnly(accountData: any): string {
   // Check if customer has account
   if (!accountData || !accountData.accountNumber || !accountData.balance) {
-    return `**Account Information**\n\nYou have no account associated with the bank.\n\nIf you would like to open an account, please contact us at +233 54 242 8935 or visit any AKCB branch.`;
+    return `**Account Information**\n\nYou have no account associated with the bank.\n\nIf you would like to open an account, please contact us at +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch.`;
   }
   
   let lastUpdatedText = '';
@@ -656,7 +656,7 @@ export function formatBalanceResponse(accountData: any): string {
   
   // If customer has neither
   if (!hasAccount && !hasLoans) {
-    return `**Account Information**\n\nYou have no account or loan associated with the bank.\n\nIf you would like to open an account or apply for a loan, please contact us at +233 54 242 8935 or visit any AKCB branch.`;
+    return `**Account Information**\n\nYou have no account or loan associated with the bank.\n\nIf you would like to open an account or apply for a loan, please contact us at +233 54 242 8935 / +233 50 129 0952 or visit any AKCB branch.`;
   }
   
   // If customer has loans but no account

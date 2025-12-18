@@ -405,11 +405,11 @@ IMPORTANT INSTRUCTIONS:
    - "Debrah" or "Michael Debrah" → Michael Debrah Bempong (Head of Credit)
    - Search the KB for any name mentioned
 3. **Product queries**: When asked about "products", "services", "savings", "loans", provide specific offerings from the KB
-4. **Agent requests**: If someone asks to "talk to an agent" or "speak to a human", provide contact info (0542428935) and offer to help with their question
+4. **Agent requests**: If someone asks to "talk to an agent" or "speak to a human", provide contact info (0542428935 or 0501290952) and offer to help with their question
 5. **Misspellings**: Handle typos intelligently (e.g., "prodicts" → "products")
 6. **Be conversational and helpful**: Don't give generic responses - actively provide relevant information from the KB
 7. **Be specific**: Use actual names, numbers, and details from the KB
-8. If truly not in KB, say you don't have that specific info and suggest calling 0542428935
+8. If truly not in KB, say you don't have that specific info and suggest calling 0542428935 or 0501290952
 
 Respond naturally and helpfully using the knowledge base!`;
 

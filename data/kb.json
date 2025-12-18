@@ -247,7 +247,7 @@
       "customer.*service",
       "support.*agent"
     ],
-    "answer": "I'm here to help! For direct assistance:\n- Call: **0542428935**\n- Email: info@amankacombank.com\n- Visit our Head Office at Amantin (GPS: BA-08182-6721)\n\nWhat banking question can I help you with right now?"
+    "answer": "I'm here to help! For direct assistance:\n- Call: **0542428935** or **0501290952**\n- Email: info@amankacombank.com\n- Visit our Head Office at Amantin (GPS: BA-08182-6721)\n\nWhat banking question can I help you with right now?"
   },
   {
     "id": "hours",
@@ -307,7 +307,7 @@
       "register.*app",
       "app.*onboarding"
     ],
-    "answer": "AKCB Mobile Banking App\\n\\nDownload: Available on Play Store (Android) and App Store (iOS)\\n\\nKey Features:\\n• Check account balance and transaction history\\n• Transfer funds between accounts and to other banks\\n• Pay bills and utilities\\n• Mobile money services\\n• Loan applications and tracking\\n• Card management (block, activate, PIN change)\\n• Account statements\\n• Branch and ATM locator\\n• Secure login with biometric authentication\\n\\nRegistration:\\n1. Download the app from your app store\\n2. Select 'Register' or 'Sign Up'\\n3. Enter your account number and Ghana Card number\\n4. Complete identity verification\\n5. Create your secure PIN\\n6. Set up biometric login (optional)\\n\\nFor assistance: Call +233 54 242 8935 or visit any branch."
+    "answer": "AKCB Mobile Banking App\\n\\nDownload: Available on Play Store (Android) and App Store (iOS)\\n\\nKey Features:\\n• Check account balance and transaction history\\n• Transfer funds between accounts and to other banks\\n• Pay bills and utilities\\n• Mobile money services\\n• Loan applications and tracking\\n• Card management (block, activate, PIN change)\\n• Account statements\\n• Branch and ATM locator\\n• Secure login with biometric authentication\\n\\nRegistration:\\n1. Download the app from your app store\\n2. Select 'Register' or 'Sign Up'\\n3. Enter your account number and Ghana Card number\\n4. Complete identity verification\\n5. Create your secure PIN\\n6. Set up biometric login (optional)\\n\\nFor assistance: Call +233 54 242 8935 / +233 50 129 0952 or visit any branch."
   },
   {
     "id": "smart_banking",
@@ -623,7 +623,7 @@
       "\\bcfo\\b",
       "chief financial officer"
     ],
-    "answer": "For information about our Head of Finance or CFO, please contact our main office at 0542428935 or visit our Amantin Head Office."
+    "answer": "For information about our Head of Finance or CFO, please contact our main office at 0542428935 / 0501290952 or visit our Amantin Head Office."
   },
   {
     "id": "head_of_departments",
@@ -746,7 +746,7 @@
       "balance enquiry",
       "how much funds are available"
     ],
-    "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 for assistance."
+    "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for assistance."
   },
   {
     "id": "balance_update_time",
@@ -780,7 +780,7 @@
       "provide recent account history",
       "show recent activity"
     ],
-    "answer": "Retrieve recent transactions / mini-statement.\n\nTo retrieve recent transactions / mini-statement, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 for assistance."
+    "answer": "Retrieve recent transactions / mini-statement.\n\nTo retrieve recent transactions / mini-statement, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for assistance."
   },
   {
     "id": "check_loan_balance",
@@ -795,7 +795,7 @@
       "loan.*status",
       "how much.*left.*loan"
     ],
-    "answer": "Check Loan Balance\n\nTo check your loan balance and details, please authenticate using your account number or phone number. Once verified with OTP, I will show you:\n\n• Current loan balance\n• Original loan amount\n• Monthly installment amount\n• Next payment due date\n• Loan maturity date\n• Remaining duration\n• Payment status\n\nYou can also call our customer service at +233 54 242 8935 for loan inquiries."
+    "answer": "Check Loan Balance\n\nTo check your loan balance and details, please authenticate using your account number or phone number. Once verified with OTP, I will show you:\n\n• Current loan balance\n• Original loan amount\n• Monthly installment amount\n• Next payment due date\n• Loan maturity date\n• Remaining duration\n• Payment status\n\nYou can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for loan inquiries."
   },
   {
     "id": "loan_payment_schedule",
@@ -810,7 +810,7 @@
       "how long.*loan",
       "loan.*duration"
     ],
-    "answer": "Loan Payment Schedule\n\nTo view your loan payment schedule including next payment date and maturity, please authenticate with your account details. I will provide:\n\n• Next payment due date\n• Monthly installment amount\n• Loan maturity date\n• Time remaining on your loan\n• Payment frequency\n\nFor detailed amortization schedules, please visit any branch or call +233 54 242 8935."
+    "answer": "Loan Payment Schedule\n\nTo view your loan payment schedule including next payment date and maturity, please authenticate with your account details. I will provide:\n\n• Next payment due date\n• Monthly installment amount\n• Loan maturity date\n• Time remaining on your loan\n• Payment frequency\n\nFor detailed amortization schedules, please visit any branch or call +233 54 242 8935 / +233 50 129 0952."
   },
   {
     "id": "loan_arrears",
@@ -823,7 +823,7 @@
       "defaulted.*loan",
       "loan.*penalty"
     ],
-    "answer": "Loan Arrears Information\n\nIf you have concerns about loan arrears or overdue payments, please contact our Credit Department immediately:\n\n📞 Phone: +233 54 242 8935\n🏦 Visit: Any AKCB branch\n\nWe can help you with:\n• Current arrears amount\n• Payment restructuring options\n• Penalty waiver requests\n• Repayment plans\n\nPlease authenticate to check your current loan status and any outstanding arrears."
+    "answer": "Loan Arrears Information\n\nIf you have concerns about loan arrears or overdue payments, please contact our Credit Department immediately:\n\n📞 Phone: +233 54 242 8935 / +233 50 129 0952\n🏦 Visit: Any AKCB branch\n\nWe can help you with:\n• Current arrears amount\n• Payment restructuring options\n• Penalty waiver requests\n• Repayment plans\n\nPlease authenticate to check your current loan status and any outstanding arrears."
   },
   {
     "id": "account_details",
@@ -831,7 +831,7 @@
     "patterns": [
       "type"
     ],
-    "answer": "\"Provide account details (number.\n\nTo \"provide account details (number, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 for assistance."
+    "answer": "\"Provide account details (number.\n\nTo \"provide account details (number, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for assistance."
   },
   {
     "id": "make_transfer",
