@@ -222,16 +222,22 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     if (!userSession.customerIdentified) {
       userSession.customerIdentified = true;
       
-      const welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?\n\nPlease reply:\n• **Yes** - I'm a customer (for account & loan inquiries)\n• **No** - I'm not a customer (for general banking information)`;
+      const welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`;
+      
+      const response = {
+        response: welcomeMessage,
+        sessionId: effectiveSessionId,
+        buttons: [
+          { text: 'Yes - I\'m a customer', icon: 'fas fa-user-check', action: 'send', value: 'Yes' },
+          { text: 'No - General inquiry', icon: 'fas fa-info-circle', action: 'send', value: 'No' }
+        ]
+      };
       
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', welcomeMessage).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
       );
       
-      return res.json({ 
-        response: welcomeMessage, 
-        sessionId: effectiveSessionId 
-      });
+      return res.json(response);
     }
     
     // If user is responding to the customer identification question
