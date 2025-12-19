@@ -553,6 +553,12 @@
                     </svg>
                     <span>Balance Upload</span>
                 </a>
+                <div class="nav-item" data-page="customer-upload">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    <span>Customer Upload</span>
+                </div>
                 <a href="loan-upload.html" class="nav-item" style="text-decoration: none; color: inherit;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -842,6 +848,80 @@
                         <h3>Selected Application</h3>
                         <p style="color: #6b7280; margin-bottom: 12px;">Click a row above to view full details.</p>
                         <pre id="loanAppDetails" style="background: #f9fafb; padding: 16px; border-radius: 8px; overflow-x: auto;">No application selected</pre>
+                    </div>
+                </div>
+
+                <!-- Customer Upload Page -->
+                <div class="page-section" id="page-customer-upload">
+                    <div class="card">
+                        <h2>Customer Upload</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Upload your core banking CSV export to import customer accounts and balances. This creates new customer accounts if they don't exist.</p>
+
+                        <div class="alert alert-info" style="margin-bottom: 24px;">
+                            <strong>📋 CSV Format Required:</strong> Account Number, Customer Type, Title, First Name, Middle Name, Surname, Gender, ID Type, ID Number, DOB, Home Address, Postal Address, Country, Email, Mobile Phone Number, Account Type, Account By Ownership, Product Name, Status Of Account, Account Branch, Currency Of Account, Account Balance
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <label for="customerFileInput" style="display: block; margin-bottom: 12px; font-weight: 500; font-size: 16px;">
+                                Select CSV File
+                            </label>
+                            <input type="file" id="customerFileInput" accept=".csv" style="display: block; width: 100%; padding: 12px; border: 2px dashed #d1d5db; border-radius: 8px; cursor: pointer;" />
+                        </div>
+
+                        <button class="btn btn-primary" id="uploadCustomersBtn">
+                            <span id="uploadCustomersBtnText">Upload Customer Data</span>
+                        </button>
+
+                        <div id="uploadCustomersProgress" class="hidden" style="margin-top: 16px;">
+                            <div style="background: #e5e7eb; border-radius: 8px; height: 8px; overflow: hidden;">
+                                <div id="uploadCustomersProgressBar" style="background: linear-gradient(90deg, #3b82f6, #2563eb); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                            </div>
+                            <p id="uploadCustomersProgressText" style="margin-top: 8px; color: #6b7280; font-size: 14px;">Uploading...</p>
+                        </div>
+
+                        <div id="uploadCustomersResult" class="hidden" style="margin-top: 16px;"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📊 Import Statistics</h3>
+                        <div id="customerUploadStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                                <div style="color: #6b7280; font-size: 14px;">Total Customers</div>
+                                <div id="totalCustomersStat" style="font-size: 24px; font-weight: bold; color: #1f2937;">-</div>
+                            </div>
+                            <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                                <div style="color: #6b7280; font-size: 14px;">Active Accounts</div>
+                                <div id="activeAccountsStat" style="font-size: 24px; font-weight: bold; color: #10b981;">-</div>
+                            </div>
+                            <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                                <div style="color: #6b7280; font-size: 14px;">Total Balances</div>
+                                <div id="totalBalancesStat" style="font-size: 24px; font-weight: bold; color: #3b82f6;">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>💡 Instructions</h3>
+                        <ol style="color: #4b5563; line-height: 1.8;">
+                            <li>Export customer data from your core banking system as CSV</li>
+                            <li>Ensure the CSV file includes all required columns (see format above)</li>
+                            <li>Click "Select CSV File" and choose your exported file</li>
+                            <li>Click "Upload Customer Data" to start the import</li>
+                            <li>Wait for the upload to complete - you'll see progress and results</li>
+                            <li>New customers will be created automatically</li>
+                            <li>Existing customer balances will be updated</li>
+                        </ol>
+
+                        <div class="alert alert-warning" style="margin-top: 16px;">
+                            <strong>⚠️ Important:</strong> Large files may take several minutes to process. Do not close this page during upload.
+                        </div>
+
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+                            <h4 style="margin-bottom: 12px;">Sample CSV Template</h4>
+                            <a href="/Accounts.csv" download class="btn btn-secondary" style="text-decoration: none; display: inline-block;">
+                                📥 Download Sample CSV
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -1140,6 +1220,7 @@ https://example.com/products"></textarea>
             const titles = {
                 'dashboard': 'Dashboard',
                 'balance-upload': 'Balance Upload',
+                'customer-upload': 'Customer Upload',
                 'loan-applications': 'Loan Applications',
                 'account-openings': 'Account Opening Applications',
                 'knowledge-base': 'Knowledge Base',
@@ -1476,6 +1557,126 @@ https://example.com/products"></textarea>
 
             resultDiv.classList.remove('hidden');
             fileInput.value = '';
+        });
+
+        // Customer upload
+        document.getElementById('uploadCustomersBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('customerFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const uploadBtn = document.getElementById('uploadCustomersBtn');
+            const uploadBtnText = document.getElementById('uploadCustomersBtnText');
+            const uploadProgress = document.getElementById('uploadCustomersProgress');
+            const uploadProgressBar = document.getElementById('uploadCustomersProgressBar');
+            const uploadProgressText = document.getElementById('uploadCustomersProgressText');
+            const uploadResult = document.getElementById('uploadCustomersResult');
+
+            // Reset UI
+            uploadResult.classList.add('hidden');
+            uploadResult.textContent = '';
+            uploadProgress.classList.remove('hidden');
+            uploadProgressBar.style.width = '0%';
+            uploadProgressText.textContent = 'Uploading...';
+            uploadBtn.disabled = true;
+            uploadBtnText.textContent = 'Uploading...';
+
+            try {
+                const formData = new FormData();
+                formData.append('customers', file);
+
+                // Simulate progress
+                uploadProgressBar.style.width = '30%';
+                uploadProgressText.textContent = 'Processing file...';
+
+                const response = await fetch('/api/admin/import-customers', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
+                uploadProgressBar.style.width = '80%';
+                uploadProgressText.textContent = 'Finalizing...';
+
+                const data = await response.json();
+
+                uploadProgressBar.style.width = '100%';
+                uploadProgress.classList.add('hidden');
+                uploadResult.classList.remove('hidden');
+
+                if (data.success) {
+                    let successMessage = `<div class="alert alert-success">
+                        <strong>✅ Upload Complete!</strong><br>
+                        <strong>Total Records:</strong> ${data.totalRecords}<br>
+                        <strong>Successfully Processed:</strong> ${data.successCount} ✅`;
+
+                    if (data.stats && data.stats.customersCreated > 0) {
+                        successMessage += `<br><strong>New Customers Created:</strong> ${data.stats.customersCreated} 🎉`;
+                    }
+                    if (data.stats && data.stats.balancesUpdated > 0) {
+                        successMessage += `<br><strong>Balances Updated:</strong> ${data.stats.balancesUpdated} 💰`;
+                    }
+                    if (data.errorCount > 0) {
+                        successMessage += `<br><strong>Errors:</strong> ${data.errorCount} ⚠️`;
+                    }
+
+                    successMessage += '</div>';
+                    uploadResult.innerHTML = successMessage;
+
+                    // Update stats
+                    if (data.stats) {
+                        document.getElementById('totalCustomersStat').textContent = data.stats.totalCustomers || '-';
+                        document.getElementById('activeAccountsStat').textContent = data.stats.totalAccounts || '-';
+                        document.getElementById('totalBalancesStat').textContent = data.stats.totalBalance ? 'GHS ' + Number(data.stats.totalBalance).toFixed(2) : '-';
+                    }
+
+                    addActivityLog(`Customer upload: ${data.successCount} records processed${data.stats && data.stats.customersCreated > 0 ? ', ' + data.stats.customersCreated + ' new customers' : ''}`, 'success');
+
+                    // Show errors if any
+                    if (data.errors && data.errors.length > 0) {
+                        let errorList = '<div class="alert alert-warning" style="margin-top: 16px;"><strong>⚠️ Errors Encountered:</strong><ul style="margin: 8px 0; padding-left: 20px;">';
+                        data.errors.slice(0, 10).forEach(err => {
+                            errorList += `<li>${err}</li>`;
+                        });
+                        if (data.errors.length > 10) {
+                            errorList += `<li>...and ${data.errors.length - 10} more errors</li>`;
+                        }
+                        errorList += '</ul></div>';
+                        uploadResult.innerHTML += errorList;
+                    }
+
+                    // Clear file input
+                    fileInput.value = '';
+                } else {
+                    uploadResult.innerHTML = `<div class="alert alert-error">
+                        <strong>❌ Upload Failed</strong><br>
+                        ${data.error || 'Unknown error occurred'}
+                    </div>`;
+                    addActivityLog('Customer upload failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                uploadProgress.classList.add('hidden');
+                uploadResult.classList.remove('hidden');
+                uploadResult.innerHTML = `<div class="alert alert-error">
+                    <strong>❌ Upload Error</strong><br>
+                    ${error.message}
+                </div>`;
+                addActivityLog('Customer upload error: ' + error.message, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtnText.textContent = 'Upload Customer Data';
+            }
         });
 
         // Activity log
