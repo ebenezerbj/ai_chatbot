@@ -25,6 +25,38 @@ export interface ImportResult {
   summary: string;
 }
 
+function buildCaseInsensitiveKeyMap(row: Record<string, any>): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const key of Object.keys(row)) {
+    const normalized = key.trim().toLowerCase();
+    if (!map[normalized]) {
+      map[normalized] = key;
+    }
+  }
+  return map;
+}
+
+function pickField(row: Record<string, any>, keyMap: Record<string, string>, candidates: string[]): any {
+  for (const candidate of candidates) {
+    if (candidate in row) return row[candidate];
+    const normalized = candidate.trim().toLowerCase();
+    const actualKey = keyMap[normalized];
+    if (actualKey && actualKey in row) return row[actualKey];
+  }
+  return undefined;
+}
+
+function parseMoney(raw: any): number | null {
+  if (raw === null || raw === undefined) return null;
+  const str = String(raw).trim();
+  if (!str) return null;
+  const cleaned = str.replace(/,/g, '');
+  const match = cleaned.match(/-?\d+(?:\.\d+)?/);
+  if (!match) return null;
+  const value = parseFloat(match[0]);
+  return Number.isFinite(value) ? value : null;
+}
+
 /**
  * Parse CSV buffer and extract customer data
  */
@@ -72,42 +104,60 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
     summary: ''
   };
 
+  console.log('[CustomerImport] Starting import, buffer size:', buffer.length);
+
   try {
     // Parse CSV
     const records: any[] = [];
     const stream = Readable.from(buffer.toString());
     
+    console.log('[CustomerImport] Parsing CSV...');
+    
     await new Promise<void>((resolve, reject) => {
       stream
         .pipe(csv())
         .on('data', (row: any) => {
+          console.log('[CustomerImport] Processing row:', JSON.stringify(row).substring(0, 200));
+          const keyMap = buildCaseInsensitiveKeyMap(row);
           // Support multiple CSV formats
           // Format 1: ACCOUNT.ID, ACCOUNT.TITLE.1, etc. (old format)
           // Format 2: Account Number, First Name, etc. (Accounts.csv format)
           
-          const accountNumber = row['ACCOUNT.ID'] || row['Account Number'];
+          const accountNumberRaw = pickField(row, keyMap, [
+            'ACCOUNT.ID',
+            'Account Number',
+            'account_number',
+            'AccountNumber',
+            'ACCOUNT_NUMBER',
+            'Account No',
+            'account_no'
+          ]);
+          const accountNumber = accountNumberRaw ? accountNumberRaw.toString().trim() : '';
           
           if (accountNumber) {
             // Handle different CSV formats
             let accountTitle = '';
             let category = '';
             let coCode = '';
-            let balance = 0;
+            let balance: number | null = null;
             let phoneNumber = '';
             let email = '';
+
+            const isOldFormat = !!pickField(row, keyMap, ['ACCOUNT.ID']);
             
-            if (row['ACCOUNT.ID']) {
+            if (isOldFormat) {
               // Old format
-              accountTitle = (row['ACCOUNT.TITLE.1'] || '').toString().trim();
-              category = (row['CATEGORY'] || '').toString().trim();
-              coCode = (row['CO.CODE'] || '').toString().trim();
-              balance = parseFloat((row['WORKING.BALANCE'] || row['ONLINE.CLEARED.BAL'] || row['ONLINE.ACTUAL.BAL'] || '0').toString().replace(/,/g, '')) || 0;
+              accountTitle = (pickField(row, keyMap, ['ACCOUNT.TITLE.1']) || '').toString().trim();
+              category = (pickField(row, keyMap, ['CATEGORY']) || '').toString().trim();
+              coCode = (pickField(row, keyMap, ['CO.CODE']) || '').toString().trim();
+              const balRaw = pickField(row, keyMap, ['WORKING.BALANCE', 'ONLINE.CLEARED.BAL', 'ONLINE.ACTUAL.BAL']);
+              balance = parseMoney(balRaw);
             } else {
               // Accounts.csv format
-              const firstName = (row['First Name'] || '').toString().trim();
-              const middleName = (row['Middle Name'] || '').toString().trim();
-              const surname = (row['Surname'] || '').toString().trim();
-              const title = (row['Title'] || '').toString().trim();
+              const firstName = (pickField(row, keyMap, ['First Name']) || '').toString().trim();
+              const middleName = (pickField(row, keyMap, ['Middle Name']) || '').toString().trim();
+              const surname = (pickField(row, keyMap, ['Surname']) || '').toString().trim();
+              const title = (pickField(row, keyMap, ['Title']) || '').toString().trim();
               
               // Build full name
               accountTitle = [title, firstName, middleName, surname]
@@ -115,11 +165,20 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
                 .join(' ')
                 .trim();
               
-              category = (row['Account Type'] || row['Product Name'] || '').toString().trim();
-              coCode = (row['Account Branch'] || '').toString().trim();
-              balance = parseFloat((row['Account Balance'] || '0').toString().replace(/,/g, '')) || 0;
-              phoneNumber = (row['Mobile Phone Number'] || '').toString().trim();
-              email = (row['Email'] || '').toString().trim();
+              category = (pickField(row, keyMap, ['Account Type', 'Product Name']) || '').toString().trim();
+              coCode = (pickField(row, keyMap, ['Account Branch']) || '').toString().trim();
+
+              // Latest_Accounts.csv uses a longer header for balance; support multiple candidates.
+              const balRaw = pickField(row, keyMap, [
+                'Account Balance',
+                'Account Balance (Own Balance Share For Joint Accounts)',
+                'Account Balance In Cedis',
+                'Account Balance In Original Currency'
+              ]);
+              balance = parseMoney(balRaw);
+
+              phoneNumber = (pickField(row, keyMap, ['Mobile Phone Number', 'Main Phone Number']) || '').toString().trim();
+              email = (pickField(row, keyMap, ['Email']) || '').toString().trim();
             }
             
             records.push({
@@ -133,14 +192,22 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
             });
           }
         })
-        .on('end', () => resolve())
-        .on('error', (error: any) => reject(error));
+        .on('end', () => {
+          console.log('[CustomerImport] CSV parsing complete, total rows:', records.length);
+          resolve();
+        })
+        .on('error', (error: any) => {
+          console.error('[CustomerImport] CSV parsing error:', error);
+          reject(error);
+        });
     });
 
     result.totalRecords = records.length;
+    console.log('[CustomerImport] Processing', result.totalRecords, 'records...');
 
     if (records.length === 0) {
       result.summary = 'No valid records found in CSV file';
+      console.log('[CustomerImport]', result.summary);
       return result;
     }
 
@@ -176,7 +243,7 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
           record.email || null
         ]);
 
-        // Then, insert/update balance
+        // Then, insert/update balance (only when we have a parsed balance)
         const balanceQuery = DB_TYPE === 'postgres'
           ? `INSERT INTO account_balances (account_number, ledger_balance, available_balance, currency)
              VALUES ($1, $2, $3, 'GHS')
@@ -192,11 +259,15 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
                available_balance = VALUES(available_balance), 
                last_updated = CURRENT_TIMESTAMP`;
 
-        await executeQuery(balanceQuery, [
-          record.accountNumber,
-          record.balance,
-          record.balance
-        ]);
+        // If the CSV didn't contain a parseable balance for this row, do not overwrite existing balances.
+        // (This avoids the common "everything becomes 0.00" scenario when headers don't match.)
+        if (record.balance !== null) {
+          await executeQuery(balanceQuery, [
+            record.accountNumber,
+            record.balance,
+            record.balance
+          ]);
+        }
 
         result.successCount++;
       } catch (error: any) {
@@ -222,6 +293,8 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
 
     return result;
   } catch (error: any) {
+    console.error('[CustomerImport] Fatal error:', error);
+    console.error('[CustomerImport] Error stack:', error.stack);
     result.errors.push(`Import failed: ${error.message}`);
     result.summary = `Import failed: ${error.message}`;
     return result;

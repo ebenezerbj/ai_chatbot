@@ -26,6 +26,41 @@ export interface UpdateResult {
   customersCreated?: number;  // Track how many new customers were created
 }
 
+function buildCaseInsensitiveKeyMap(row: Record<string, any>): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const key of Object.keys(row)) {
+    const normalized = key.trim().toLowerCase();
+    if (!map[normalized]) {
+      map[normalized] = key;
+    }
+  }
+  return map;
+}
+
+function pickField(row: Record<string, any>, keyMap: Record<string, string>, candidates: string[]): any {
+  for (const candidate of candidates) {
+    if (candidate in row) return row[candidate];
+    const normalized = candidate.trim().toLowerCase();
+    const actualKey = keyMap[normalized];
+    if (actualKey && actualKey in row) return row[actualKey];
+  }
+  return undefined;
+}
+
+function parseMoney(raw: any): number | null {
+  if (raw === null || raw === undefined) return null;
+  const str = String(raw).trim();
+  if (!str) return null;
+
+  // Remove common separators and extract the first number we see.
+  const cleaned = str.replace(/,/g, '');
+  const match = cleaned.match(/-?\d+(?:\.\d+)?/);
+  if (!match) return null;
+
+  const value = parseFloat(match[0]);
+  return Number.isFinite(value) ? value : null;
+}
+
 /**
  * Parse CSV buffer and extract balance updates
  */
@@ -37,65 +72,88 @@ export async function parseCSV(buffer: Buffer): Promise<BalanceUpdate[]> {
     stream
       .pipe(csv())
       .on('data', (row: any) => {
+        const keyMap = buildCaseInsensitiveKeyMap(row);
         // Flexible field mapping - handles various CSV formats from core banking
-        const accountNumber = 
-          row['ACCOUNT.ID'] ||           // Core banking export format
-          row['Account Number'] || 
-          row['account_number'] || 
-          row['AccountNumber'] || 
-          row['ACCOUNT_NUMBER'] ||
-          row['Account No'] ||
-          row['account_no'];
+        const accountNumberRaw = pickField(row, keyMap, [
+          'ACCOUNT.ID',           // Core banking export format
+          'Account Number',
+          'account_number',
+          'AccountNumber',
+          'ACCOUNT_NUMBER',
+          'Account No',
+          'account_no',
+          'ACCOUNT NO',
+          'ACCOUNT NO.',
+          'ACCOUNT.NO',
+          'A/C No',
+          'A/C NO',
+          'ACCT NO'
+        ]);
         
-        const ledgerBalance = 
-          row['WORKING.BALANCE'] ||      // Core banking export format
-          row['ONLINE.ACTUAL.BAL'] ||    // Core banking alternative
-          row['Ledger Balance'] || 
-          row['ledger_balance'] || 
-          row['LedgerBalance'] || 
-          row['Balance'] || 
-          row['balance'] ||
-          row['BALANCE'] ||
-          '0.00';
+        const ledgerBalanceRaw = pickField(row, keyMap, [
+          'WORKING.BALANCE',      // Core banking export format
+          'ONLINE.ACTUAL.BAL',    // Core banking alternative
+          'Ledger Balance',
+          'ledger_balance',
+          'LedgerBalance',
+          'Balance',
+          'balance',
+          'BALANCE',
+          // Accounts exports (e.g., Latest_Accounts.csv)
+          'Account Balance',
+          'Account Balance (Own Balance Share For Joint Accounts)',
+          'Account Balance In Cedis',
+          'Account Balance In Original Currency'
+        ]);
         
-        const availableBalance = 
-          row['ONLINE.CLEARED.BAL'] ||   // Core banking export format
-          row['ONLINE.ACTUAL.BAL'] ||    // Core banking alternative
-          row['Available Balance'] || 
-          row['available_balance'] || 
-          row['AvailableBalance'] || 
-          row['Available'] ||
-          ledgerBalance; // Default to ledger if not provided
+        const availableBalanceRaw = pickField(row, keyMap, [
+          'ONLINE.CLEARED.BAL',   // Core banking export format
+          'ONLINE.ACTUAL.BAL',    // Core banking alternative
+          'Available Balance',
+          'available_balance',
+          'AvailableBalance',
+          'Available'
+        ]);
         
         // Extract customer information from CSV (for auto-creation)
-        const accountTitle = 
-          row['ACCOUNT.TITLE.1'] ||      // Core banking export format
-          row['Account Title'] ||
-          row['account_title'] ||
-          row['Customer Name'] ||
-          row['customer_name'] ||
-          row['Name'] ||
-          '';
+        const accountTitle = (pickField(row, keyMap, [
+          'ACCOUNT.TITLE.1',      // Core banking export format
+          'Account Title',
+          'account_title',
+          'Customer Name',
+          'customer_name',
+          'Name'
+        ]) || '').toString();
         
-        const category = 
-          row['CATEGORY'] ||              // Core banking export format
-          row['Account Type'] ||
-          row['account_type'] ||
-          row['Type'] ||
-          '';
+        const category = (pickField(row, keyMap, [
+          'CATEGORY',              // Core banking export format
+          'Account Type',
+          'account_type',
+          'Type'
+        ]) || '').toString();
         
-        const coCode = 
-          row['CO.CODE'] ||               // Core banking export format
-          row['Branch Code'] ||
-          row['branch_code'] ||
-          row['Branch'] ||
-          '';
+        const coCode = (pickField(row, keyMap, [
+          'CO.CODE',               // Core banking export format
+          'Branch Code',
+          'branch_code',
+          'Branch'
+        ]) || '').toString();
+
+        const accountNumber = accountNumberRaw ? accountNumberRaw.toString().trim() : '';
+        const ledgerParsed = parseMoney(ledgerBalanceRaw);
+        const availableParsed = parseMoney(availableBalanceRaw ?? ledgerBalanceRaw);
+
+        // If we can't actually parse any balance fields, skip this row.
+        // This prevents accidental overwrites to 0.00 when a CSV has unexpected headers.
+        if (ledgerParsed === null && availableParsed === null) {
+          return;
+        }
         
         if (accountNumber) {
           updates.push({
-            accountNumber: accountNumber.toString().trim(),
-            ledgerBalance: parseFloat(ledgerBalance.toString().replace(/,/g, '')) || 0,
-            availableBalance: parseFloat(availableBalance.toString().replace(/,/g, '')) || 0,
+            accountNumber,
+            ledgerBalance: ledgerParsed ?? 0,
+            availableBalance: availableParsed ?? ledgerParsed ?? 0,
             accountTitle: accountTitle.toString().trim(),
             category: category.toString().trim(),
             coCode: coCode.toString().trim()
@@ -120,6 +178,29 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
     errors: [],
     summary: '',
     customersCreated: 0
+  };
+
+  const toPlainAccountNumber = (raw: string): { value: string } | { error: string } => {
+    const trimmed = (raw || '').trim();
+    if (!trimmed) return { error: 'Missing account number' };
+
+    // If it contains any letters and looks like scientific notation (common Excel export issue), reject.
+    // Example: 1.51111E+15 (precision is already lost; it will not match real account numbers).
+    if (/e[+-]?\d+/i.test(trimmed)) {
+      return {
+        error:
+          `Account number '${trimmed}' appears to be in scientific notation. ` +
+          `Please export the ACCOUNT.ID column as TEXT (full digits, no E+15) and re-upload.`
+      };
+    }
+
+    // Accept digits-only account numbers.
+    const digitsOnly = trimmed.replace(/\s+/g, '');
+    if (!/^\d+$/.test(digitsOnly)) {
+      return { error: `Invalid account number '${trimmed}' (expected digits only)` };
+    }
+
+    return { value: digitsOnly };
   };
 
   if (updates.length === 0) {
@@ -162,6 +243,24 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
   // Process each update
   for (const update of updates) {
     try {
+      const normalizedAccount = toPlainAccountNumber(update.accountNumber);
+      if ('error' in normalizedAccount) {
+        result.errorCount++;
+        const errorMsg = `Account ${update.accountNumber}: ${normalizedAccount.error}`;
+        result.errors.push(errorMsg);
+        console.error('[BalanceUpdater]', errorMsg);
+
+        if (result.errors.length > 10) {
+          result.errors = result.errors.slice(0, 10);
+          result.errors.push(`... and ${result.errorCount - 10} more errors`);
+          break;
+        }
+        continue;
+      }
+
+      // Use normalized digits-only account number for any DB operations
+      update.accountNumber = normalizedAccount.value;
+
       // Step 1: Create or update customer record if we have customer data
       if (update.accountTitle) {
         try {

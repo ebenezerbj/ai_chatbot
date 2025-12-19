@@ -8,6 +8,7 @@
     "dev": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
+    "reset:data": "node dist/resetCustomerData.js",
     "lint": "echo 'No linter configured yet'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",

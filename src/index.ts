@@ -1348,13 +1348,18 @@ app.post('/api/admin/import-customers', upload.single('customers'), async (req: 
   } catch (error: any) {
     console.error('[Admin] Import error:', error.message);
     console.error('[Admin] Import error stack:', error.stack);
+    console.error('[Admin] Full error:', error);
     
     // Handle multer errors specifically
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ error: 'File too large. Maximum size is 50MB.' });
     }
     
-    res.status(500).json({ error: 'Import failed: ' + error.message });
+    res.status(500).json({ 
+      error: 'Import failed: ' + (error.message || 'Unknown error'),
+      details: error.stack,
+      type: error.constructor?.name
+    });
   }
 });
 
