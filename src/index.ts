@@ -15,6 +15,7 @@ import * as analytics from './analytics';
 import * as loanApplications from './loanApplications';
 import * as accountOpenings from './accountOpenings';
 import * as kbModule from './knowledge/kb';
+import * as migration from './migration';
 
 // Load environment variables
 dotenv.config();
@@ -1548,6 +1549,39 @@ app.post('/api/admin/upload-loans', upload.single('loans'), async (req: Request,
     console.error('[Admin] Loan upload error:', error.message);
     res.status(500).json({ 
       error: 'Failed to upload loans',
+      details: error.message 
+    });
+  }
+});
+
+// Run database migration
+app.post('/api/admin/run-migration', async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    console.log('[Admin] Running database migration...');
+    
+    const result = await migration.runMigration001();
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (error: any) {
+    console.error('[Admin] Migration error:', error.message);
+    res.status(500).json({ 
+      success: false,
+      error: 'Migration failed',
       details: error.message 
     });
   }
