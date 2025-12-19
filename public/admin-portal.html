@@ -1758,19 +1758,38 @@ https://example.com/products"></textarea>
             formData.append('balances', file);
 
             try {
+                console.log('[Upload] Starting balance upload, file size:', file.size);
                 const response = await fetch('/api/admin/upload-balances', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${authToken}` },
                     body: formData
                 });
 
-                const data = await response.json();
-                progressDiv.classList.add('hidden');
+                console.log('[Upload] Response status:', response.status);
 
                 if (response.status === 401) {
                     handleUnauthorized();
+                    progressDiv.classList.add('hidden');
                     return;
                 }
+
+                // Check content type before parsing
+                const contentType = response.headers.get('content-type');
+                console.log('[Upload] Response content-type:', contentType);
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    progressDiv.classList.add('hidden');
+                    resultDiv.className = 'alert alert-error';
+                    const text = await response.text();
+                    console.error('[Upload] Non-JSON response:', text);
+                    resultDiv.innerHTML = `<strong>❌ Upload Error</strong><br>Server returned non-JSON response (${response.status}):<br><pre style="margin-top:8px; padding:8px; background:#f9fafb; border-radius:4px; overflow-x:auto;">${text.substring(0, 500)}</pre>`;
+                    resultDiv.classList.remove('hidden');
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('[Upload] Response data:', data);
+                progressDiv.classList.add('hidden');
 
                 if (response.ok && data.success) {
                     resultDiv.className = 'alert alert-success';
@@ -1789,19 +1808,46 @@ https://example.com/products"></textarea>
                         successMessage += `<br><br>${data.summary}`;
                     }
                     
+                    if (data.errors && data.errors.length > 0) {
+                        successMessage += '<br><br><strong>Error Details:</strong><br>';
+                        data.errors.forEach(err => {
+                            successMessage += `<small>• ${err}</small><br>`;
+                        });
+                    }
+                    
                     resultDiv.innerHTML = successMessage;
                     addActivityLog(`Balance upload: ${data.successCount} accounts updated${data.customersCreated > 0 ? ', ' + data.customersCreated + ' new customers' : ''}`, 'success');
                     loadDashboardData(); // Refresh stats
                 } else {
                     resultDiv.className = 'alert alert-error';
-                    resultDiv.innerHTML = `<strong>Upload Failed:</strong> ${data.error || 'Unknown error'}`;
+                    let errorMsg = `<strong>❌ Upload Failed</strong><br>${data.error || 'Unknown error'}`;
+                    
+                    if (data.details) {
+                        errorMsg += `<br><details style="margin-top:8px;"><summary>Technical Details</summary><pre style="margin-top:4px; padding:8px; background:#f9fafb; border-radius:4px; overflow-x:auto; font-size:11px;">${data.details}</pre></details>`;
+                    }
+                    
+                    resultDiv.innerHTML = errorMsg;
                     addActivityLog('Balance upload failed', 'error');
                 }
             } catch (error) {
+                console.error('[Upload] Exception:', error);
                 progressDiv.classList.add('hidden');
                 resultDiv.className = 'alert alert-error';
-                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
-                addActivityLog('Balance upload error', 'error');
+                
+                let errorMsg = `<strong>❌ Upload Error</strong><br>`;
+                
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    errorMsg += `Network error or server is unavailable. Please check:<br>
+                    • Server is running<br>
+                    • File size is under 50MB<br>
+                    • Your internet connection<br>
+                    • Try refreshing the page`;
+                } else {
+                    errorMsg += error.message || 'An unexpected error occurred';
+                }
+                
+                resultDiv.innerHTML = errorMsg;
+                addActivityLog('Balance upload error: ' + (error.message || 'Unknown'), 'error');
             }
 
             resultDiv.classList.remove('hidden');

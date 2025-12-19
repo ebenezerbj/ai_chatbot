@@ -25,6 +25,15 @@ const port = Number(process.env.PORT || 4000);
 // Middleware - MUST be before routes
 app.use(express.json());
 
+// Increase timeout for large file uploads (10 minutes)
+app.use((req, res, next) => {
+  if (req.path.includes('/upload') || req.path.includes('/import')) {
+    req.setTimeout(600000); // 10 minutes
+    res.setTimeout(600000);
+  }
+  next();
+});
+
 // Test database connection and initialize analytics on startup
 (async () => {
   const dbConnected = await testConnection();
@@ -1225,47 +1234,72 @@ app.post('/api/admin/logout', (req: Request, res: Response) => {
 
 // Balance upload endpoint
 app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Request, res: Response) => {
+  console.log('[Admin] Balance upload endpoint hit');
   try {
     // Check authentication
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[Admin] Balance upload rejected - no token');
       return res.status(401).json({ error: 'Unauthorized - No token provided' });
     }
     
     const token = authHeader.substring(7);
     if (!adminTokens.has(token)) {
+      console.log('[Admin] Balance upload rejected - invalid token');
       return res.status(401).json({ error: 'Unauthorized - Invalid token' });
     }
     
     // Check file upload
     if (!req.file) {
+      console.log('[Admin] Balance upload rejected - no file');
       return res.status(400).json({ error: 'No file uploaded' });
     }
     
     console.log('[Admin] Processing balance upload, file size:', req.file.size, 'bytes');
     
-    // Parse CSV
-    const updates = await balanceUpdater.parseCSV(req.file.buffer);
-    console.log('[Admin] Parsed', updates.length, 'records from CSV');
-    
-    // Update balances
-    const result = await balanceUpdater.updateBalances(updates);
-    console.log('[Admin] Update complete:', result.successCount, 'successful,', result.errorCount, 'errors');
-    
-    // Get statistics
-    const stats = await balanceUpdater.getUpdateStats();
-    
-    res.json({
-      success: result.success,
-      totalRecords: result.totalRecords,
-      successCount: result.successCount,
-      errorCount: result.errorCount,
-      errors: result.errors,
-      stats: stats,
-      summary: result.summary
-    });
+    try {
+      // Parse CSV
+      console.log('[Admin] Starting CSV parse...');
+      const updates = await balanceUpdater.parseCSV(req.file.buffer);
+      console.log('[Admin] Parsed', updates.length, 'records from CSV');
+      
+      // Update balances
+      console.log('[Admin] Starting balance updates...');
+      const result = await balanceUpdater.updateBalances(updates);
+      console.log('[Admin] Update complete:', result.successCount, 'successful,', result.errorCount, 'errors');
+      
+      // Get statistics
+      console.log('[Admin] Fetching statistics...');
+      const stats = await balanceUpdater.getUpdateStats();
+      console.log('[Admin] Statistics retrieved');
+      
+      res.json({
+        success: result.success,
+        totalRecords: result.totalRecords,
+        successCount: result.successCount,
+        errorCount: result.errorCount,
+        errors: result.errors,
+        stats: stats,
+        summary: result.summary,
+        customersCreated: result.customersCreated || 0
+      });
+    } catch (parseError: any) {
+      console.error('[Admin] Balance upload processing error:', parseError.message);
+      console.error('[Admin] Stack trace:', parseError.stack);
+      return res.status(500).json({ 
+        error: 'Failed to process balance upload: ' + parseError.message,
+        details: parseError.stack 
+      });
+    }
   } catch (error: any) {
-    console.error('[Admin] Upload error:', error.message);
+    console.error('[Admin] Balance upload error:', error.message);
+    console.error('[Admin] Stack trace:', error.stack);
+    
+    // Handle multer errors specifically
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'File too large. Maximum size is 50MB.' });
+    }
+    
     res.status(500).json({ error: 'Upload failed: ' + error.message });
   }
 });
