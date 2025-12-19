@@ -189,6 +189,10 @@ export async function createAccountOpening(payload: AccountOpeningPayload): Prom
   }
   
   try {
+    // Import DB_TYPE to determine database
+    const { DB_TYPE } = await import('./database.js');
+    
+    // For PostgreSQL, use RETURNING id; for MySQL, use standard INSERT
     const sql = `
       INSERT INTO account_openings (
         session_id, ip_address, user_agent,
@@ -201,7 +205,8 @@ export async function createAccountOpening(payload: AccountOpeningPayload): Prom
         specimen_signature_acknowledged, customer_declaration,
         terms_accepted, data_processing_consent,
         status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ${DB_TYPE === 'postgres' ? 'CURRENT_TIMESTAMP' : 'NOW()'})
+      ${DB_TYPE === 'postgres' ? 'RETURNING id' : ''}
     `;
     
     const values = [
@@ -228,14 +233,31 @@ export async function createAccountOpening(payload: AccountOpeningPayload): Prom
       payload.nextOfKinName,
       payload.nextOfKinRelationship,
       payload.nextOfKinPhone,
-      payload.specimenSignatureAcknowledged ? 1 : 0,
-      payload.customerDeclaration ? 1 : 0,
-      payload.termsAccepted ? 1 : 0,
-      payload.dataProcessingConsent ? 1 : 0
+      DB_TYPE === 'postgres' 
+        ? payload.specimenSignatureAcknowledged 
+        : (payload.specimenSignatureAcknowledged ? 1 : 0),
+      DB_TYPE === 'postgres' 
+        ? payload.customerDeclaration 
+        : (payload.customerDeclaration ? 1 : 0),
+      DB_TYPE === 'postgres' 
+        ? payload.termsAccepted 
+        : (payload.termsAccepted ? 1 : 0),
+      DB_TYPE === 'postgres' 
+        ? payload.dataProcessingConsent 
+        : (payload.dataProcessingConsent ? 1 : 0)
     ];
     
     const result = await executeQuery(sql, values);
-    const applicationId = (result as any).insertId;
+    
+    // Get application ID - different for PostgreSQL vs MySQL
+    let applicationId: number;
+    if (DB_TYPE === 'postgres') {
+      // PostgreSQL returns the row with RETURNING id
+      applicationId = result[0]?.id;
+    } else {
+      // MySQL returns insertId in the result metadata
+      applicationId = (result as any).insertId;
+    }
     
     console.log(`[AccountOpening] Created application ID: ${applicationId}`);
     
