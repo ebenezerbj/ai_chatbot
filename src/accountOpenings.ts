@@ -4,6 +4,10 @@
  */
 
 import { executeQuery } from './database.js';
+import axios from 'axios';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
 
 export interface AccountOpeningPayload {
   sessionId?: string;
@@ -364,17 +368,126 @@ export async function updateAccountOpeningStatus(
     throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
   }
 
-  const sql = `
-    UPDATE account_openings 
-    SET status = ?
-    WHERE id = ?
-  `;
-
   try {
-    const result = await executeQuery(sql, [newStatus, applicationId]);
+    // Get customer details before updating
+    const getCustomerSql = `
+      SELECT full_name, phone_number, email 
+      FROM account_openings 
+      WHERE id = ?
+    `;
+    const customerResult = await executeQuery(getCustomerSql, [applicationId]);
+    
+    if (!customerResult || customerResult.length === 0) {
+      throw new Error('Application not found');
+    }
+
+    const customer = customerResult[0];
+    const customerName = customer.full_name || customer.fullName || 'Customer';
+    const phoneNumber = customer.phone_number || customer.phoneNumber;
+
+    // Update status
+    const updateSql = `
+      UPDATE account_openings 
+      SET status = ?
+      WHERE id = ?
+    `;
+    await executeQuery(updateSql, [newStatus, applicationId]);
+
+    // Send SMS notification if phone number exists
+    if (phoneNumber) {
+      await sendStatusUpdateSMS(customerName, phoneNumber, newStatus, applicationId);
+    }
+
     return true;
   } catch (error) {
     console.error('[AccountOpenings] Failed to update status:', error);
     throw error;
+  }
+}
+
+/**
+ * Send SMS notification for status change
+ */
+async function sendStatusUpdateSMS(
+  customerName: string,
+  phoneNumber: string,
+  status: string,
+  applicationId: number
+): Promise<void> {
+  try {
+    const apiKey = process.env.SMS_ONLINE_API_KEY;
+    const senderName = process.env.SMS_ONLINE_SENDER || 'AKCB';
+
+    // Format status for customer-friendly message
+    const statusMessages: Record<string, string> = {
+      'pending': 'Your account opening application is pending review.',
+      'under_review': 'Your account opening application is currently under review. We will update you soon.',
+      'approved': 'Congratulations! Your account opening application has been approved. Please visit our branch to complete the process.',
+      'rejected': 'We regret to inform you that your account opening application has been rejected. Please contact us for more details.',
+      'completed': 'Your account has been successfully opened! Welcome to AKCB. Visit our branch to collect your account details.',
+      'cancelled': 'Your account opening application has been cancelled.'
+    };
+
+    const statusMessage = statusMessages[status] || `Your account opening application status: ${status}`;
+    const message = `Dear ${customerName}, ${statusMessage} Application Ref: #${applicationId}. Thank you for choosing AKCB.`;
+
+    if (!apiKey) {
+      console.log(`[AccountOpenings] SMS not configured. Would send: ${message} to ${phoneNumber}`);
+      return;
+    }
+
+    // Format phone number for SMS Online Ghana (233XXXXXXXXX format)
+    let formattedPhone = phoneNumber;
+    if (phoneNumber.startsWith('0')) {
+      formattedPhone = '233' + phoneNumber.substring(1);
+    } else if (phoneNumber.startsWith('+233')) {
+      formattedPhone = phoneNumber.substring(1);
+    } else if (!phoneNumber.startsWith('233')) {
+      formattedPhone = '233' + phoneNumber;
+    }
+
+    // Prepare SMS request
+    const smsData = {
+      text: message,
+      type: 0,
+      sender: senderName,
+      destinations: [formattedPhone]
+    };
+
+    // Create HTTPS agent
+    let httpsAgent;
+    const cacertPath = path.join(process.cwd(), 'cacert.pem');
+    
+    if (fs.existsSync(cacertPath)) {
+      const ca = fs.readFileSync(cacertPath);
+      httpsAgent = new https.Agent({ ca, rejectUnauthorized: true });
+    } else {
+      httpsAgent = new https.Agent({ rejectUnauthorized: true });
+    }
+
+    // Send SMS
+    const response = await axios.post(
+      'https://api.smsonlinegh.com/v5/message/sms/send',
+      smsData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Host': 'api.smsonlinegh.com',
+          'Authorization': `key ${apiKey}`
+        },
+        httpsAgent,
+        timeout: 10000
+      }
+    );
+
+    if (response.status === 200 && response.data.handshake?.id === 0) {
+      console.log(`[AccountOpenings] Status update SMS sent to ${formattedPhone} for Application #${applicationId}`);
+    } else {
+      console.error('[AccountOpenings] SMS API returned non-success:', response.data);
+    }
+  } catch (error: any) {
+    console.error('[AccountOpenings] Failed to send status update SMS:', error.response?.data || error.message);
+    // Don't throw - SMS failure shouldn't prevent status update
   }
 }
