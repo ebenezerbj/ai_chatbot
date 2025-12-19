@@ -240,9 +240,18 @@ export async function createAccountOpening(payload: AccountOpeningPayload): Prom
     console.log(`[AccountOpening] Created application ID: ${applicationId}`);
     
     return { ok: true, applicationId };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[AccountOpening] Database error:', error);
-    return { ok: false, error: 'Database error while creating account opening application.' };
+    console.error('[AccountOpening] Error details:', {
+      message: error?.message,
+      code: error?.code,
+      sqlState: error?.sqlState,
+      sqlMessage: error?.sqlMessage
+    });
+    
+    // Return more detailed error message for debugging
+    const errorMsg = error?.sqlMessage || error?.message || 'Database error while creating account opening application.';
+    return { ok: false, error: errorMsg };
   }
 }
 

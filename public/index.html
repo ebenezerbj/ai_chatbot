@@ -1174,6 +1174,11 @@
       .message {
         margin-bottom: 1rem;
       }
+
+      /* Fix account opening form grid on mobile */
+      .account-opening-form > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+      }
     }
 
     /* Extra small devices - Compact phones (≤414px) */
@@ -3540,7 +3545,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await resp.json().catch(() => ({}));
+        
+        console.log('[AccountOpening] Response status:', resp.status, resp.statusText);
+        
+        const data = await resp.json().catch((e) => {
+          console.error('[AccountOpening] Failed to parse response:', e);
+          return {};
+        });
+        
+        console.log('[AccountOpening] Response data:', data);
 
         if (resp.ok && data?.ok) {
           try { localStorage.removeItem('accountOpeningDraft'); } catch {}
@@ -3559,12 +3572,15 @@
 
         if (statusEl) {
           statusEl.style.color = 'var(--danger, #c62828)';
-          statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+          const errorMessage = data?.error || 'Sorry, something went wrong.';
+          statusEl.textContent = `Error: ${errorMessage}`;
+          console.error('[AccountOpening] Submission failed:', errorMessage);
         }
       } catch (e) {
+        console.error('[AccountOpening] Exception during submission:', e);
         if (statusEl) {
           statusEl.style.color = 'var(--danger, #c62828)';
-          statusEl.textContent = 'Network error submitting application.';
+          statusEl.textContent = 'Network error submitting application. Please check your connection.';
         }
       }
     }
