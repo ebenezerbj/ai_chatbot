@@ -90,6 +90,18 @@
         <div id="smsStatus" class="muted">Idle</div>
         <pre id="smsOutput" hidden></pre>
       </section>
+
+      <hr />
+
+      <section>
+        <h3>Run Database Migration</h3>
+        <p class="muted">Adds 26 demographic fields to customers table (KYC data, contact info, compliance flags). Achieves 93% CSV coverage.</p>
+        <div class="row">
+          <button id="migrationBtn">Run Migration</button>
+        </div>
+        <div id="migrationStatus" class="muted">Ready to run</div>
+        <pre id="migrationOutput" hidden></pre>
+      </section>
     </div>
 
     <script>
@@ -104,6 +116,10 @@
       const smsMessageEl = document.getElementById('smsMessage');
       const smsStatusEl = document.getElementById('smsStatus');
       const smsOutEl = document.getElementById('smsOutput');
+
+      const migrationBtn = document.getElementById('migrationBtn');
+      const migrationStatusEl = document.getElementById('migrationStatus');
+      const migrationOutEl = document.getElementById('migrationOutput');
 
       async function reloadKB() {
         const token = tokenEl.value.trim();
@@ -188,8 +204,48 @@
         }
       }
 
+      async function runMigration() {
+        const token = tokenEl.value.trim();
+        if (!token) {
+          migrationStatusEl.textContent = 'Provide ADMIN_TOKEN.';
+          migrationStatusEl.className = 'err';
+          return;
+        }
+        migrationBtn.disabled = true;
+        migrationStatusEl.textContent = 'Running migration...';
+        migrationStatusEl.className = '';
+        migrationOutEl.hidden = true;
+        migrationOutEl.textContent = '';
+        try {
+          const res = await fetch('/api/admin/run-migration', {
+            method: 'POST',
+            headers: { 'authorization': `Bearer ${token}`, 'content-type': 'application/json' }
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            migrationStatusEl.textContent = `Failed (${res.status})`;
+            migrationStatusEl.className = 'err';
+            migrationOutEl.hidden = false;
+            migrationOutEl.textContent = JSON.stringify(data || { error: 'Unknown error' }, null, 2);
+            return;
+          }
+          migrationStatusEl.textContent = 'Migration completed successfully';
+          migrationStatusEl.className = 'ok';
+          migrationOutEl.hidden = false;
+          migrationOutEl.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          migrationStatusEl.textContent = 'Network error';
+          migrationStatusEl.className = 'err';
+          migrationOutEl.hidden = false;
+          migrationOutEl.textContent = String(e);
+        } finally {
+          migrationBtn.disabled = false;
+        }
+      }
+
       reloadBtn.addEventListener('click', reloadKB);
       smsBtn.addEventListener('click', testSms);
+      migrationBtn.addEventListener('click', runMigration);
     </script>
   </body>
 </html>
