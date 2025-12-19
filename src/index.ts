@@ -6,7 +6,7 @@ import path from 'path';
 import multer from 'multer';
 import crypto from 'crypto';
 import * as customerAuth from './customerAuth';
-import { testConnection, executeQuery, DB_TYPE } from './database';
+import { testConnection, executeQuery, querySingle, DB_TYPE } from './database';
 import * as balanceUpdater from './balanceUpdater';
 import * as loanManager from './loanManager';
 import * as customerImporter from './customerImporter';
@@ -1344,6 +1344,121 @@ app.get('/api/admin/stats', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Stats error:', error.message);
     res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
+// Customer demographics endpoint
+app.get('/api/admin/demographics', async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    // Get total customers
+    const totalCustomers = await querySingle<any>(
+      'SELECT COUNT(*) as count FROM customers'
+    );
+
+    // Get customers by status
+    const byStatus = await executeQuery<any>(
+      'SELECT status, COUNT(*) as count FROM customers GROUP BY status ORDER BY count DESC'
+    );
+
+    // Get customers by account type
+    const byAccountType = await executeQuery<any>(
+      'SELECT account_type, COUNT(*) as count FROM customers GROUP BY account_type ORDER BY count DESC'
+    );
+
+    // Get customers by branch
+    const byBranch = await executeQuery<any>(
+      'SELECT branch_code, COUNT(*) as count FROM customers GROUP BY branch_code ORDER BY count DESC LIMIT 20'
+    );
+
+    // Get contact info stats
+    const contactStats = await querySingle<any>(
+      `SELECT 
+        COUNT(*) as total,
+        COUNT(phone_number) as with_phone,
+        COUNT(email) as with_email,
+        COUNT(CASE WHEN phone_number IS NOT NULL AND email IS NOT NULL THEN 1 END) as with_both,
+        COUNT(CASE WHEN phone_number IS NULL AND email IS NULL THEN 1 END) as with_neither
+      FROM customers`
+    );
+
+    // Get account balance statistics
+    const balanceStats = await querySingle<any>(
+      `SELECT 
+        COUNT(*) as total_accounts,
+        COUNT(CASE WHEN ledger_balance > 0 THEN 1 END) as positive_balance,
+        COUNT(CASE WHEN ledger_balance = 0 THEN 1 END) as zero_balance,
+        COUNT(CASE WHEN ledger_balance < 0 THEN 1 END) as negative_balance,
+        COALESCE(SUM(ledger_balance), 0) as total_balance,
+        COALESCE(AVG(ledger_balance), 0) as average_balance,
+        COALESCE(MAX(ledger_balance), 0) as max_balance,
+        COALESCE(MIN(ledger_balance), 0) as min_balance
+      FROM account_balances`
+    );
+
+    // Get recent account creation stats (last 30 days, 60 days, 90 days)
+    const createdDateField = DB_TYPE === 'postgres' 
+      ? `created_at >= CURRENT_DATE - INTERVAL '30 days'`
+      : `created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)`;
+    
+    const recentStats = await querySingle<any>(
+      DB_TYPE === 'postgres'
+        ? `SELECT 
+            COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as last_30_days,
+            COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '60 days' THEN 1 END) as last_60_days,
+            COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '90 days' THEN 1 END) as last_90_days
+          FROM customers`
+        : `SELECT 
+            COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as last_30_days,
+            COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 60 DAY) THEN 1 END) as last_60_days,
+            COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 90 DAY) THEN 1 END) as last_90_days
+          FROM customers`
+    );
+
+    res.json({
+      totalCustomers: totalCustomers.count,
+      byStatus,
+      byAccountType,
+      byBranch,
+      contactInfo: {
+        total: contactStats.total,
+        withPhone: contactStats.with_phone,
+        withEmail: contactStats.with_email,
+        withBoth: contactStats.with_both,
+        withNeither: contactStats.with_neither,
+        phonePercentage: ((contactStats.with_phone / contactStats.total) * 100).toFixed(1),
+        emailPercentage: ((contactStats.with_email / contactStats.total) * 100).toFixed(1)
+      },
+      balances: {
+        totalAccounts: balanceStats.total_accounts,
+        positiveBalance: balanceStats.positive_balance,
+        zeroBalance: balanceStats.zero_balance,
+        negativeBalance: balanceStats.negative_balance,
+        totalBalance: parseFloat(balanceStats.total_balance),
+        averageBalance: parseFloat(balanceStats.average_balance),
+        maxBalance: parseFloat(balanceStats.max_balance),
+        minBalance: parseFloat(balanceStats.min_balance)
+      },
+      recentActivity: {
+        last30Days: recentStats.last_30_days,
+        last60Days: recentStats.last_60_days,
+        last90Days: recentStats.last_90_days
+      }
+    });
+  } catch (error: any) {
+    console.error('[Admin] Demographics error:', error.message);
+    console.error('[Admin] Demographics error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to get demographics' });
   }
 });
 
