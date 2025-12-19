@@ -39,15 +39,25 @@ const postgresConfig = {
 // Create connection pools
 let mysqlPool: mysql.Pool | null = null;
 let pgPool: PgPool | null = null;
+let isShuttingDown = false;
 
 /**
  * Get database connection pool (lazy initialization)
  */
 export function getPool(): mysql.Pool | PgPool {
+  if (isShuttingDown) {
+    throw new Error('Database is shutting down');
+  }
+  
   if (DB_TYPE === 'postgres') {
     if (!pgPool) {
       console.log('[DB] Creating PostgreSQL connection pool');
       pgPool = new PgPool(postgresConfig);
+      
+      // Handle pool errors
+      pgPool.on('error', (err) => {
+        console.error('[DB] PostgreSQL pool error:', err);
+      });
     }
     return pgPool as any;
   } else {
@@ -96,31 +106,44 @@ export async function executeQuery<T = any>(
   query: string,
   params: any[] = []
 ): Promise<T[]> {
-  if (DB_TYPE === 'postgres') {
-    const pool = getPool() as PgPool;
-    // Convert MySQL placeholders (?) to PostgreSQL ($1, $2, etc.)
-    let pgQuery = query;
-    let paramIndex = 1;
-    pgQuery = pgQuery.replace(/\?/g, () => `$${paramIndex++}`);
-    
-    try {
+  try {
+    if (DB_TYPE === 'postgres') {
+      const pool = getPool() as PgPool;
+      // Convert MySQL placeholders (?) to PostgreSQL ($1, $2, etc.)
+      let pgQuery = query;
+      let paramIndex = 1;
+      pgQuery = pgQuery.replace(/\?/g, () => `$${paramIndex++}`);
+      
       const result = await pool.query(pgQuery, params);
       return result.rows as T[];
-    } catch (error: any) {
-      console.error('[DB] PostgreSQL query error:', error.message);
-      console.error('[DB] Query:', pgQuery);
-      console.error('[DB] Params:', params);
-      throw error;
+    } else {
+      const pool = getPool() as mysql.Pool;
+      const connection = await pool.getConnection();
+      try {
+        const [rows] = await connection.query(query, params);
+        return rows as T[];
+      } finally {
+        connection.release();
+      }
     }
-  } else {
-    const pool = getPool() as mysql.Pool;
-    const connection = await pool.getConnection();
-    try {
-      const [rows] = await connection.query(query, params);
-      return rows as T[];
-    } finally {
-      connection.release();
+  } catch (error: any) {
+    // Check if it's a pool error
+    if (error.message && error.message.includes('pool after calling end')) {
+      console.error('[DB] Pool was closed, attempting to recreate...');
+      // Reset the pool
+      if (DB_TYPE === 'postgres') {
+        pgPool = null;
+      } else {
+        mysqlPool = null;
+      }
+      // Don't throw - let caller retry if needed
+      throw new Error('Database pool was closed. Please retry the operation.');
     }
+    
+    console.error('[DB] Query error:', error.message);
+    console.error('[DB] Query:', query);
+    console.error('[DB] Params:', params);
+    throw error;
   }
 }
 
@@ -139,6 +162,12 @@ export async function querySingle<T = any>(
  * Close pool (for graceful shutdown)
  */
 export async function closePool(): Promise<void> {
+  isShuttingDown = true;
+  console.log('[DB] Initiating graceful shutdown...');
+  
+  // Wait a bit for ongoing queries to complete
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
   if (DB_TYPE === 'postgres' && pgPool) {
     await pgPool.end();
     pgPool = null;
@@ -150,11 +179,12 @@ export async function closePool(): Promise<void> {
   }
 }
 
-// Handle graceful shutdown
-process.on('SIGTERM', async () => {
-  await closePool();
-});
+// Handle graceful shutdown - DISABLED for production to prevent premature pool closure
+// Only close pool on actual process termination, not on signals
+// process.on('SIGTERM', async () => {
+//   await closePool();
+// });
 
-process.on('SIGINT', async () => {
-  await closePool();
-});
+// process.on('SIGINT', async () => {
+//   await closePool();
+// });
