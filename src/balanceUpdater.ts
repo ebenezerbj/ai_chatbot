@@ -116,7 +116,7 @@ export async function parseCSV(buffer: Buffer): Promise<BalanceUpdate[]> {
         ]);
         
         // Extract customer information from CSV (for auto-creation)
-        const accountTitle = (pickField(row, keyMap, [
+        let accountTitle = (pickField(row, keyMap, [
           'ACCOUNT.TITLE.1',      // Core banking export format
           'Account Title',
           'account_title',
@@ -124,6 +124,18 @@ export async function parseCSV(buffer: Buffer): Promise<BalanceUpdate[]> {
           'customer_name',
           'Name'
         ]) || '').toString();
+        
+        // If no account title, try to build from name components (R20 format)
+        if (!accountTitle) {
+          const firstName = (pickField(row, keyMap, ['FIRSTNAME', 'First Name', 'first_name']) || '').toString().trim();
+          const lastName = (pickField(row, keyMap, ['LASTNAME', 'Last Name', 'last_name', 'Surname']) || '').toString().trim();
+          const otherName = (pickField(row, keyMap, ['OTHERNAME', 'Other Name', 'other_name', 'Middle Name']) || '').toString().trim();
+          
+          const nameParts = [firstName, otherName, lastName].filter(p => p.length > 0);
+          if (nameParts.length > 0) {
+            accountTitle = nameParts.join(' ');
+          }
+        }
         
         const category = (pickField(row, keyMap, [
           'CATEGORY',              // Core banking export format
@@ -261,7 +273,21 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
       // Use normalized digits-only account number for any DB operations
       update.accountNumber = normalizedAccount.value;
 
-      // Step 1: Create or update customer record if we have customer data
+      // Step 1: Check if customer exists (required for foreign key constraint)
+      const checkQuery = DB_TYPE === 'postgres' 
+        ? 'SELECT account_number FROM customers WHERE account_number = $1'
+        : 'SELECT account_number FROM customers WHERE account_number = ?';
+      
+      const existingCustomer = await executeQuery(checkQuery, [update.accountNumber]);
+      const customerExists = Array.isArray(existingCustomer) && existingCustomer.length > 0;
+
+      // Step 2: Create or update customer record
+      // If customer doesn't exist and we don't have a name, create with account number as name
+      if (!customerExists && !update.accountTitle) {
+        update.accountTitle = `Account ${update.accountNumber}`;
+        console.log(`[BalanceUpdater] Creating new customer for ${update.accountNumber} with auto-generated name`);
+      }
+
       if (update.accountTitle) {
         try {
           if (DB_TYPE === 'postgres') {
@@ -272,7 +298,7 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
               update.coCode || null
             ]);
             // Check if this was an insert (new customer)
-            if ((customerResult as any).rowCount > 0) {
+            if ((customerResult as any).rowCount > 0 && !customerExists) {
               result.customersCreated!++;
             }
           } else {
@@ -293,7 +319,7 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
         }
       }
 
-      // Step 2: Update balance (this will now succeed because customer exists)
+      // Step 3: Update balance
       if (DB_TYPE === 'postgres') {
         await executeQuery(balanceQuery, [
           update.accountNumber,
