@@ -149,19 +149,19 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
       try {
         // First, insert/update customer
         const customerQuery = DB_TYPE === 'postgres'
-          ? `INSERT INTO customers (account_number, full_name, account_type, branch_code, phone_number, email)
+          ? `INSERT INTO customers (account_number, account_name, account_type, branch_code, phone_number, email)
              VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (account_number) 
              DO UPDATE SET 
-               full_name = EXCLUDED.full_name,
+               account_name = EXCLUDED.account_name,
                account_type = EXCLUDED.account_type,
                branch_code = EXCLUDED.branch_code,
                phone_number = COALESCE(EXCLUDED.phone_number, customers.phone_number),
                email = COALESCE(EXCLUDED.email, customers.email)`
-          : `INSERT INTO customers (account_number, full_name, account_type, branch_code, phone_number, email)
+          : `INSERT INTO customers (account_number, account_name, account_type, branch_code, phone_number, email)
              VALUES (?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE 
-               full_name = VALUES(full_name),
+               account_name = VALUES(account_name),
                account_type = VALUES(account_type),
                branch_code = VALUES(branch_code),
                phone_number = COALESCE(VALUES(phone_number), phone_number),
