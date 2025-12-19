@@ -203,7 +203,7 @@ app.put('/api/admin/account-openings/:id/status', async (req: Request, res: Resp
 // Configure multer for file uploads
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
 // Admin authentication
@@ -1314,6 +1314,12 @@ app.post('/api/admin/import-customers', upload.single('customers'), async (req: 
   } catch (error: any) {
     console.error('[Admin] Import error:', error.message);
     console.error('[Admin] Import error stack:', error.stack);
+    
+    // Handle multer errors specifically
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'File too large. Maximum size is 50MB.' });
+    }
+    
     res.status(500).json({ error: 'Import failed: ' + error.message });
   }
 });
@@ -1819,6 +1825,22 @@ app.get('/api/health', (req: Request, res: Response) => {
     port,
     kbEntries: kb.length
   });
+});
+
+// Global error handler for multer and other errors
+app.use((err: any, req: Request, res: Response, next: any) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    console.error('[Upload] File too large:', err.message);
+    return res.status(413).json({ error: 'File too large. Maximum size is 50MB.' });
+  }
+  
+  if (err instanceof multer.MulterError) {
+    console.error('[Upload] Multer error:', err.message);
+    return res.status(400).json({ error: 'File upload error: ' + err.message });
+  }
+  
+  console.error('[Server] Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // Load KB on startup
