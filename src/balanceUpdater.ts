@@ -193,8 +193,11 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
   };
 
   const toPlainAccountNumber = (raw: string): { value: string } | { error: string } => {
-    const trimmed = (raw || '').trim();
+    let trimmed = (raw || '').trim();
     if (!trimmed) return { error: 'Missing account number' };
+
+    // Strip common currency prefixes (GHS, USD, EUR, etc.)
+    trimmed = trimmed.replace(/^(GHS|USD|EUR|GBP|NGN|KES|ZAR)\s*/i, '');
 
     // If it contains any letters and looks like scientific notation (common Excel export issue), reject.
     // Example: 1.51111E+15 (precision is already lost; it will not match real account numbers).
@@ -206,10 +209,10 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
       };
     }
 
-    // Accept digits-only account numbers.
+    // Accept digits-only account numbers (after removing spaces).
     const digitsOnly = trimmed.replace(/\s+/g, '');
     if (!/^\d+$/.test(digitsOnly)) {
-      return { error: `Invalid account number '${trimmed}' (expected digits only)` };
+      return { error: `Invalid account number '${raw}' (expected digits only, got '${digitsOnly}')` };
     }
 
     return { value: digitsOnly };
