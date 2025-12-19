@@ -1272,20 +1272,24 @@ app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Re
 
 // Customer & Balance import endpoint (combined)
 app.post('/api/admin/import-customers', upload.single('customers'), async (req: Request, res: Response) => {
+  console.log('[Admin] Customer import endpoint hit');
   try {
     // Check authentication
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[Admin] Import rejected - no token');
       return res.status(401).json({ error: 'Unauthorized - No token provided' });
     }
     
     const token = authHeader.substring(7);
     if (!adminTokens.has(token)) {
+      console.log('[Admin] Import rejected - invalid token');
       return res.status(401).json({ error: 'Unauthorized - Invalid token' });
     }
     
     // Check file upload
     if (!req.file) {
+      console.log('[Admin] Import rejected - no file');
       return res.status(400).json({ error: 'No file uploaded' });
     }
     
@@ -1309,6 +1313,7 @@ app.post('/api/admin/import-customers', upload.single('customers'), async (req: 
     });
   } catch (error: any) {
     console.error('[Admin] Import error:', error.message);
+    console.error('[Admin] Import error stack:', error.stack);
     res.status(500).json({ error: 'Import failed: ' + error.message });
   }
 });

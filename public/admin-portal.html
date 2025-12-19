@@ -1609,6 +1609,13 @@ https://example.com/products"></textarea>
                 uploadProgressBar.style.width = '80%';
                 uploadProgressText.textContent = 'Finalizing...';
 
+                // Check response content type
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const textResponse = await response.text();
+                    throw new Error(`Server returned non-JSON response (${response.status}): ${textResponse.substring(0, 200)}`);
+                }
+
                 const data = await response.json();
 
                 uploadProgressBar.style.width = '100%';
