@@ -350,3 +350,31 @@ export function shouldOpenAccountOpeningForm(message: string, isCustomer?: boole
   
   return triggers.some(trigger => lowerMsg.includes(trigger));
 }
+
+/**
+ * Update the status of an account opening application
+ */
+export async function updateAccountOpeningStatus(
+  applicationId: number,
+  newStatus: string
+): Promise<boolean> {
+  // Validate status
+  const validStatuses = ['pending', 'under_review', 'approved', 'rejected', 'completed', 'cancelled'];
+  if (!validStatuses.includes(newStatus)) {
+    throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  const sql = `
+    UPDATE account_openings 
+    SET status = ?
+    WHERE id = ?
+  `;
+
+  try {
+    const result = await executeQuery(sql, [newStatus, applicationId]);
+    return true;
+  } catch (error) {
+    console.error('[AccountOpenings] Failed to update status:', error);
+    throw error;
+  }
+}

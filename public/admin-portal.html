@@ -869,11 +869,12 @@
                                     <th>Account Type</th>
                                     <th>Initial Deposit</th>
                                     <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="accountOpeningsTable">
                                 <tr>
-                                    <td colspan="8" style="text-align: center; color: #6b7280;">No data loaded</td>
+                                    <td colspan="9" style="text-align: center; color: #6b7280;">No data loaded</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1250,7 +1251,7 @@ https://example.com/products"></textarea>
                 errorEl.textContent = '';
             }
 
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">Loading…</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#6b7280;">Loading…</td></tr>`;
 
             try {
                 const resp = await fetch('/api/admin/account-openings?limit=100&offset=0', {
@@ -1269,7 +1270,7 @@ https://example.com/products"></textarea>
                         errorEl.textContent = msg;
                         errorEl.classList.remove('hidden');
                     }
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No data</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#6b7280;">No data</td></tr>`;
                     return;
                 }
 
@@ -1295,7 +1296,19 @@ https://example.com/products"></textarea>
                         <td>${escapeHtml(item.ghanaCardNumber || '')}</td>
                         <td>${escapeHtml(item.accountType || '')}</td>
                         <td>GHS ${Number(item.initialDeposit || 0).toFixed(2)}</td>
-                        <td>${escapeHtml(item.status || '')}</td>
+                        <td>
+                            <select id="status-${item.id}" style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;" onclick="event.stopPropagation();">
+                                <option value="pending" ${item.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="under_review" ${item.status === 'under_review' ? 'selected' : ''}>Under Review</option>
+                                <option value="approved" ${item.status === 'approved' ? 'selected' : ''}>Approved</option>
+                                <option value="rejected" ${item.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="cancelled" ${item.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 4px 12px; font-size: 14px;" onclick="updateApplicationStatus(${item.id}); event.stopPropagation();">Update</button>
+                        </td>
                     `;
                     row.addEventListener('click', () => {
                         if (detailsEl) {
@@ -1309,7 +1322,46 @@ https://example.com/products"></textarea>
                     errorEl.textContent = error?.message || 'Error loading account openings';
                     errorEl.classList.remove('hidden');
                 }
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#6b7280;">No data</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#6b7280;">No data</td></tr>`;
+            }
+        }
+
+        // Update application status
+        async function updateApplicationStatus(applicationId) {
+            const selectElement = document.getElementById(`status-${applicationId}`);
+            if (!selectElement) {
+                alert('Could not find status dropdown');
+                return;
+            }
+
+            const newStatus = selectElement.value;
+            
+            try {
+                const resp = await fetch(`/api/admin/account-openings/${applicationId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (resp.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || !data?.ok) {
+                    alert(data?.error || 'Failed to update status');
+                    return;
+                }
+
+                alert('Status updated successfully!');
+                await loadAccountOpenings(); // Reload the table
+            } catch (error) {
+                console.error('Update status error:', error);
+                alert(error?.message || 'Error updating status');
             }
         }
 
