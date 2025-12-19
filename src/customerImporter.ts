@@ -81,18 +81,55 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
       stream
         .pipe(csv())
         .on('data', (row: any) => {
-          const accountNumber = row['ACCOUNT.ID'];
+          // Support multiple CSV formats
+          // Format 1: ACCOUNT.ID, ACCOUNT.TITLE.1, etc. (old format)
+          // Format 2: Account Number, First Name, etc. (Accounts.csv format)
+          
+          const accountNumber = row['ACCOUNT.ID'] || row['Account Number'];
+          
           if (accountNumber) {
+            // Handle different CSV formats
+            let accountTitle = '';
+            let category = '';
+            let coCode = '';
+            let balance = 0;
+            let phoneNumber = '';
+            let email = '';
+            
+            if (row['ACCOUNT.ID']) {
+              // Old format
+              accountTitle = (row['ACCOUNT.TITLE.1'] || '').toString().trim();
+              category = (row['CATEGORY'] || '').toString().trim();
+              coCode = (row['CO.CODE'] || '').toString().trim();
+              balance = parseFloat((row['WORKING.BALANCE'] || row['ONLINE.CLEARED.BAL'] || row['ONLINE.ACTUAL.BAL'] || '0').toString().replace(/,/g, '')) || 0;
+            } else {
+              // Accounts.csv format
+              const firstName = (row['First Name'] || '').toString().trim();
+              const middleName = (row['Middle Name'] || '').toString().trim();
+              const surname = (row['Surname'] || '').toString().trim();
+              const title = (row['Title'] || '').toString().trim();
+              
+              // Build full name
+              accountTitle = [title, firstName, middleName, surname]
+                .filter(n => n)
+                .join(' ')
+                .trim();
+              
+              category = (row['Account Type'] || row['Product Name'] || '').toString().trim();
+              coCode = (row['Account Branch'] || '').toString().trim();
+              balance = parseFloat((row['Account Balance'] || '0').toString().replace(/,/g, '')) || 0;
+              phoneNumber = (row['Mobile Phone Number'] || '').toString().trim();
+              email = (row['Email'] || '').toString().trim();
+            }
+            
             records.push({
               accountNumber: accountNumber.toString().trim(),
-              accountTitle: (row['ACCOUNT.TITLE.1'] || '').toString().trim(),
-              category: (row['CATEGORY'] || '').toString().trim(),
-              accountOfficer: (row['ACCOUNT.OFFICER'] || '').toString().trim(),
-              coCode: (row['CO.CODE'] || '').toString().trim(),
-              smsSubscribe: (row['SMS.SUBSCRIBE'] || '').toString().trim(),
-              workingBalance: parseFloat((row['WORKING.BALANCE'] || '0').toString().replace(/,/g, '')) || 0,
-              clearedBalance: parseFloat((row['ONLINE.CLEARED.BAL'] || row['WORKING.BALANCE'] || '0').toString().replace(/,/g, '')) || 0,
-              actualBalance: parseFloat((row['ONLINE.ACTUAL.BAL'] || row['WORKING.BALANCE'] || '0').toString().replace(/,/g, '')) || 0
+              accountTitle,
+              category,
+              coCode,
+              balance,
+              phoneNumber,
+              email
             });
           }
         })
@@ -112,25 +149,31 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
       try {
         // First, insert/update customer
         const customerQuery = DB_TYPE === 'postgres'
-          ? `INSERT INTO customers (account_number, full_name, account_type, branch_code)
-             VALUES ($1, $2, $3, $4)
+          ? `INSERT INTO customers (account_number, full_name, account_type, branch_code, phone_number, email)
+             VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (account_number) 
              DO UPDATE SET 
                full_name = EXCLUDED.full_name,
                account_type = EXCLUDED.account_type,
-               branch_code = EXCLUDED.branch_code`
-          : `INSERT INTO customers (account_number, full_name, account_type, branch_code)
-             VALUES (?, ?, ?, ?)
+               branch_code = EXCLUDED.branch_code,
+               phone_number = COALESCE(EXCLUDED.phone_number, customers.phone_number),
+               email = COALESCE(EXCLUDED.email, customers.email)`
+          : `INSERT INTO customers (account_number, full_name, account_type, branch_code, phone_number, email)
+             VALUES (?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE 
                full_name = VALUES(full_name),
                account_type = VALUES(account_type),
-               branch_code = VALUES(branch_code)`;
+               branch_code = VALUES(branch_code),
+               phone_number = COALESCE(VALUES(phone_number), phone_number),
+               email = COALESCE(VALUES(email), email)`;
 
         await executeQuery(customerQuery, [
           record.accountNumber,
           record.accountTitle,
           record.category,
-          record.coCode
+          record.coCode,
+          record.phoneNumber || null,
+          record.email || null
         ]);
 
         // Then, insert/update balance
@@ -151,8 +194,8 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
 
         await executeQuery(balanceQuery, [
           record.accountNumber,
-          record.workingBalance,
-          record.clearedBalance
+          record.balance,
+          record.balance
         ]);
 
         result.successCount++;
