@@ -284,8 +284,16 @@ export async function listAccountOpenings(limit = 100): Promise<any[]> {
   try {
     const sql = `
       SELECT 
-        id, session_id, full_name, phone_number, email, account_type,
-        initial_deposit, status, created_at
+        id,
+        session_id as "sessionId",
+        full_name as "fullName",
+        phone_number as "phoneNumber",
+        email,
+        ghana_card_number as "ghanaCardNumber",
+        account_type as "accountType",
+        initial_deposit as "initialDeposit",
+        status,
+        created_at as "createdAt"
       FROM account_openings
       ORDER BY created_at DESC
       LIMIT ?

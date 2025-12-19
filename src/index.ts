@@ -158,7 +158,13 @@ app.get('/api/admin/account-openings', async (req: Request, res: Response) => {
 
     const limit = Number((req.query as any)?.limit ?? 100);
     const applications = await accountOpenings.listAccountOpenings(limit);
-    return res.json({ ok: true, applications });
+    
+    // Return in format expected by admin portal (items + total)
+    return res.json({ 
+      ok: true, 
+      items: applications,
+      total: applications.length 
+    });
   } catch (error: any) {
     console.error('[Admin] Account openings list error:', error?.message || error);
     return res.status(500).json({ ok: false, error: 'Failed to load account openings' });
