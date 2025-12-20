@@ -1044,6 +1044,135 @@ app.post('/api/followup/complete', async (req: Request, res: Response) => {
   }
 });
 
+// Customer escalation/handover request
+app.post('/api/handover', async (req: Request, res: Response) => {
+  try {
+    const { sessionId, name, phone, message, lat, lng } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID required' });
+    }
+
+    console.log('[Handover] Request received:', { sessionId, name, phone, hasLocation: !!(lat && lng) });
+
+    // Verify session exists
+    const sessions = await executeQuery<any>(
+      'SELECT session_id FROM chat_sessions WHERE session_id = $1',
+      [sessionId]
+    );
+
+    if (!sessions || sessions.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Generate unique ticket ID
+    const ticketId = `TICKET-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    // Determine target branch based on location (if provided)
+    let targetBranch = 'Head Office (Tarkwa)';
+    if (lat && lng) {
+      // Simple distance calculation to nearest branch
+      // Tarkwa coordinates: 5.2977° N, 1.9953° W
+      const tarkwaLat = 5.2977;
+      const tarkwaLng = -1.9953;
+      
+      // Calculate simple distance (not accurate but good enough for demo)
+      const distance = Math.sqrt(
+        Math.pow(lat - tarkwaLat, 2) + Math.pow(lng - tarkwaLng, 2)
+      );
+      
+      // If within ~0.1 degrees (~11km), route to Tarkwa
+      if (distance < 0.1) {
+        targetBranch = 'Tarkwa Branch';
+      } else {
+        targetBranch = 'Head Office (Tarkwa)';
+      }
+      
+      console.log('[Handover] Location-based routing:', { lat, lng, distance, targetBranch });
+    }
+
+    // Store escalation in database (create table if needed)
+    try {
+      // Create escalations table if it doesn't exist
+      if (DB_TYPE === 'postgres') {
+        await executeQuery(`
+          CREATE TABLE IF NOT EXISTS escalations (
+            id SERIAL PRIMARY KEY,
+            ticket_id VARCHAR(255) UNIQUE NOT NULL,
+            session_id VARCHAR(255) NOT NULL,
+            customer_name VARCHAR(255),
+            customer_phone VARCHAR(50),
+            message TEXT,
+            latitude DECIMAL(10, 7),
+            longitude DECIMAL(10, 7),
+            target_branch VARCHAR(100),
+            status VARCHAR(50) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+
+        await executeQuery(`
+          CREATE INDEX IF NOT EXISTS idx_escalations_status ON escalations(status)
+        `);
+
+        await executeQuery(`
+          CREATE INDEX IF NOT EXISTS idx_escalations_created ON escalations(created_at)
+        `);
+      } else {
+        // MySQL
+        await executeQuery(`
+          CREATE TABLE IF NOT EXISTS escalations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            ticket_id VARCHAR(255) UNIQUE NOT NULL,
+            session_id VARCHAR(255) NOT NULL,
+            customer_name VARCHAR(255),
+            customer_phone VARCHAR(50),
+            message TEXT,
+            latitude DECIMAL(10, 7),
+            longitude DECIMAL(10, 7),
+            target_branch VARCHAR(100),
+            status VARCHAR(50) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_status (status),
+            INDEX idx_created (created_at)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+      }
+
+      // Insert escalation record
+      await executeQuery(
+        DB_TYPE === 'postgres'
+          ? `INSERT INTO escalations 
+             (ticket_id, session_id, customer_name, customer_phone, message, latitude, longitude, target_branch) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+          : `INSERT INTO escalations 
+             (ticket_id, session_id, customer_name, customer_phone, message, latitude, longitude, target_branch) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [ticketId, sessionId, name || null, phone || null, message || null, lat || null, lng || null, targetBranch]
+      );
+
+      console.log('[Handover] Escalation saved:', ticketId);
+
+    } catch (dbError: any) {
+      console.error('[Handover] Database error:', dbError.message);
+      // Continue even if DB save fails - at least log it
+    }
+
+    res.json({
+      ok: true,
+      ticketId,
+      targetBranch,
+      message: 'Your request has been submitted. An agent will contact you soon.'
+    });
+
+  } catch (error: any) {
+    console.error('[Handover] Error:', error);
+    res.status(500).json({ error: 'Failed to submit handover request' });
+  }
+});
+
 // Get user segment distribution (admin)
 app.get('/api/admin/segments', async (req: Request, res: Response) => {
   try {
@@ -1057,6 +1186,41 @@ app.get('/api/admin/segments', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Segments] Error:', error);
     res.status(500).json({ error: 'Failed to get segment distribution' });
+  }
+});
+
+// Get escalations (admin)
+app.get('/api/admin/escalations', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const status = req.query.status as string || 'all';
+    
+    let query: string;
+    let params: any[] = [];
+
+    if (status === 'all') {
+      query = `SELECT * FROM escalations ORDER BY created_at DESC LIMIT 100`;
+    } else {
+      query = DB_TYPE === 'postgres'
+        ? `SELECT * FROM escalations WHERE status = $1 ORDER BY created_at DESC LIMIT 100`
+        : `SELECT * FROM escalations WHERE status = ? ORDER BY created_at DESC LIMIT 100`;
+      params = [status];
+    }
+
+    const escalations = await executeQuery<any>(query, params);
+
+    res.json({ 
+      escalations: escalations || [],
+      total: escalations?.length || 0
+    });
+
+  } catch (error: any) {
+    console.error('[Escalations] Error:', error);
+    res.status(500).json({ error: 'Failed to get escalations' });
   }
 });
 
