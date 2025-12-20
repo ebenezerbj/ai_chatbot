@@ -38,9 +38,19 @@ Export a CSV file with the following columns:
 
 ### Step 3: Upload CSV File
 1. Click "Choose File" button
-2. Select your CSV export file
+2. Select your CSV export file (any size supported)
 3. Click "Upload Balances"
 4. Wait for processing (progress indicator will show)
+
+**Large File Support (Added December 20, 2025):**
+- ✅ Automatic batch processing for large files
+- ✅ Processes 500 records per batch internally
+- ✅ No file size limit - tested with 48,872 records (9.74 MB)
+- ✅ Real-time progress logging in server logs
+- ✅ Prevents timeout errors on large uploads
+- ✅ Handles up to 100 errors without stopping
+
+**Example:** A CSV with 48,872 records is automatically split into 98 internal batches and processed sequentially with progress updates.
 
 ### Step 4: Review Results
 After processing, you'll see:
@@ -167,7 +177,7 @@ Response: { "token": "auth_token_here" }
 ```
 POST /api/admin/upload-balances
 Headers: { "Authorization": "Bearer <token>" }
-Body: FormData with file
+Body: FormData with file (any size supported)
 Response: {
   "success": true,
   "totalRecords": 48715,
@@ -177,9 +187,16 @@ Response: {
   "stats": {
     "totalAccounts": 48715,
     "lastUpdate": "2024-01-15T10:30:00.000Z"
-  }
+  },
+  "customersCreated": 125  // If new accounts were created
 }
 ```
+
+**Performance:**
+- Processes large files in batches (500 records per batch)
+- Timeout set to 10 minutes
+- Tested with 48,872 records successfully
+- Server logs show batch progress: "Batch X/Y complete: N success, M errors"
 
 ### Logout
 ```

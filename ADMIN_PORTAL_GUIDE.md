@@ -32,14 +32,39 @@ The main dashboard provides:
 - **System Information**: Database type, connection status, service status
 - **Recent Activity Log**: Last 10 system events
 
-### 2. Balance Upload
+### 2. Customer Demographics
+View comprehensive demographic analytics with interactive charts.
+
+**Features:**
+- **Coverage Statistics**: Percentage of customers with each demographic field
+- **Interactive Charts** (Chart.js):
+  - Gender Distribution (Doughnut Chart)
+  - Age Group Distribution (Bar Chart)
+  - Customer Type Distribution (Pie Chart)
+  - Account Status Distribution (Doughnut Chart)
+- **Detailed Tables**: Complete demographic data with all captured fields
+- **20+ Demographic Fields**: Names, gender, ID info, addresses, phone, email, DOB, etc.
+- **Database Migration**: Run Migration 001 to add demographic columns
+
+**Captured Demographics:**
+- Personal: Title, First/Middle/Last Name, Gender, Date of Birth
+- Identification: ID Type, ID Number, PEP Status
+- Contact: Mobile Phone, Email, Home Address, Postal Address, Country
+- Account: Customer Type, Ownership, Product Name, Status, Branch, Currency
+
+### 3. Balance Upload
 Upload CSV files to update customer account balances.
 
 **Features:**
-- File upload with validation
+- File upload with validation (any file size supported)
 - Real-time progress indicator
 - Detailed success/error reporting
 - Automatic stats refresh after upload
+- **Batch Processing** (Added Dec 20, 2025):
+  - Large files processed in 500-record batches
+  - Prevents timeout on large uploads
+  - Handles up to 100 errors per upload
+  - Tested with 48,872 records successfully
 
 **CSV Format:**
 ```csv

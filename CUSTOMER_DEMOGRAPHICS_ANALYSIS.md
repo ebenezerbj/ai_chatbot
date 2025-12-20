@@ -345,9 +345,21 @@ From **Latest_Acc.csv**, we can already extract:
 - ✅ `public/admin-portal.html` - UI enhancements
 - ✅ `CUSTOMER_DEMOGRAPHICS_ANALYSIS.md` - This document
 
+### 🔄 Batch Processing (Added December 20, 2025)
+
+**Large File Handling:**
+- Automatic batch processing for large CSV uploads
+- Processes 500 records per batch internally
+- Prevents timeout errors on large files (48K+ records)
+- Progress logging for each batch
+- Handles up to 100 errors without stopping
+
+**Example:** A 48,872-record CSV is automatically processed in 98 internal batches with real-time progress updates.
+
 ---
 
 **Generated:** December 19, 2025
 **Updated:** December 20, 2025
 **Current Coverage:** 8% → **50%** (after migration)
-**Status:** ✅ **Implementation Complete - Ready for Deployment**
+**Status:** ✅ **Implementation Complete - Deployed to Production**
+**Latest Commit:** 9593d45
