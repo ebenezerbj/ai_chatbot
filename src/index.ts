@@ -698,6 +698,25 @@ Respond naturally and helpfully using the knowledge base!`;
       const reply = response.data.choices[0]?.message?.content || 'I could not generate a response.';
       console.log(`[Chat] OpenAI response: ${reply}`);
       
+      // Detect if AI is suggesting to contact someone or can't help
+      const replyLower = reply.toLowerCase();
+      const suggestHandover = 
+        replyLower.includes('call:') || 
+        replyLower.includes('email:') ||
+        replyLower.includes('contact') && (replyLower.includes('0542428935') || replyLower.includes('0501290952')) ||
+        replyLower.includes('speak to') && replyLower.includes('agent') ||
+        replyLower.includes('talk to') && replyLower.includes('agent') ||
+        replyLower.includes('connect you with') ||
+        replyLower.includes('i don\'t have that') ||
+        replyLower.includes('outside my expertise') ||
+        replyLower.includes('cannot help') ||
+        replyLower.includes('unable to assist') ||
+        replyLower.includes('visit our') && replyLower.includes('office');
+      
+      if (suggestHandover) {
+        console.log('[Chat] Handover suggested - AI indicated human assistance needed');
+      }
+      
       // Log bot response
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
@@ -706,7 +725,8 @@ Respond naturally and helpfully using the knowledge base!`;
       return res.json({ 
         reply: reply,
         source: 'openai',
-        sessionId: effectiveSessionId
+        sessionId: effectiveSessionId,
+        suggestHandover: suggestHandover
       });
     } catch (error: any) {
       console.error('[OpenAI] Error:', error.message);
@@ -720,7 +740,8 @@ Respond naturally and helpfully using the knowledge base!`;
       return res.json({ 
         reply: errorResponse,
         source: 'error',
-        sessionId: effectiveSessionId
+        sessionId: effectiveSessionId,
+        suggestHandover: true // Always suggest handover on errors
       });
     }
   } catch (err: any) {
