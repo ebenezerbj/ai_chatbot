@@ -366,7 +366,7 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
   
   // Log batch completion
   console.log(`[BalanceUpdater] Batch ${batchIndex + 1}/${totalBatches} complete: ${result.successCount} success, ${result.errorCount} errors`);
-}
+  }
 
   result.success = result.successCount > 0;
   result.summary = `Updated ${result.successCount} of ${result.totalRecords} accounts`;
@@ -379,13 +379,12 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
     result.errors = result.errors.slice(0, 100);
     result.errors.push(`... and ${result.errorCount - 100} more errors (showing first 100)`);
   }
-
-  console.log('[BalanceUpdater] Update complete:', result.summary);
-  return result;
-  if (result.errorCount > 0) {
+  
+  if (result.errorCount > 0 && result.errorCount <= 100) {
     result.summary += ` (${result.errorCount} errors)`;
   }
 
+  console.log('[BalanceUpdater] Update complete:', result.summary);
   return result;
 }
 
