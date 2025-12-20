@@ -997,6 +997,74 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- Demographic Coverage Card -->
+                    <div class="card">
+                        <h3 style="margin-bottom: 16px;">📋 Demographic Field Coverage</h3>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Track how much demographic data is captured for your customer base</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                            <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                <div style="color: #059669; font-size: 14px; margin-bottom: 4px;">Gender Data</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #047857;" id="demo-coverage-gender">-</div>
+                                <div style="color: #6b7280; font-size: 12px;" id="demo-coverage-gender-pct">-% coverage</div>
+                            </div>
+                            
+                            <div style="background: #eff6ff; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                <div style="color: #2563eb; font-size: 14px; margin-bottom: 4px;">ID Numbers</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #1d4ed8;" id="demo-coverage-id">-</div>
+                                <div style="color: #6b7280; font-size: 12px;" id="demo-coverage-id-pct">-% coverage</div>
+                            </div>
+                            
+                            <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <div style="color: #d97706; font-size: 14px; margin-bottom: 4px;">Date of Birth</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #b45309;" id="demo-coverage-dob">-</div>
+                                <div style="color: #6b7280; font-size: 12px;" id="demo-coverage-dob-pct">-% coverage</div>
+                            </div>
+                            
+                            <div style="background: #f5f3ff; padding: 16px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+                                <div style="color: #7c3aed; font-size: 14px; margin-bottom: 4px;">Home Address</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #6d28d9;" id="demo-coverage-address">-</div>
+                                <div style="color: #6b7280; font-size: 12px;" id="demo-coverage-address-pct">-% coverage</div>
+                            </div>
+                            
+                            <div style="background: #fce7f3; padding: 16px; border-radius: 8px; border-left: 4px solid #ec4899;">
+                                <div style="color: #db2777; font-size: 14px; margin-bottom: 4px;">Full Names</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #be185d;" id="demo-coverage-names">-</div>
+                                <div style="color: #6b7280; font-size: 12px;" id="demo-coverage-names-pct">-% coverage</div>
+                            </div>
+                        </div>
+
+                        <!-- Gender Distribution -->
+                        <h4 style="margin: 24px 0 16px 0;">Gender Distribution</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Gender</th>
+                                    <th style="text-align: right;">Count</th>
+                                    <th style="text-align: right;">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="demo-gender-tbody">
+                                <tr><td colspan="3" style="text-align: center; color: #6b7280;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Customer Type Distribution -->
+                        <h4 style="margin: 24px 0 16px 0;">Customer Type Distribution</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer Type</th>
+                                    <th style="text-align: right;">Count</th>
+                                    <th style="text-align: right;">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="demo-customer-type-tbody">
+                                <tr><td colspan="3" style="text-align: center; color: #6b7280;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Customer Upload Page -->
@@ -1729,6 +1797,64 @@ https://example.com/products"></textarea>
                     `;
                     branchTbody.appendChild(row);
                 });
+                
+                // Demographic coverage stats
+                if (data.demographicCoverage) {
+                    document.getElementById('demo-coverage-gender').textContent = data.demographicCoverage.withGender.toLocaleString();
+                    document.getElementById('demo-coverage-gender-pct').textContent = `${data.demographicCoverage.genderPercentage}% coverage`;
+                    
+                    document.getElementById('demo-coverage-id').textContent = data.demographicCoverage.withIdNumber.toLocaleString();
+                    document.getElementById('demo-coverage-id-pct').textContent = `${data.demographicCoverage.idPercentage}% coverage`;
+                    
+                    document.getElementById('demo-coverage-dob').textContent = data.demographicCoverage.withDob.toLocaleString();
+                    document.getElementById('demo-coverage-dob-pct').textContent = `${data.demographicCoverage.dobPercentage}% coverage`;
+                    
+                    document.getElementById('demo-coverage-address').textContent = data.demographicCoverage.withHomeAddress.toLocaleString();
+                    document.getElementById('demo-coverage-address-pct').textContent = `${data.demographicCoverage.addressPercentage}% coverage`;
+                    
+                    document.getElementById('demo-coverage-names').textContent = data.demographicCoverage.withFirstName.toLocaleString();
+                    document.getElementById('demo-coverage-names-pct').textContent = `${data.demographicCoverage.namePercentage}% coverage`;
+                }
+                
+                // Gender distribution table
+                if (data.byGender) {
+                    const genderTbody = document.getElementById('demo-gender-tbody');
+                    genderTbody.innerHTML = '';
+                    const totalWithGender = data.byGender.reduce((sum, item) => sum + item.count, 0);
+                    data.byGender.forEach(item => {
+                        const percentage = ((item.count / totalWithGender) * 100).toFixed(1);
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.gender}</td>
+                            <td style="text-align: right;">${item.count.toLocaleString()}</td>
+                            <td style="text-align: right;">${percentage}%</td>
+                        `;
+                        genderTbody.appendChild(row);
+                    });
+                    if (data.byGender.length === 0) {
+                        genderTbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #6b7280;">No gender data available</td></tr>';
+                    }
+                }
+                
+                // Customer type distribution table
+                if (data.byCustomerType) {
+                    const customerTypeTbody = document.getElementById('demo-customer-type-tbody');
+                    customerTypeTbody.innerHTML = '';
+                    const totalWithType = data.byCustomerType.reduce((sum, item) => sum + item.count, 0);
+                    data.byCustomerType.forEach(item => {
+                        const percentage = ((item.count / totalWithType) * 100).toFixed(1);
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.customer_type}</td>
+                            <td style="text-align: right;">${item.count.toLocaleString()}</td>
+                            <td style="text-align: right;">${percentage}%</td>
+                        `;
+                        customerTypeTbody.appendChild(row);
+                    });
+                    if (data.byCustomerType.length === 0) {
+                        customerTypeTbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #6b7280;">No customer type data available</td></tr>';
+                    }
+                }
                 
                 addActivityLog('Demographics data loaded', 'success');
             } catch (error) {

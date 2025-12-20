@@ -1465,6 +1465,33 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
           FROM customers`
     );
 
+    // Get demographic field coverage stats
+    const demographicCoverage = await querySingle<any>(
+      `SELECT 
+        COUNT(*) as total,
+        COUNT(gender) as with_gender,
+        COUNT(id_type) as with_id_type,
+        COUNT(id_number) as with_id_number,
+        COUNT(date_of_birth) as with_dob,
+        COUNT(home_address) as with_home_address,
+        COUNT(postal_address) as with_postal_address,
+        COUNT(first_name) as with_first_name,
+        COUNT(middle_name) as with_middle_name,
+        COUNT(surname) as with_surname,
+        COUNT(customer_type) as with_customer_type
+      FROM customers`
+    );
+
+    // Get customers by gender
+    const byGender = await executeQuery<any>(
+      'SELECT gender, COUNT(*) as count FROM customers WHERE gender IS NOT NULL AND gender != \'\' GROUP BY gender ORDER BY count DESC'
+    );
+
+    // Get customers by customer type
+    const byCustomerType = await executeQuery<any>(
+      'SELECT customer_type, COUNT(*) as count FROM customers WHERE customer_type IS NOT NULL AND customer_type != \'\' GROUP BY customer_type ORDER BY count DESC'
+    );
+
     res.json({
       totalCustomers: totalCustomers.count,
       byStatus,
@@ -1493,7 +1520,27 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
         last30Days: recentStats.last_30_days,
         last60Days: recentStats.last_60_days,
         last90Days: recentStats.last_90_days
-      }
+      },
+      demographicCoverage: {
+        total: demographicCoverage.total,
+        withGender: demographicCoverage.with_gender,
+        withIdType: demographicCoverage.with_id_type,
+        withIdNumber: demographicCoverage.with_id_number,
+        withDob: demographicCoverage.with_dob,
+        withHomeAddress: demographicCoverage.with_home_address,
+        withPostalAddress: demographicCoverage.with_postal_address,
+        withFirstName: demographicCoverage.with_first_name,
+        withMiddleName: demographicCoverage.with_middle_name,
+        withSurname: demographicCoverage.with_surname,
+        withCustomerType: demographicCoverage.with_customer_type,
+        genderPercentage: ((demographicCoverage.with_gender / demographicCoverage.total) * 100).toFixed(1),
+        idPercentage: ((demographicCoverage.with_id_number / demographicCoverage.total) * 100).toFixed(1),
+        dobPercentage: ((demographicCoverage.with_dob / demographicCoverage.total) * 100).toFixed(1),
+        addressPercentage: ((demographicCoverage.with_home_address / demographicCoverage.total) * 100).toFixed(1),
+        namePercentage: ((demographicCoverage.with_first_name / demographicCoverage.total) * 100).toFixed(1)
+      },
+      byGender,
+      byCustomerType
     });
   } catch (error: any) {
     console.error('[Admin] Demographics error:', error.message);

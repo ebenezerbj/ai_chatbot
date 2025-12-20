@@ -181,6 +181,24 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
               email = (pickField(row, keyMap, ['Email']) || '').toString().trim();
             }
             
+            // Capture all available demographic fields from CSV
+            const customerType = (pickField(row, keyMap, ['Customer Type']) || '').toString().trim();
+            const gender = (pickField(row, keyMap, ['Gender']) || '').toString().trim();
+            const idType = (pickField(row, keyMap, ['ID Type']) || '').toString().trim();
+            const idNumber = (pickField(row, keyMap, ['ID Number']) || '').toString().trim();
+            const dob = (pickField(row, keyMap, ['DOB', 'Date of Birth', 'Birth Date']) || '').toString().trim();
+            const homeAddress = (pickField(row, keyMap, ['Home Address', 'Residential Address']) || '').toString().trim();
+            const postalAddress = (pickField(row, keyMap, ['Postal Address']) || '').toString().trim();
+            const country = (pickField(row, keyMap, ['Country']) || 'Ghana').toString().trim();
+            const accountOwnership = (pickField(row, keyMap, ['Account By Ownership']) || '').toString().trim();
+            const productName = (pickField(row, keyMap, ['Product Name']) || '').toString().trim();
+            const accountStatus = (pickField(row, keyMap, ['Status Of Account', 'Status']) || 'Active').toString().trim();
+            const currency = (pickField(row, keyMap, ['Currency Of Account', 'Currency']) || 'GHS').toString().trim();
+            const firstName = isOldFormat ? '' : (pickField(row, keyMap, ['First Name']) || '').toString().trim();
+            const middleName = isOldFormat ? '' : (pickField(row, keyMap, ['Middle Name']) || '').toString().trim();
+            const surname = isOldFormat ? '' : (pickField(row, keyMap, ['Surname']) || '').toString().trim();
+            const title = isOldFormat ? '' : (pickField(row, keyMap, ['Title']) || '').toString().trim();
+            
             records.push({
               accountNumber: accountNumber.toString().trim(),
               accountTitle,
@@ -188,7 +206,24 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
               coCode,
               balance,
               phoneNumber,
-              email
+              email,
+              // New demographic fields
+              customerType,
+              title,
+              firstName,
+              middleName,
+              surname,
+              gender,
+              idType,
+              idNumber,
+              dob,
+              homeAddress,
+              postalAddress,
+              country,
+              accountOwnership,
+              productName,
+              accountStatus,
+              currency
             });
           }
         })
@@ -214,25 +249,85 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
     // Process each record
     for (const record of records) {
       try {
-        // First, insert/update customer
+        // Parse date of birth
+        let dobDate: string | null = null;
+        if (record.dob) {
+          try {
+            // Handle DD/MM/YYYY format
+            const parts = record.dob.split('/');
+            if (parts.length === 3) {
+              dobDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+          } catch (e) {
+            console.warn(`[CustomerImport] Invalid DOB format for ${record.accountNumber}: ${record.dob}`);
+          }
+        }
+
+        // First, insert/update customer with all demographic fields
         const customerQuery = DB_TYPE === 'postgres'
-          ? `INSERT INTO customers (account_number, account_name, account_type, branch_code, phone_number, email)
-             VALUES ($1, $2, $3, $4, $5, $6)
+          ? `INSERT INTO customers (
+               account_number, account_name, account_type, branch_code, phone_number, email,
+               customer_type, title, first_name, middle_name, surname, gender, 
+               id_type, id_number, date_of_birth, home_address, postal_address, country,
+               account_ownership, product_name, account_status, currency, mobile_phone, branch_name
+             )
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
              ON CONFLICT (account_number) 
              DO UPDATE SET 
                account_name = EXCLUDED.account_name,
                account_type = EXCLUDED.account_type,
                branch_code = EXCLUDED.branch_code,
                phone_number = COALESCE(EXCLUDED.phone_number, customers.phone_number),
-               email = COALESCE(EXCLUDED.email, customers.email)`
-          : `INSERT INTO customers (account_number, account_name, account_type, branch_code, phone_number, email)
-             VALUES (?, ?, ?, ?, ?, ?)
+               email = COALESCE(EXCLUDED.email, customers.email),
+               customer_type = COALESCE(EXCLUDED.customer_type, customers.customer_type),
+               title = COALESCE(EXCLUDED.title, customers.title),
+               first_name = COALESCE(EXCLUDED.first_name, customers.first_name),
+               middle_name = COALESCE(EXCLUDED.middle_name, customers.middle_name),
+               surname = COALESCE(EXCLUDED.surname, customers.surname),
+               gender = COALESCE(EXCLUDED.gender, customers.gender),
+               id_type = COALESCE(EXCLUDED.id_type, customers.id_type),
+               id_number = COALESCE(EXCLUDED.id_number, customers.id_number),
+               date_of_birth = COALESCE(EXCLUDED.date_of_birth, customers.date_of_birth),
+               home_address = COALESCE(EXCLUDED.home_address, customers.home_address),
+               postal_address = COALESCE(EXCLUDED.postal_address, customers.postal_address),
+               country = COALESCE(EXCLUDED.country, customers.country),
+               account_ownership = COALESCE(EXCLUDED.account_ownership, customers.account_ownership),
+               product_name = COALESCE(EXCLUDED.product_name, customers.product_name),
+               account_status = COALESCE(EXCLUDED.account_status, customers.account_status),
+               currency = COALESCE(EXCLUDED.currency, customers.currency),
+               mobile_phone = COALESCE(EXCLUDED.mobile_phone, customers.mobile_phone),
+               branch_name = COALESCE(EXCLUDED.branch_name, customers.branch_name)`
+          : `INSERT INTO customers (
+               account_number, account_name, account_type, branch_code, phone_number, email,
+               customer_type, title, first_name, middle_name, surname, gender,
+               id_type, id_number, date_of_birth, home_address, postal_address, country,
+               account_ownership, product_name, account_status, currency, mobile_phone, branch_name
+             )
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE 
                account_name = VALUES(account_name),
                account_type = VALUES(account_type),
                branch_code = VALUES(branch_code),
                phone_number = COALESCE(VALUES(phone_number), phone_number),
-               email = COALESCE(VALUES(email), email)`;
+               email = COALESCE(VALUES(email), email),
+               customer_type = COALESCE(VALUES(customer_type), customer_type),
+               title = COALESCE(VALUES(title), title),
+               first_name = COALESCE(VALUES(first_name), first_name),
+               middle_name = COALESCE(VALUES(middle_name), middle_name),
+               surname = COALESCE(VALUES(surname), surname),
+               gender = COALESCE(VALUES(gender), gender),
+               id_type = COALESCE(VALUES(id_type), id_type),
+               id_number = COALESCE(VALUES(id_number), id_number),
+               date_of_birth = COALESCE(VALUES(date_of_birth), date_of_birth),
+               home_address = COALESCE(VALUES(home_address), home_address),
+               postal_address = COALESCE(VALUES(postal_address), postal_address),
+               country = COALESCE(VALUES(country), country),
+               account_ownership = COALESCE(VALUES(account_ownership), account_ownership),
+               product_name = COALESCE(VALUES(product_name), product_name),
+               account_status = COALESCE(VALUES(account_status), account_status),
+               currency = COALESCE(VALUES(currency), currency),
+               mobile_phone = COALESCE(VALUES(mobile_phone), mobile_phone),
+               branch_name = COALESCE(VALUES(branch_name), branch_name)`;
 
         await executeQuery(customerQuery, [
           record.accountNumber,
@@ -240,7 +335,25 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
           record.category,
           record.coCode,
           record.phoneNumber || null,
-          record.email || null
+          record.email || null,
+          record.customerType || null,
+          record.title || null,
+          record.firstName || null,
+          record.middleName || null,
+          record.surname || null,
+          record.gender || null,
+          record.idType || null,
+          record.idNumber || null,
+          dobDate,
+          record.homeAddress || null,
+          record.postalAddress || null,
+          record.country || 'Ghana',
+          record.accountOwnership || null,
+          record.productName || null,
+          record.accountStatus || 'Active',
+          record.currency || 'GHS',
+          record.phoneNumber || null,
+          record.coCode || null
         ]);
 
         // Then, insert/update balance (only when we have a parsed balance)
