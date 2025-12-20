@@ -693,6 +693,27 @@
                     </div>
 
                     <div class="card">
+                        <h2>🔧 Database Management</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Run database migrations to update schema and add new features.</p>
+                        
+                        <div style="margin-bottom: 24px; padding: 16px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                            <h4 style="margin: 0 0 8px 0; color: #1e40af;">Migration 001: Enhanced Customer Demographics</h4>
+                            <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
+                                Adds 20+ demographic fields including gender, ID info, addresses, customer type, and more.
+                                <strong>Coverage improvement: 8% → 50%</strong>
+                            </p>
+                            <button class="btn btn-primary" id="runMigrationBtn">
+                                <span id="runMigrationBtnText">Run Migration 001</span>
+                            </button>
+                            <div id="migrationResult" class="hidden" style="margin-top: 12px;"></div>
+                        </div>
+                        
+                        <div style="padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                            <strong>⚠️ Note:</strong> After running the migration, re-upload your Accounts.csv to capture all demographic fields.
+                        </div>
+                    </div>
+
+                    <div class="card">
                         <h2>📋 Sample Test Accounts</h2>
                         <p style="color: #6b7280; margin-bottom: 16px;">Use these <strong>real</strong> accounts from the database for chatbot authentication testing:</p>
                         <table>
@@ -1707,6 +1728,57 @@ https://example.com/products"></textarea>
                 console.error('Error loading dashboard data:', error);
             }
         }
+
+        // Run Migration Button Handler
+        document.getElementById('runMigrationBtn')?.addEventListener('click', async () => {
+            const btn = document.getElementById('runMigrationBtn');
+            const btnText = document.getElementById('runMigrationBtnText');
+            const resultDiv = document.getElementById('migrationResult');
+            
+            if (!confirm('Run database migration? This will add new demographic fields to the customers table.')) {
+                return;
+            }
+            
+            btn.disabled = true;
+            btnText.textContent = 'Running migration...';
+            resultDiv.innerHTML = '';
+            resultDiv.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/admin/run-migration-001', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ Migration completed successfully!<br>
+                            <small>${data.message}</small>
+                            ${data.details ? `<br><small>Columns added: ${data.details.columnsAdded}, Indexes created: ${data.details.indexesCreated}</small>` : ''}
+                        </div>
+                    `;
+                    addActivityLog('Database migration 001 completed', 'success');
+                } else {
+                    throw new Error(data.message || 'Migration failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ Migration failed: ${error.message}
+                    </div>
+                `;
+                addActivityLog('Database migration 001 failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Run Migration 001';
+            }
+        });
 
         // Load demographics data
         async function loadDemographics() {
