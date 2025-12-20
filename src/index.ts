@@ -954,7 +954,8 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
       sessionId: effectiveSessionId,
       buttons: [
         { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
-        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' },
+        { text: '🆘 Assistance', action: 'handover', value: 'assistance' }
       ]
     });
   } catch (error: any) {
@@ -965,7 +966,8 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
       sessionId: effectiveSessionId,
       buttons: [
         { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
-        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' },
+        { text: '🆘 Assistance', action: 'handover', value: 'assistance' }
       ]
     });
   }
