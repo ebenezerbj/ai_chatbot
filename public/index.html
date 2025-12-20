@@ -1511,6 +1511,7 @@
     let liveChatActive = false;
     let liveChatSessionId = null;
     let currentAgentName = null;
+    let liveChatTimeout = null; // Track timeout for no agent response
 
     function initializeLiveChat() {
       if (!liveChatSocket) {
@@ -1523,9 +1524,20 @@
         liveChatSocket.on('customer:session-created', (data) => {
           liveChatSessionId = data.sessionId;
           addMsg('assistant', data.message, false, false);
+          
+          // Start 2-minute timeout
+          liveChatTimeout = setTimeout(() => {
+            handleNoAgentResponse();
+          }, 120000); // 2 minutes
         });
 
         liveChatSocket.on('customer:agent-joined', (data) => {
+          // Agent joined - clear timeout
+          if (liveChatTimeout) {
+            clearTimeout(liveChatTimeout);
+            liveChatTimeout = null;
+          }
+          
           liveChatActive = true;
           currentAgentName = data.agentName;
           addMsg('assistant', `👋 ${data.message}`, false, false);
@@ -1600,7 +1612,35 @@
       return true;
     }
 
+    function handleNoAgentResponse() {
+      // Called after 2 minutes if no agent accepts
+      if (!liveChatActive && liveChatSessionId) {
+        // End the pending session
+        liveChatSocket.emit('customer:end-chat', {
+          sessionId: liveChatSessionId
+        });
+
+        liveChatActive = false;
+        liveChatSessionId = null;
+        liveChatTimeout = null;
+
+        // Show polite message
+        addMsg('assistant', '😊 Thank you for your patience. All our agents are currently assisting other customers. Would you like to leave a message? An agent will respond to you as soon as possible.', false, false);
+        
+        // Automatically show the message form after a brief delay
+        setTimeout(() => {
+          openHandoverForm();
+        }, 500);
+      }
+    }
+
     function endLiveChat() {
+      // Clear timeout if exists
+      if (liveChatTimeout) {
+        clearTimeout(liveChatTimeout);
+        liveChatTimeout = null;
+      }
+
       if (liveChatSessionId) {
         liveChatSocket.emit('customer:end-chat', {
           sessionId: liveChatSessionId
