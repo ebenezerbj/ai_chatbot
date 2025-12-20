@@ -223,6 +223,12 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
     return result;
   }
 
+  console.log('[BalanceUpdater] Processing', updates.length, 'balance updates...');
+
+  // Process updates in batches for better performance
+  const BATCH_SIZE = 500;
+  const totalBatches = Math.ceil(updates.length / BATCH_SIZE);
+
   // Prepare customer upsert query based on database type
   const customerQuery = DB_TYPE === 'postgres'
     ? `INSERT INTO customers (account_number, account_name, account_type, branch_code)
@@ -255,8 +261,16 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
          available_balance = VALUES(available_balance), 
          last_updated = CURRENT_TIMESTAMP`;
 
-  // Process each update
-  for (const update of updates) {
+  // Process updates in batches
+  for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+    const start = batchIndex * BATCH_SIZE;
+    const end = Math.min(start + BATCH_SIZE, updates.length);
+    const batch = updates.slice(start, end);
+    
+    console.log(`[BalanceUpdater] Processing batch ${batchIndex + 1}/${totalBatches} (${batch.length} records)...`);
+
+    // Process each update in the batch
+    for (const update of batch) {
     try {
       const normalizedAccount = toPlainAccountNumber(update.accountNumber);
       if ('error' in normalizedAccount) {
@@ -343,14 +357,16 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
       result.errors.push(errorMsg);
       console.error('[BalanceUpdater]', errorMsg);
       
-      // Only keep first 10 errors in result
-      if (result.errors.length > 10) {
-        result.errors = result.errors.slice(0, 10);
-        result.errors.push(`... and ${result.errorCount - 10} more errors`);
-        break;
+      // Keep up to 100 errors
+      if (result.errors.length > 100) {
+        result.errors = result.errors.slice(0, 100);
       }
     }
   }
+  
+  // Log batch completion
+  console.log(`[BalanceUpdater] Batch ${batchIndex + 1}/${totalBatches} complete: ${result.successCount} success, ${result.errorCount} errors`);
+}
 
   result.success = result.successCount > 0;
   result.summary = `Updated ${result.successCount} of ${result.totalRecords} accounts`;
@@ -359,6 +375,13 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
     result.summary += ` (${result.customersCreated} new customers created)`;
   }
   
+  if (result.errorCount > 100) {
+    result.errors = result.errors.slice(0, 100);
+    result.errors.push(`... and ${result.errorCount - 100} more errors (showing first 100)`);
+  }
+
+  console.log('[BalanceUpdater] Update complete:', result.summary);
+  return result;
   if (result.errorCount > 0) {
     result.summary += ` (${result.errorCount} errors)`;
   }
