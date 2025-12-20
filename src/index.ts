@@ -1492,6 +1492,43 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       'SELECT customer_type, COUNT(*) as count FROM customers WHERE customer_type IS NOT NULL AND customer_type != \'\' GROUP BY customer_type ORDER BY count DESC'
     );
 
+    // Calculate age groups from date of birth
+    const ageGroups = await executeQuery<any>(
+      DB_TYPE === 'postgres'
+        ? `SELECT 
+            CASE 
+              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) < 18 THEN 'Under 18'
+              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 18 AND 25 THEN '18-25'
+              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 26 AND 35 THEN '26-35'
+              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 36 AND 45 THEN '36-45'
+              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 46 AND 55 THEN '46-55'
+              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 56 AND 65 THEN '56-65'
+              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) > 65 THEN 'Over 65'
+              ELSE 'Unknown'
+            END as age_group,
+            COUNT(*) as count
+          FROM customers 
+          WHERE date_of_birth IS NOT NULL
+          GROUP BY age_group
+          ORDER BY age_group`
+        : `SELECT 
+            CASE 
+              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN 'Under 18'
+              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN '18-25'
+              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 26 AND 35 THEN '26-35'
+              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 36 AND 45 THEN '36-45'
+              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 46 AND 55 THEN '46-55'
+              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 56 AND 65 THEN '56-65'
+              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) > 65 THEN 'Over 65'
+              ELSE 'Unknown'
+            END as age_group,
+            COUNT(*) as count
+          FROM customers 
+          WHERE date_of_birth IS NOT NULL
+          GROUP BY age_group
+          ORDER BY age_group`
+    );
+
     res.json({
       totalCustomers: totalCustomers.count,
       byStatus,
@@ -1540,7 +1577,8 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
         namePercentage: ((demographicCoverage.with_first_name / demographicCoverage.total) * 100).toFixed(1)
       },
       byGender,
-      byCustomerType
+      byCustomerType,
+      ageGroups
     });
   } catch (error: any) {
     console.error('[Admin] Demographics error:', error.message);

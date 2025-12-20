@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AKCB Admin Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1056,6 +1057,32 @@
                             </div>
                         </div>
 
+                        <!-- Demographics Charts -->
+                        <h4 style="margin: 24px 0 16px 0;">📊 Visual Analytics</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                            <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <h5 style="margin-bottom: 16px; color: #1f2937;">Gender Distribution</h5>
+                                <canvas id="genderChart" style="max-height: 300px;"></canvas>
+                            </div>
+                            
+                            <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <h5 style="margin-bottom: 16px; color: #1f2937;">Age Groups</h5>
+                                <canvas id="ageGroupChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                            <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <h5 style="margin-bottom: 16px; color: #1f2937;">Customer Type Distribution</h5>
+                                <canvas id="customerTypeChart" style="max-height: 300px;"></canvas>
+                            </div>
+                            
+                            <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <h5 style="margin-bottom: 16px; color: #1f2937;">Account Status</h5>
+                                <canvas id="statusChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+
                         <!-- Gender Distribution -->
                         <h4 style="margin: 24px 0 16px 0;">Gender Distribution</h4>
                         <table class="data-table">
@@ -1928,10 +1955,188 @@ https://example.com/products"></textarea>
                     }
                 }
                 
+                // Render charts
+                renderDemographicsCharts(data);
+                
                 addActivityLog('Demographics data loaded', 'success');
             } catch (error) {
                 console.error('Error loading demographics:', error);
                 addActivityLog('Failed to load demographics', 'error');
+            }
+        }
+
+        // Store chart instances globally to destroy before re-creating
+        let genderChartInstance = null;
+        let ageGroupChartInstance = null;
+        let customerTypeChartInstance = null;
+        let statusChartInstance = null;
+
+        // Render demographics charts
+        function renderDemographicsCharts(data) {
+            // Define color palette
+            const colors = {
+                primary: ['#667eea', '#764ba2', '#f093fb', '#4facfe'],
+                gender: ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981'],
+                age: ['#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#10b981', '#06b6d4', '#6366f1'],
+                status: ['#10b981', '#f59e0b', '#ef4444', '#6b7280']
+            };
+
+            // Gender Chart
+            if (data.byGender && data.byGender.length > 0) {
+                const genderCtx = document.getElementById('genderChart');
+                if (genderCtx) {
+                    if (genderChartInstance) genderChartInstance.destroy();
+                    genderChartInstance = new Chart(genderCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.byGender.map(item => item.gender),
+                            datasets: [{
+                                data: data.byGender.map(item => item.count),
+                                backgroundColor: colors.gender,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { padding: 15, font: { size: 12 } }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                            return `${context.label}: ${context.parsed.toLocaleString()} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Age Group Chart
+            if (data.ageGroups && data.ageGroups.length > 0) {
+                const ageCtx = document.getElementById('ageGroupChart');
+                if (ageCtx) {
+                    if (ageGroupChartInstance) ageGroupChartInstance.destroy();
+                    ageGroupChartInstance = new Chart(ageCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.ageGroups.map(item => item.age_group),
+                            datasets: [{
+                                label: 'Customers',
+                                data: data.ageGroups.map(item => item.count),
+                                backgroundColor: colors.age,
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `Customers: ${context.parsed.y.toLocaleString()}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Customer Type Chart
+            if (data.byCustomerType && data.byCustomerType.length > 0) {
+                const typeCtx = document.getElementById('customerTypeChart');
+                if (typeCtx) {
+                    if (customerTypeChartInstance) customerTypeChartInstance.destroy();
+                    customerTypeChartInstance = new Chart(typeCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: data.byCustomerType.map(item => item.customer_type),
+                            datasets: [{
+                                data: data.byCustomerType.map(item => item.count),
+                                backgroundColor: colors.primary,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { padding: 15, font: { size: 12 } }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                            return `${context.label}: ${context.parsed.toLocaleString()} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Status Chart
+            if (data.byStatus && data.byStatus.length > 0) {
+                const statusCtx = document.getElementById('statusChart');
+                if (statusCtx) {
+                    if (statusChartInstance) statusChartInstance.destroy();
+                    statusChartInstance = new Chart(statusCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.byStatus.map(item => item.status),
+                            datasets: [{
+                                data: data.byStatus.map(item => item.count),
+                                backgroundColor: colors.status,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { padding: 15, font: { size: 12 } }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                            return `${context.label}: ${context.parsed.toLocaleString()} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
             }
         }
 
