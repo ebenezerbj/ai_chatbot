@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import https from 'https';
 import multer from 'multer';
 import crypto from 'crypto';
 import * as customerAuth from './customerAuth';
@@ -1044,6 +1045,99 @@ app.post('/api/followup/complete', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Send SMS notification to branch about customer escalation
+ */
+async function sendBranchSMS(
+  branchPhone: string,
+  ticketId: string,
+  customerName: string,
+  customerPhone: string,
+  customerMessage: string,
+  branchLocation: string
+): Promise<void> {
+  const apiKey = process.env.SMS_ONLINE_API_KEY;
+  const senderName = process.env.SMS_ONLINE_SENDER || 'AKCB';
+
+  if (!apiKey) {
+    console.log('[SMS] API key not configured, skipping notification');
+    return;
+  }
+
+  // Format phone number (233XXXXXXXXX format)
+  let formattedPhone = branchPhone;
+  if (branchPhone.startsWith('0')) {
+    formattedPhone = '233' + branchPhone.substring(1);
+  } else if (branchPhone.startsWith('+233')) {
+    formattedPhone = branchPhone.substring(1);
+  } else if (!branchPhone.startsWith('233')) {
+    formattedPhone = '233' + branchPhone;
+  }
+
+  // Compose SMS message
+  const smsText = `AKCB ESCALATION - ${branchLocation} Branch\n` +
+    `Ticket: ${ticketId}\n` +
+    `Customer: ${customerName}\n` +
+    `Phone: ${customerPhone}\n` +
+    `Issue: ${customerMessage.substring(0, 100)}${customerMessage.length > 100 ? '...' : ''}\n` +
+    `Please contact customer ASAP.`;
+
+  const smsData = {
+    text: smsText,
+    type: 0,
+    sender: senderName,
+    destinations: [formattedPhone]
+  };
+
+  // Create HTTPS agent with CA certificate
+  let httpsAgent;
+  const cacertPath = path.join(process.cwd(), 'cacert.pem');
+  
+  try {
+    if (fs.existsSync(cacertPath)) {
+      const ca = fs.readFileSync(cacertPath);
+      httpsAgent = new https.Agent({
+        ca: ca,
+        rejectUnauthorized: true
+      });
+    } else {
+      httpsAgent = new https.Agent({
+        rejectUnauthorized: true
+      });
+    }
+  } catch {
+    httpsAgent = new https.Agent({
+      rejectUnauthorized: true
+    });
+  }
+
+  // Send SMS
+  try {
+    const response = await axios.post(
+      'https://api.smsonlinegh.com/v5/message/sms/send',
+      smsData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `key ${apiKey}`
+        },
+        httpsAgent,
+        timeout: 15000
+      }
+    );
+
+    if (response.data?.handshake?.label === 'HSHK_OK') {
+      console.log(`[SMS] Notification sent to ${branchLocation} Branch (${formattedPhone})`);
+    } else {
+      console.warn('[SMS] Unexpected response:', response.data);
+    }
+  } catch (error: any) {
+    console.error('[SMS] Failed to send notification:', error.message);
+    throw error;
+  }
+}
+
 // Customer escalation/handover request
 app.post('/api/handover', async (req: Request, res: Response) => {
   try {
@@ -1070,15 +1164,15 @@ app.post('/api/handover', async (req: Request, res: Response) => {
 
     // AKCB Branch locations with coordinates (Amantin & Kasei Community Bank)
     const branches = [
-      { name: 'AMANTIN AND KASEI HO.', lat: 6.70, lng: -1.62, location: 'Head Office' },
-      { name: 'AMANTIN n KASEI-EJURA', lat: 7.3833, lng: -1.3667, location: 'Ejura' },
-      { name: 'AMANTINnKASEI-AHWIAA', lat: 6.62, lng: -1.55, location: 'Ahwiaa' },
-      { name: 'AMANTINnKASEI-AMANTIN', lat: 6.73, lng: -1.74, location: 'Amantin' },
-      { name: 'AMANTINnKASEI-ATEBUBU', lat: 7.75, lng: -0.98, location: 'Atebubu' },
-      { name: 'AMANTINnKASEI-KAJEJI', lat: 6.70, lng: -1.60, location: 'Kajeji' },
-      { name: 'AMANTINnKASEI-KEJETIA', lat: 6.6880, lng: -1.6229, location: 'Kejetia' },
-      { name: 'AMANTINnKASEI-KWAME DS', lat: 7.35, lng: -1.40, location: 'Kwame Danso' },
-      { name: 'AMANTINnKASEI-YEJI', lat: 7.82, lng: -0.22, location: 'Yeji' }
+      { name: 'AMANTIN AND KASEI HO.', lat: 6.70, lng: -1.62, location: 'Head Office - Amantin', phone: '+233542428935' },
+      { name: 'AMANTIN n KASEI-EJURA', lat: 7.3833, lng: -1.3667, location: 'Ejura', phone: '+233202055172' },
+      { name: 'AMANTINnKASEI-AHWIAA', lat: 6.62, lng: -1.55, location: 'Ahwiaa', phone: '+233202099931' },
+      { name: 'AMANTINnKASEI-AMANTIN', lat: 6.73, lng: -1.74, location: 'Amantin', phone: '+233542428935' },
+      { name: 'AMANTINnKASEI-ATEBUBU', lat: 7.75, lng: -0.98, location: 'Atebubu', phone: '+233202055173' },
+      { name: 'AMANTINnKASEI-KAJAJI', lat: 6.70, lng: -1.60, location: 'Kajaji', phone: '+233240526372' },
+      { name: 'AMANTINnKASEI-KEJETIA', lat: 6.6880, lng: -1.6229, location: 'Kejetia', phone: '+233248698267' },
+      { name: 'AMANTINnKASEI-KWAME DS', lat: 7.35, lng: -1.40, location: 'Kwame Danso', phone: '+233202055174' },
+      { name: 'AMANTINnKASEI-YEJI', lat: 7.82, lng: -0.22, location: 'Yeji', phone: '+233202055175' }
     ];
 
     // Determine target branch based on location (if provided)
@@ -1176,6 +1270,24 @@ app.post('/api/handover', async (req: Request, res: Response) => {
       );
 
       console.log('[Handover] Escalation saved:', ticketId);
+
+      // Send SMS notification to the branch
+      try {
+        const selectedBranch = branches.find(b => b.name === targetBranch);
+        if (selectedBranch && selectedBranch.phone) {
+          await sendBranchSMS(
+            selectedBranch.phone,
+            ticketId,
+            name || 'Customer',
+            phone || 'Not provided',
+            message || 'Callback requested',
+            targetLocation
+          );
+        }
+      } catch (smsError: any) {
+        console.error('[Handover] SMS notification failed:', smsError.message);
+        // Don't fail the request if SMS fails
+      }
 
     } catch (dbError: any) {
       console.error('[Handover] Database error:', dbError.message);
