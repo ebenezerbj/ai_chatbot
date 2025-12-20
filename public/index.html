@@ -1512,6 +1512,8 @@
     let liveChatSessionId = null;
     let currentAgentName = null;
     let liveChatTimeout = null; // Track timeout for no agent response
+    let liveChatCountdownInterval = null; // Track countdown display
+    let liveChatCountdownElement = null; // Reference to countdown message
 
     function initializeLiveChat() {
       if (!liveChatSocket) {
@@ -1523,19 +1525,30 @@
 
         liveChatSocket.on('customer:session-created', (data) => {
           liveChatSessionId = data.sessionId;
-          addMsg('assistant', data.message, false, false);
           
-          // Start 2-minute timeout
+          // Show countdown message
+          startLiveChatCountdown();
+          
+          // Start 30-second timeout
           liveChatTimeout = setTimeout(() => {
             handleNoAgentResponse();
-          }, 120000); // 2 minutes
+          }, 30000); // 30 seconds
         });
 
         liveChatSocket.on('customer:agent-joined', (data) => {
-          // Agent joined - clear timeout
+          // Agent joined - clear timeout and countdown
           if (liveChatTimeout) {
             clearTimeout(liveChatTimeout);
             liveChatTimeout = null;
+          }
+          if (liveChatCountdownInterval) {
+            clearInterval(liveChatCountdownInterval);
+            liveChatCountdownInterval = null;
+          }
+          // Remove countdown message
+          if (liveChatCountdownElement) {
+            liveChatCountdownElement.remove();
+            liveChatCountdownElement = null;
           }
           
           liveChatActive = true;
@@ -1591,7 +1604,42 @@
         message: initialMessage
       });
 
-      addMsg('assistant', '🔄 Connecting you to a live agent... Please wait.', false, false);
+      // Countdown will be shown by startLiveChatCountdown()
+    }
+
+    function startLiveChatCountdown() {
+      let secondsLeft = 30;
+      const chatEl = document.getElementById('chat');
+      
+      // Create countdown message
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message assistant';
+      messageDiv.innerHTML = `
+        <div class="msg-content">
+          <p>🔄 Connecting you to a live agent...</p>
+          <p style="font-size: 0.9em; color: var(--gray-600); margin-top: 0.5rem;">
+            <span id="liveChatCountdown">Waiting for agent... (${secondsLeft}s)</span>
+          </p>
+        </div>
+      `;
+      chatEl.appendChild(messageDiv);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      liveChatCountdownElement = messageDiv;
+      
+      const countdownSpan = document.getElementById('liveChatCountdown');
+      
+      // Update countdown every second
+      liveChatCountdownInterval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft > 0 && countdownSpan) {
+          countdownSpan.textContent = `Waiting for agent... (${secondsLeft}s)`;
+        }
+        
+        if (secondsLeft <= 0) {
+          clearInterval(liveChatCountdownInterval);
+          liveChatCountdownInterval = null;
+        }
+      }, 1000);
     }
 
     function sendLiveChatMessage(message) {
@@ -1613,8 +1661,18 @@
     }
 
     function handleNoAgentResponse() {
-      // Called after 2 minutes if no agent accepts
+      // Called after 30 seconds if no agent accepts
       if (!liveChatActive && liveChatSessionId) {
+        // Clear countdown
+        if (liveChatCountdownInterval) {
+          clearInterval(liveChatCountdownInterval);
+          liveChatCountdownInterval = null;
+        }
+        if (liveChatCountdownElement) {
+          liveChatCountdownElement.remove();
+          liveChatCountdownElement = null;
+        }
+        
         // End the pending session
         liveChatSocket.emit('customer:end-chat', {
           sessionId: liveChatSessionId
@@ -1635,10 +1693,18 @@
     }
 
     function endLiveChat() {
-      // Clear timeout if exists
+      // Clear timeout and countdown if exists
       if (liveChatTimeout) {
         clearTimeout(liveChatTimeout);
         liveChatTimeout = null;
+      }
+      if (liveChatCountdownInterval) {
+        clearInterval(liveChatCountdownInterval);
+        liveChatCountdownInterval = null;
+      }
+      if (liveChatCountdownElement) {
+        liveChatCountdownElement.remove();
+        liveChatCountdownElement = null;
       }
 
       if (liveChatSessionId) {
