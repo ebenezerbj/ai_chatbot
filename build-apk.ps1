@@ -25,10 +25,12 @@ if (Test-Path ".\app\build\outputs\apk") {
 }
 
 Write-Host "[4/5] Building APK (this may take a few minutes)..." -ForegroundColor Yellow
-& .\gradlew.bat clean assembleRelease
+$buildOutput = & .\gradlew.bat clean assembleRelease 2>&1
+$buildSuccess = $buildOutput | Select-String "BUILD SUCCESSFUL"
 
-if ($LASTEXITCODE -ne 0) {
+if (-not $buildSuccess) {
     Write-Host "`nBuild failed! Check errors above." -ForegroundColor Red
+    Write-Host $buildOutput -ForegroundColor Red
     Set-Location ..
     exit 1
 }

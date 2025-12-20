@@ -4,10 +4,12 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import http from 'http';
 import multer from 'multer';
 import crypto from 'crypto';
+import { Server as SocketIOServer } from 'socket.io';
 import * as customerAuth from './customerAuth';
-import { testConnection, executeQuery, querySingle, DB_TYPE } from './database';
+import { testConnection, executeQuery, querySingle, DB_TYPE, getPool } from './database';
 import * as balanceUpdater from './balanceUpdater';
 import * as loanManager from './loanManager';
 import * as customerImporter from './customerImporter';
@@ -17,6 +19,7 @@ import * as loanApplications from './loanApplications';
 import * as accountOpenings from './accountOpenings';
 import * as kbModule from './knowledge/kb';
 import * as migration from './migration';
+import { LiveChatManager } from './liveChat';
 
 // Load environment variables
 dotenv.config();
@@ -2486,20 +2489,38 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 console.log('[Startup] About to load KB...');
 loadKB();
 
+// Create HTTP server and attach Socket.IO
+console.log(`[Startup] Creating HTTP server...`);
+const httpServer = http.createServer(app);
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+// Initialize Live Chat Manager
+console.log(`[Startup] Initializing Live Chat Manager...`);
+const pool = getPool();
+const liveChatManager = new LiveChatManager(io, pool as any);
+console.log(`[Startup] Live Chat Manager initialized`);
+
 // Start server - bind to 0.0.0.0 for Render deployment
 console.log(`[Startup] Starting server on port ${port}...`);
 const server = process.env.RENDER 
-  ? app.listen(port, '0.0.0.0', () => {
+  ? httpServer.listen(port, '0.0.0.0', () => {
       console.log(`[Startup] Server callback fired`);
       console.log(`✓ Server listening on http://0.0.0.0:${port}`);
       console.log(`✓ KB: ${kb.length} entries loaded`);
       console.log(`✓ OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
+      console.log(`✓ Live Chat: Enabled`);
     })
-  : app.listen(port, () => {
+  : httpServer.listen(port, () => {
       console.log(`[Startup] Server callback fired`);
       console.log(`✓ Server listening on http://localhost:${port}`);
       console.log(`✓ KB: ${kb.length} entries loaded`);
       console.log(`✓ OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
+      console.log(`✓ Live Chat: Enabled`);
     });
 
 server.on('error', (err: any) => {

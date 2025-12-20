@@ -206,7 +206,7 @@ Before going to production:
 ## Support Contacts
 
 For technical support during integration:
-- IT Department: +233 20 205 5170
+- IT Department: +233 24 231 2059
 - Email: support@akamantinkasei.com
 
 ## Notes

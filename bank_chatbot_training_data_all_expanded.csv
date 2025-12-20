@@ -298,3 +298,15 @@ escalate_human,human_agent,Escalate to a human agent or request callback,I want 
 escalate_human,human_agent,Escalate to a human agent or request callback,Please schedule a call-back.
 escalate_human,human_agent,Escalate to a human agent or request callback,Escalate this to a supervisor.
 escalate_human,human_agent,Escalate to a human agent or request callback,Transfer me to live support.
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,How do I register for mobile banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,How can I activate online banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,What are the steps to get mobile banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,How do I sign up for internet banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,I want to use mobile banking.
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,Tell me about mobile banking registration.
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,How do I get started with online banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,What is the USSD code for mobile banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,How do I dial for mobile banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,Can I register for mobile banking myself?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,What do I need to register for mobile banking?
+mobile_banking_registration,digital_banking,Register for mobile banking or online banking via USSD,Tell me about *992# registration.

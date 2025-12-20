@@ -916,7 +916,7 @@
       "deactivate card",
       "prevent unauthorized use of card"
     ],
-    "answer": "Block lost or stolen card immediately.\n\nFor block lost or stolen card immediately, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Block lost or stolen card immediately.\n\nFor block lost or stolen card immediately, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
   },
   {
     "id": "request_new_card",
@@ -933,7 +933,7 @@
       "request for new atm card",
       "send me new debit card"
     ],
-    "answer": "Request a replacement or new card.\n\nFor request a replacement or new card, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Request a replacement or new card.\n\nFor request a replacement or new card, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
   },
   {
     "id": "card_not_working",
@@ -950,7 +950,7 @@
       "card malfunction—help me",
       "card error at atm"
     ],
-    "answer": "Troubleshoot declined or failing card.\n\nFor troubleshoot declined or failing card, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Troubleshoot declined or failing card.\n\nFor troubleshoot declined or failing card, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
   },
   {
     "id": "pin_reset",
@@ -967,7 +967,7 @@
       "pin is blocked",
       "unlock pin"
     ],
-    "answer": "Reset or change card PIN.\n\nFor reset or change card pin, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Reset or change card PIN.\n\nFor reset or change card pin, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
   },
   {
     "id": "card_activation",
@@ -984,7 +984,7 @@
       "why is new card inactive",
       "help activate card"
     ],
-    "answer": "Activate a new card.\n\nFor activate a new card, please contact our customer service immediately at +233 20 205 5170 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Activate a new card.\n\nFor activate a new card, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
   },
   {
     "id": "password_reset",
@@ -1001,7 +1001,7 @@
       "forgot login credentials",
       "send password reset instructions"
     ],
-    "answer": "Reset online banking password or help logging in.\n\nTo reset online banking password or help logging in, please use our mobile banking app or contact customer service at +233 20 205 5170. For security reasons, some actions may require identity verification."
+    "answer": "Reset online banking password or help logging in.\n\nTo reset online banking password or help logging in, please use our mobile banking app or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification."
   },
   {
     "id": "profile_update",
@@ -1009,7 +1009,7 @@
     "patterns": [
       "email)\""
     ],
-    "answer": "\"Update customer profile (phone.\n\nTo \"update customer profile (phone, please use our mobile banking app or contact customer service at +233 20 205 5170. For security reasons, some actions may require identity verification."
+    "answer": "\"Update customer profile (phone.\n\nTo \"update customer profile (phone, please use our mobile banking app or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification."
   },
   {
     "id": "mobile_app_support",
@@ -1026,7 +1026,7 @@
       "app login failing after update",
       "why can't i access certain features on app"
     ],
-    "answer": "Troubleshoot mobile app issues.\n\nTo troubleshoot mobile app issues, please use our mobile banking app or contact customer service at +233 20 205 5170. For security reasons, some actions may require identity verification."
+    "answer": "Troubleshoot mobile app issues.\n\nTo troubleshoot mobile app issues, please use our mobile banking app or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification."
   },
   {
     "id": "loan_products",
@@ -1043,7 +1043,7 @@
       "show lointerest rates by product",
       "what documents are needed to apply for loan"
     ],
-    "answer": "Provide loan product information.\n\nFor information about provide loan product information, please visit any branch or call +233 20 205 5170. Our loan officers will be happy to discuss options and eligibility requirements."
+    "answer": "Provide loan product information.\n\nFor information about provide loan product information, please visit any branch or call +233 24 231 2059. Our loan officers will be happy to discuss options and eligibility requirements."
   },
   {
     "id": "loan_application",
@@ -1059,7 +1059,7 @@
       "ci save loapplication and continue later",
       "i need help filling loform"
     ],
-    "answer": "Assist with loan applications.\n\nFor information about assist with loan applications, please visit any branch or call +233 20 205 5170. Our loan officers will be happy to discuss options and eligibility requirements."
+    "answer": "Assist with loan applications.\n\nFor information about assist with loan applications, please visit any branch or call +233 24 231 2059. Our loan officers will be happy to discuss options and eligibility requirements."
   },
   {
     "id": "loan_balance",
@@ -1074,7 +1074,7 @@
       "show loamortization for loan",
       "provide details for loaccount 445566"
     ],
-    "answer": "Retrieve loan balance and repayment schedule.\n\nFor information about retrieve loan balance and repayment schedule, please visit any branch or call +233 20 205 5170. Our loan officers will be happy to discuss options and eligibility requirements."
+    "answer": "Retrieve loan balance and repayment schedule.\n\nFor information about retrieve loan balance and repayment schedule, please visit any branch or call +233 24 231 2059. Our loan officers will be happy to discuss options and eligibility requirements."
   },
   {
     "id": "loan_interest",
@@ -1087,7 +1087,7 @@
       "when were lorates last updated",
       "what rate do first-time borrowers get"
     ],
-    "answer": "**Current Loan Interest Rates:**\n\n- **Salary Loan**: 31% per annum\n- Other loan products have varying rates depending on the product type and assessment\n\nInterest rates are subject to change and final approval based on your credit assessment. For personalized quotes on other loan products (personal, business, agricultural, mortgage), please visit any branch or call +233 20 205 5170."
+    "answer": "**Current Loan Interest Rates:**\n\n- **Salary Loan**: 31% per annum\n- Other loan products have varying rates depending on the product type and assessment\n\nInterest rates are subject to change and final approval based on your credit assessment. For personalized quotes on other loan products (personal, business, agricultural, mortgage), please visit any branch or call +233 24 231 2059."
   },
   {
     "id": "savings_info",
@@ -1102,7 +1102,7 @@
       "what benefits come with savings account",
       "is there fees for dormant savings accounts"
     ],
-    "answer": "Savings account information and rates.\n\nFor savings account information and rates, please visit any branch or contact us at +233 20 205 5170. Our financial advisors can provide detailed information and help you get started."
+    "answer": "Savings account information and rates.\n\nFor savings account information and rates, please visit any branch or contact us at +233 24 231 2059. Our financial advisors can provide detailed information and help you get started."
   },
   {
     "id": "fixed_deposit",
@@ -1117,7 +1117,7 @@
       "what is minimum amount for fd",
       "how long are fd tenures available"
     ],
-    "answer": "Create or inquire about fixed deposits.\n\nFor create or inquire about fixed deposits, please visit any branch or contact us at +233 20 205 5170. Our financial advisors can provide detailed information and help you get started."
+    "answer": "Create or inquire about fixed deposits.\n\nFor create or inquire about fixed deposits, please visit any branch or contact us at +233 24 231 2059. Our financial advisors can provide detailed information and help you get started."
   },
   {
     "id": "investment_products",
@@ -1125,7 +1125,7 @@
     "patterns": [
       "bonds"
     ],
-    "answer": "\"Info on investments (T-bills.\n\nFor \"info on investments (t-bills, please visit any branch or contact us at +233 20 205 5170. Our financial advisors can provide detailed information and help you get started."
+    "answer": "\"Info on investments (T-bills.\n\nFor \"info on investments (t-bills, please visit any branch or contact us at +233 24 231 2059. Our financial advisors can provide detailed information and help you get started."
   },
   {
     "id": "account_fees",
@@ -1138,7 +1138,7 @@
       "what is monthly account maintenance fee",
       "are there penalties for falling below minimum balance"
     ],
-    "answer": "Inquiries about account maintenance and service fees.\n\nFor details about inquiries about account maintenance and service fees, please refer to our fee schedule available at any branch or on our website. You can also contact customer service at +233 20 205 5170."
+    "answer": "Inquiries about account maintenance and service fees.\n\nFor details about inquiries about account maintenance and service fees, please refer to our fee schedule available at any branch or on our website. You can also contact customer service at +233 24 231 2059."
   },
   {
     "id": "transaction_fees",
@@ -1150,7 +1150,7 @@
       "how much do you charge for international transfers",
       "are there charges for pos transactions"
     ],
-    "answer": "Specific transaction-related charges.\n\nFor details about specific transaction-related charges, please refer to our fee schedule available at any branch or on our website. You can also contact customer service at +233 20 205 5170."
+    "answer": "Specific transaction-related charges.\n\nFor details about specific transaction-related charges, please refer to our fee schedule available at any branch or on our website. You can also contact customer service at +233 24 231 2059."
   },
   {
     "id": "kyc_update",
@@ -1185,7 +1185,7 @@
       "which branches have extended hours",
       "locate atm that accepts deposits"
     ],
-    "answer": "Locate branches or ATMs and opening hours.\n\nTo locate branches or atms and opening hours, please use our branch locator on the mobile app or visit our website. You can also call +233 20 205 5170 for directions."
+    "answer": "Locate branches or ATMs and opening hours.\n\nTo locate branches or atms and opening hours, please use our branch locator on the mobile app or visit our website. You can also call +233 24 231 2059 for directions."
   },
   {
     "id": "report_fraud",
@@ -1198,7 +1198,7 @@
       "help me dispute suspicious transaction",
       "how do i report identity theft"
     ],
-    "answer": "Report suspected fraud or unauthorized transactions.\n\nFor report suspected fraud or unauthorized transactions, please contact our fraud hotline immediately at +233 20 205 5170. Time-sensitive reports can also be made through the mobile banking app."
+    "answer": "Report suspected fraud or unauthorized transactions.\n\nFor report suspected fraud or unauthorized transactions, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made through the mobile banking app."
   },
   {
     "id": "transaction_alerts",
@@ -1211,7 +1211,7 @@
       "change phone number for alerts",
       "i want sms alerts for withdrawals above 1000"
     ],
-    "answer": "Manage SMS/email/push transaction alerts.\n\nFor manage sms/email/push transaction alerts, please contact our fraud hotline immediately at +233 20 205 5170. Time-sensitive reports can also be made through the mobile banking app."
+    "answer": "Manage SMS/email/push transaction alerts.\n\nFor manage sms/email/push transaction alerts, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made through the mobile banking app."
   },
   {
     "id": "bank_products",
@@ -1223,7 +1223,7 @@
       "do you offer insurance products",
       "what are digital banking services"
     ],
-    "answer": "High-level info about bank products and services.\n\nFor more information about high-level info about bank products and services, please visit any branch, check our website, or call customer service at +233 20 205 5170."
+    "answer": "High-level info about bank products and services.\n\nFor more information about high-level info about bank products and services, please visit any branch, check our website, or call customer service at +233 24 231 2059."
   },
   {
     "id": "contact_support",
@@ -1235,7 +1235,7 @@
       "what are phone support hours",
       "how do i escalate unresolved issue"
     ],
-    "answer": "Provide customer support contact details and escalation.\n\nFor more information about provide customer support contact details and escalation, please visit any branch, check our website, or call customer service at +233 20 205 5170."
+    "answer": "Provide customer support contact details and escalation.\n\nFor more information about provide customer support contact details and escalation, please visit any branch, check our website, or call customer service at +233 24 231 2059."
   },
   {
     "id": "failed_transaction",
@@ -1247,7 +1247,7 @@
       "i sent money but it didn't arrive",
       "how do i get refund for failed payment"
     ],
-    "answer": "Handle failed transactions and reversals.\n\nTo handle failed transactions and reversals, please contact customer service at +233 20 205 5170 or visit any branch. We aim to resolve all issues within 24-48 hours."
+    "answer": "Handle failed transactions and reversals.\n\nTo handle failed transactions and reversals, please contact customer service at +233 24 231 2059 or visit any branch. We aim to resolve all issues within 24-48 hours."
   },
   {
     "id": "complaint_status",
@@ -1259,7 +1259,7 @@
       "check progress of ticket",
       "when will complaint be closed"
     ],
-    "answer": "Check complaint ticket status or follow-up.\n\nTo check complaint ticket status or follow-up, please contact customer service at +233 20 205 5170 or visit any branch. We aim to resolve all issues within 24-48 hours."
+    "answer": "Check complaint ticket status or follow-up.\n\nTo check complaint ticket status or follow-up, please contact customer service at +233 24 231 2059 or visit any branch. We aim to resolve all issues within 24-48 hours."
   },
   {
     "id": "escalate_human",
@@ -1271,7 +1271,7 @@
       "escalate this to supervisor",
       "transfer me to live support"
     ],
-    "answer": "Escalate to a human agent or request callback.\n\nI'll connect you with a human agent who can better assist you. Please call +233 20 205 5170 or visit any of our branches for personalized service."
+    "answer": "Escalate to a human agent or request callback.\n\nI'll connect you with a human agent who can better assist you. Please visit any of our nearest branches for personalized service. Ask me \"where is the nearest branch?\" to find your closest branch location and contact number."
   },
   {
     "id": "web_thebftonline_com_2025_09_03_amantin_and_kasei_comm",
@@ -1769,5 +1769,22 @@
       "editors' picksheadlinestop headlines"
     ],
     "answer": "Editors' picksHeadlinesTop Headlines FacebookTwitterWhatsAppEmailPrint The strain created by rapid urban growth demands bold and immediate interventions to bridge the mounting housing shortfall, now estimated at more than two million units. This has intensified pressure on government to rethink how the sector is regulated and financed. The Ghana Real Estate Developers Association (GREDA) president, Dr. James Orleans-Lindsay, is therefore calling for simplified permitting processes, expanding access to land and broadening financing options through tools such as real estate investment trusts. Dr. Orleans-Lindsay made this remarks at the 2025 GREDA Awards and Dinner in Accra recently, where he described the 24-hour economy as “a potential game-changer” for the sector. With firm government bac...\n\nFor more information, visit: https://thebftonline.com/2025/12/15/editorial-bridging-mounting-housing-shortfall-through-public-private-partnerships/"
+  },
+  {
+    "id": "mobile_banking_registration",
+    "product": "digital_banking",
+    "patterns": [
+      "how do i register for mobile banking",
+      "how ci activate online banking",
+      "what are steps to get mobile banking",
+      "how do i sign up for internet banking",
+      "i want to use mobile banking",
+      "tell me about mobile banking registration",
+      "how do i get started with online banking",
+      "what is ussd code for mobile banking",
+      "how do i dial for mobile banking",
+      "ci register for mobile banking myself"
+    ],
+    "answer": "To register for Online Banking or Mobile Banking, please follow these steps:\n\n**Requirements:**\n1. You must have an account with Amankaa Community Bank\n2. Your Ghana Card Identification number must be linked to your Account\n3. Your preferred phone number must be linked with your account\n\n**Registration Process:**\n• Dial *992# on your registered phone number\n• Follow the prompts to get onboarded\n\n**Important Note:**\nPlease visit any nearest branch to get your customer details updated if your Ghana Card or phone number is not yet linked to your account.\n\nFor assistance, contact us at +233 24 231 2059. Thank you!"
   }
 ]

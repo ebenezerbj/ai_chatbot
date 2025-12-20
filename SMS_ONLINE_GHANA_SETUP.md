@@ -269,7 +269,7 @@ SMS_ONLINE_SENDER=AKCB
 ### Application Support
 - **Technical**: Check console logs and delivery reports
 - **Database**: Verify customer phone numbers
-- **Contact**: +233 20 205 5170
+- **Contact**: +233 24 231 2059
 
 ## Comparison with Twilio
 

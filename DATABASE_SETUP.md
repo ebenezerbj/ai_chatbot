@@ -220,4 +220,4 @@ Need help with database integration?
 - Check server logs: `server.log`
 - Review database queries in `src/customerAuth.ts`
 - Test queries directly in phpMyAdmin
-- Contact IT Department: +233 20 205 5170
+- Contact IT Department: +233 24 231 2059

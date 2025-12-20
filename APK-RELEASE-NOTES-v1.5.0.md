@@ -178,7 +178,7 @@ See `GOOGLE-PLAY-STORE-UPLOAD-GUIDE.md` for publishing instructions
 
 For issues or questions:
 - **Email:** support@akmantinkasei.com
-- **Phone:** +233 20 205 5170
+- **Phone:** +233 24 231 2059
 - **Developer:** ebenezerbj@github
 
 ---

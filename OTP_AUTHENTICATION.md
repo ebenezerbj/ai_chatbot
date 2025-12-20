@@ -112,7 +112,7 @@ Valid for 5 minutes. Do not share this code with anyone.
 
 ### Invalid Credentials
 - **Invalid account/phone**: "Invalid account details. Please verify your account number and phone number."
-- **Account not active**: "Your account is dormant. Please visit any branch or call +233 20 205 5170 for assistance."
+- **Account not active**: "Your account is dormant. Please visit any branch or call +233 24 231 2059 for assistance."
 
 ### OTP Errors
 - **Invalid OTP**: "Invalid verification code. You have 2 attempt(s) remaining."
@@ -220,4 +220,4 @@ For issues or questions:
 - **SMS Online Ghana**: Check dashboard at https://www.smsonlinegh.com/login
 - **API Documentation**: https://www.smsonlinegh.com/developers/http-api/v5
 - **Database**: Verify customer phone numbers in database
-- **Contact**: +233 20 205 5170
+- **Contact**: +233 24 231 2059

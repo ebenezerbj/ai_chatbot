@@ -261,7 +261,7 @@ Set up periodic sync from core banking system to `akcb_bank` database.
 - `CUSTOMER_AUTH_SUMMARY.md` - Feature overview
 
 ### Contact
-- IT Department: +233 20 205 5170
+- IT Department: +233 24 231 2059
 - Email: support@akamantinkasei.com
 
 ---

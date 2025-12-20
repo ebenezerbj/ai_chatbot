@@ -113,7 +113,7 @@ If you have an older version installed:
 
 If you continue to have issues:
 - **Email**: support@akamantinkasei.com
-- **Phone**: +233 20 205 5170
+- **Phone**: +233 24 231 2059
 
 ## Technical Details
 

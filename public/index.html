@@ -1427,6 +1427,7 @@
       background: var(--gray-400);
     }
   </style>
+  <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
   <div class="app-container">
@@ -1504,6 +1505,134 @@
   const useLocationBtn = document.getElementById('useLocationBtn');
 
     let sessionId = null;
+
+    // ===== Live Chat with Human Agent =====
+    let liveChatSocket = null;
+    let liveChatActive = false;
+    let liveChatSessionId = null;
+    let currentAgentName = null;
+
+    function initializeLiveChat() {
+      if (!liveChatSocket) {
+        liveChatSocket = io();
+
+        liveChatSocket.on('connect', () => {
+          console.log('Connected to live chat server');
+        });
+
+        liveChatSocket.on('customer:session-created', (data) => {
+          liveChatSessionId = data.sessionId;
+          addMsg('assistant', data.message, false, false);
+        });
+
+        liveChatSocket.on('customer:agent-joined', (data) => {
+          liveChatActive = true;
+          currentAgentName = data.agentName;
+          addMsg('assistant', `👋 ${data.message}`, false, false);
+          
+          // Change input placeholder
+          if (input) {
+            input.placeholder = `Chat with ${currentAgentName}...`;
+          }
+        });
+
+        liveChatSocket.on('customer:agent-message', (data) => {
+          addMsg('assistant', data.message, false, false);
+        });
+
+        liveChatSocket.on('customer:agent-typing', (data) => {
+          showAgentTyping();
+        });
+
+        liveChatSocket.on('customer:chat-ended', (data) => {
+          endLiveChat();
+          addMsg('assistant', data.message, false, false);
+        });
+
+        liveChatSocket.on('customer:agent-disconnected', (data) => {
+          addMsg('assistant', `⚠️ ${data.message}`, false, false);
+          liveChatActive = false;
+          currentAgentName = null;
+        });
+
+        liveChatSocket.on('error', (data) => {
+          console.error('Live chat error:', data.message);
+          addMsg('assistant', `Error: ${data.message}`, false, false);
+        });
+      }
+    }
+
+    function requestLiveChat(initialMessage = '') {
+      initializeLiveChat();
+
+      const customerId = sessionId || 'guest_' + Date.now();
+      const customerName = 'Customer'; // Can be enhanced to get actual name
+
+      liveChatSocket.emit('customer:connect', {
+        customerId: customerId,
+        customerName: customerName
+      });
+
+      liveChatSocket.emit('customer:request-chat', {
+        customerId: customerId,
+        customerName: customerName,
+        message: initialMessage
+      });
+
+      addMsg('assistant', '🔄 Connecting you to a live agent... Please wait.', false, false);
+    }
+
+    function sendLiveChatMessage(message) {
+      if (!liveChatActive || !liveChatSessionId) {
+        return false;
+      }
+
+      liveChatSocket.emit('customer:message', {
+        sessionId: liveChatSessionId,
+        message: message
+      });
+
+      // Send typing indicator
+      liveChatSocket.emit('customer:typing', {
+        sessionId: liveChatSessionId
+      });
+
+      return true;
+    }
+
+    function endLiveChat() {
+      if (liveChatSessionId) {
+        liveChatSocket.emit('customer:end-chat', {
+          sessionId: liveChatSessionId
+        });
+      }
+
+      liveChatActive = false;
+      liveChatSessionId = null;
+      currentAgentName = null;
+
+      if (input) {
+        input.placeholder = 'Type your message...';
+      }
+    }
+
+    function showAgentTyping() {
+      const typingIndicator = document.createElement('div');
+      typingIndicator.className = 'message assistant typing-indicator';
+      typingIndicator.innerHTML = `
+        <div class="message-content">
+          <div class="message-bubble">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      chatEl.appendChild(typingIndicator);
+      chatEl.scrollTop = chatEl.scrollHeight;
+
+      setTimeout(() => {
+        typingIndicator.remove();
+      }, 3000);
+    }
 
     // ===== Session Idle Timeout Management =====
     const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
@@ -2767,6 +2896,15 @@
       const msgText = (message || input.value).trim();
       if (!msgText) return;
 
+      // Handle live chat mode
+      if (liveChatActive && liveChatSessionId) {
+        input.value = '';
+        input.style.height = 'auto';
+        addMsg('user', msgText);
+        sendLiveChatMessage(msgText);
+        return;
+      }
+
       // If user asks for the nearest branch, auto-request geolocation and handle locally
       try {
         const isNearestBranchQuery = (s) => {
@@ -2966,10 +3104,24 @@
       const row = last.querySelector('.msg-actions') || (() => {
         const r = document.createElement('div'); r.className = 'msg-actions'; last.appendChild(r); return r;
       })();
+      
+      // Add Live Chat button
+      const liveChatBtn = document.createElement('button');
+      liveChatBtn.type = 'button';
+      liveChatBtn.className = 'msg-action-btn handover-cta';
+      liveChatBtn.innerHTML = `<i class="fa fa-comments" aria-hidden="true"></i><span>Live Chat</span>`;
+      liveChatBtn.addEventListener('click', () => {
+        const lastUserMsg = Array.from(chatEl.querySelectorAll('.message.user .msg-content')).pop();
+        const initialMsg = lastUserMsg ? lastUserMsg.textContent : '';
+        requestLiveChat(initialMsg);
+      });
+      row.appendChild(liveChatBtn);
+      
+      // Add Branch Visit button
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'msg-action-btn handover-cta';
-      btn.innerHTML = `<i class="fa fa-user-headset" aria-hidden="true"></i><span>Talk to a person</span>`;
+      btn.innerHTML = `<i class="fa fa-user-headset" aria-hidden="true"></i><span>Visit Branch</span>`;
       btn.addEventListener('click', openHandoverForm);
       row.appendChild(btn);
     }

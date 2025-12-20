@@ -458,7 +458,7 @@ Bot: "I can help you find the nearest branch. Would you like to share your locat
 User: [Clicks location button]
 Bot: "📍 Nearest Branch: Amantin (Head Office)
      📏 Distance: ~2.3km
-     📞 Phone: +233 20 205 5170
+     📞 Phone: +233 24 231 2059
      📌 Address: Amantin High Street
      [Get Directions on Google Maps]"
 ```
@@ -571,7 +571,7 @@ Bot: "📍 Nearest Branch: Amantin (Head Office)
 ### Technical Support
 - GitHub repository with issue tracking
 - Email support: support@akcb.com
-- Phone support: +233 20 205 5170
+- Phone support: +233 24 231 2059
 - Admin portal help section
 - Developer documentation
 - Render platform support

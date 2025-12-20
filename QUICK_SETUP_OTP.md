@@ -169,4 +169,4 @@ Look for this in console:
 - **SMS Online Ghana**: https://www.smsonlinegh.com/login
 - **API Docs**: https://www.smsonlinegh.com/developers/http-api/v5
 - **Database**: Verify `customers` table
-- **Contact**: +233 20 205 5170
+- **Contact**: +233 24 231 2059

@@ -118,5 +118,5 @@ AkcbSupport
 
 ## 📞 Support Contacts
 If customers need help:
-- **Phone:** +233 20 205 5170
+- **Phone:** +233 24 231 2059
 - **Branch:** Visit any AKCB branch

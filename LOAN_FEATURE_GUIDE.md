@@ -265,7 +265,7 @@ The loan data will automatically appear in the mobile app once:
 ## 📞 Support
 
 For loan-related customer inquiries, the bot will suggest:
-- Phone: +233 20 205 5170
+- Phone: +233 24 231 2059
 - Visit any AKCB branch
 - Authenticate for real-time loan status
 
