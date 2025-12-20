@@ -1068,27 +1068,49 @@ app.post('/api/handover', async (req: Request, res: Response) => {
     // Generate unique ticket ID
     const ticketId = `TICKET-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
+    // AKCB Branch locations with coordinates (Amantin & Kasei Community Bank)
+    const branches = [
+      { name: 'AMANTIN AND KASEI HO.', lat: 6.70, lng: -1.62, location: 'Head Office' },
+      { name: 'AMANTIN n KASEI-EJURA', lat: 7.3833, lng: -1.3667, location: 'Ejura' },
+      { name: 'AMANTINnKASEI-AHWIAA', lat: 6.62, lng: -1.55, location: 'Ahwiaa' },
+      { name: 'AMANTINnKASEI-AMANTIN', lat: 6.73, lng: -1.74, location: 'Amantin' },
+      { name: 'AMANTINnKASEI-ATEBUBU', lat: 7.75, lng: -0.98, location: 'Atebubu' },
+      { name: 'AMANTINnKASEI-KAJEJI', lat: 6.70, lng: -1.60, location: 'Kajeji' },
+      { name: 'AMANTINnKASEI-KEJETIA', lat: 6.6880, lng: -1.6229, location: 'Kejetia' },
+      { name: 'AMANTINnKASEI-KWAME DS', lat: 7.35, lng: -1.40, location: 'Kwame Danso' },
+      { name: 'AMANTINnKASEI-YEJI', lat: 7.82, lng: -0.22, location: 'Yeji' }
+    ];
+
     // Determine target branch based on location (if provided)
-    let targetBranch = 'Head Office (Tarkwa)';
+    let targetBranch = branches[0].name; // Default to Head Office
+    let targetLocation = branches[0].location;
+
     if (lat && lng) {
-      // Simple distance calculation to nearest branch
-      // Tarkwa coordinates: 5.2977° N, 1.9953° W
-      const tarkwaLat = 5.2977;
-      const tarkwaLng = -1.9953;
+      // Calculate distance to each branch and find nearest
+      let minDistance = Infinity;
       
-      // Calculate simple distance (not accurate but good enough for demo)
-      const distance = Math.sqrt(
-        Math.pow(lat - tarkwaLat, 2) + Math.pow(lng - tarkwaLng, 2)
-      );
-      
-      // If within ~0.1 degrees (~11km), route to Tarkwa
-      if (distance < 0.1) {
-        targetBranch = 'Tarkwa Branch';
-      } else {
-        targetBranch = 'Head Office (Tarkwa)';
+      for (const branch of branches) {
+        const distance = Math.sqrt(
+          Math.pow((lat - branch.lat) * 111, 2) + // ~111km per degree latitude
+          Math.pow((lng - branch.lng) * 111 * Math.cos(lat * Math.PI / 180), 2) // longitude adjusted for latitude
+        );
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          targetBranch = branch.name;
+          targetLocation = branch.location;
+        }
       }
       
-      console.log('[Handover] Location-based routing:', { lat, lng, distance, targetBranch });
+      console.log('[Handover] Location-based routing:', { 
+        lat, 
+        lng, 
+        nearestBranch: targetBranch,
+        location: targetLocation,
+        distanceKm: Math.round(minDistance * 10) / 10 
+      });
+    } else {
+      console.log('[Handover] No location provided, routing to Head Office');
     }
 
     // Store escalation in database (create table if needed)
@@ -1163,7 +1185,7 @@ app.post('/api/handover', async (req: Request, res: Response) => {
     res.json({
       ok: true,
       ticketId,
-      targetBranch,
+      targetBranch: `${targetLocation} Branch`,
       message: 'Your request has been submitted. An agent will contact you soon.'
     });
 
