@@ -1439,15 +1439,6 @@
             <span id="sessionStatus">Online</span>
           </div>
           <div class="header-actions" id="headerActions" aria-label="Chat settings and tools">
-            <button id="assistanceBtn" class="header-action-btn assistance-btn" title="Get Human Assistance" aria-label="Get human assistance">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              <span class="label">Assistance</span>
-            </button>
             <select id="ttsSelect" class="header-action-select" title="Voice & language" aria-label="Voice and language">
               <option>Female UK</option>
             </select>
@@ -3823,15 +3814,6 @@
         },
         { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
       );
-    });
-
-    // Customer Assistance Button
-    const assistanceBtn = document.getElementById('assistanceBtn');
-    assistanceBtn?.addEventListener('click', () => {
-      addMsg('assistant', 'I\'ll connect you with a customer service representative. Please provide your contact details so they can reach you.');
-      setTimeout(() => {
-        openHandoverForm();
-      }, 100);
     });
 
   // Removed Plus Code map pin button per request
