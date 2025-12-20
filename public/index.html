@@ -2072,6 +2072,8 @@
                 inputElement.value = btn.value || btn.text;
                 sendBtn.click();
               }
+            } else if (btn.action === 'handover') {
+              openHandoverForm();
             } else if (btn.action === 'callback' && btn.callback) {
               btn.callback();
             }
@@ -2972,7 +2974,31 @@
       row.appendChild(btn);
     }
 
+    function isWithinWorkingHours() {
+      const now = new Date();
+      const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const timeInMinutes = hours * 60 + minutes;
+      
+      // Check if it's a weekday (Monday-Friday)
+      const isWeekday = day >= 1 && day <= 5;
+      
+      // Check if it's between 8:30 AM (510 minutes) and 4:00 PM (960 minutes)
+      const workingStart = 8 * 60 + 30; // 8:30 AM
+      const workingEnd = 16 * 60; // 4:00 PM
+      const isDuringWorkingHours = timeInMinutes >= workingStart && timeInMinutes < workingEnd;
+      
+      return isWeekday && isDuringWorkingHours;
+    }
+
     function openHandoverForm() {
+      // Check if within working hours
+      if (!isWithinWorkingHours()) {
+        addMsg('assistant', '⏰ Our customer assistance agents are currently unavailable.\n\nWorking Hours:\n📅 Monday - Friday\n🕐 8:30 AM - 4:00 PM\n\nPlease try again during our working hours, or leave your contact details and we\'ll get back to you as soon as possible.');
+        // Still show form for contact details
+      }
+      
       // Create a simple inline form under the last assistant message
       const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
       if (!nodes.length) return;
