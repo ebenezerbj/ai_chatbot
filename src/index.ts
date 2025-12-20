@@ -1705,6 +1705,39 @@ app.post('/api/admin/run-migration-001', async (req: Request, res: Response) => 
   }
 });
 
+// Migration 002: Analytics Phase 2 Tables
+app.post('/api/admin/run-migration-002', async (req: Request, res: Response) => {
+  try {
+    // Check authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    }
+
+    console.log('[Admin] Running database migration 002 (Analytics Phase 2)...');
+    
+    const result = await migration.runMigration002();
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (error: any) {
+    console.error('[Admin] Migration 002 error:', error.message);
+    res.status(500).json({ 
+      success: false,
+      error: 'Migration 002 failed',
+      details: error.message 
+    });
+  }
+});
+
 // Get loan statistics
 app.get('/api/admin/loan-stats', async (req: Request, res: Response) => {
   try {

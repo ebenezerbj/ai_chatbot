@@ -709,6 +709,18 @@
                             <div id="migrationResult" class="hidden" style="margin-top: 12px;"></div>
                         </div>
                         
+                        <div style="margin-bottom: 24px; padding: 16px; background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 4px;">
+                            <h4 style="margin: 0 0 8px 0; color: #047857;">Migration 002: Analytics Phase 2 Tables</h4>
+                            <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
+                                Creates tables for personalized greetings, user segmentation (VIP/Regular/New), feedback collection (👍👎), follow-up reminders, and smart recommendations.
+                                <strong>Enables: Returning user recognition, engagement tracking, satisfaction ratings</strong>
+                            </p>
+                            <button class="btn btn-success" id="runMigration002Btn">
+                                <span id="runMigration002BtnText">Run Migration 002</span>
+                            </button>
+                            <div id="migration002Result" class="hidden" style="margin-top: 12px;"></div>
+                        </div>
+                        
                         <div style="padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
                             <strong>⚠️ Note:</strong> After running the migration, re-upload your Accounts.csv to capture all demographic fields.
                         </div>
@@ -1804,6 +1816,57 @@ https://example.com/products"></textarea>
             } finally {
                 btn.disabled = false;
                 btnText.textContent = 'Run Migration 001';
+            }
+        });
+
+        // Run Migration 002 Button Handler
+        document.getElementById('runMigration002Btn')?.addEventListener('click', async () => {
+            const btn = document.getElementById('runMigration002Btn');
+            const btnText = document.getElementById('runMigration002BtnText');
+            const resultDiv = document.getElementById('migration002Result');
+            
+            if (!confirm('Run Analytics Phase 2 migration? This will create tables for personalized greetings, user segmentation, feedback, and recommendations.')) {
+                return;
+            }
+            
+            btn.disabled = true;
+            btnText.textContent = 'Running migration...';
+            resultDiv.innerHTML = '';
+            resultDiv.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/admin/run-migration-002', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ Migration 002 completed successfully!<br>
+                            <small>${data.message}</small>
+                            ${data.details ? `<br><small>Tables created: ${data.details.tables}</small>` : ''}
+                        </div>
+                    `;
+                    addActivityLog('Analytics Phase 2 migration completed', 'success');
+                } else {
+                    throw new Error(data.message || 'Migration failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ Migration failed: ${error.message}
+                    </div>
+                `;
+                addActivityLog('Analytics Phase 2 migration failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Run Migration 002';
             }
         });
 

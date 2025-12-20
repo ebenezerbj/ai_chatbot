@@ -118,3 +118,162 @@ export async function runMigration001(): Promise<{ success: boolean; message: st
     };
   }
 }
+
+/**
+ * Migration 002: Ensure Analytics Phase 2 Tables Exist
+ * Creates user_profiles, feedback, follow_ups, user_preferences
+ */
+export async function runMigration002(): Promise<{ success: boolean; message: string; details?: any }> {
+  try {
+    console.log('[Migration 002] Starting: Analytics Phase 2 Tables');
+
+    if (DB_TYPE === 'postgres') {
+      // User profiles
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS user_profiles (
+          user_id VARCHAR(255) PRIMARY KEY,
+          first_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          total_sessions INTEGER DEFAULT 0,
+          total_messages INTEGER DEFAULT 0,
+          preferred_topics JSONB,
+          segment VARCHAR(20) DEFAULT 'new',
+          average_satisfaction DECIMAL(3,2),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // User preferences
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS user_preferences (
+          id SERIAL PRIMARY KEY,
+          user_id VARCHAR(255) NOT NULL,
+          preference_key VARCHAR(100) NOT NULL,
+          preference_value TEXT NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(user_id, preference_key)
+        )
+      `);
+
+      // Feedback
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS feedback (
+          id SERIAL PRIMARY KEY,
+          session_id VARCHAR(255) NOT NULL,
+          message_id INTEGER NOT NULL,
+          feedback_type VARCHAR(20) NOT NULL,
+          score INTEGER NOT NULL,
+          comment TEXT,
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Follow-ups
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS follow_ups (
+          id SERIAL PRIMARY KEY,
+          user_id VARCHAR(255) NOT NULL,
+          session_id VARCHAR(255) NOT NULL,
+          topic VARCHAR(255) NOT NULL,
+          action TEXT NOT NULL,
+          completed BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          completed_at TIMESTAMP
+        )
+      `);
+
+      // Indexes
+      await executeQuery(`CREATE INDEX IF NOT EXISTS idx_user_profiles_segment ON user_profiles(segment)`);
+      await executeQuery(`CREATE INDEX IF NOT EXISTS idx_user_profiles_last_seen ON user_profiles(last_seen)`);
+      await executeQuery(`CREATE INDEX IF NOT EXISTS idx_feedback_session ON feedback(session_id)`);
+      await executeQuery(`CREATE INDEX IF NOT EXISTS idx_followups_user ON follow_ups(user_id)`);
+      await executeQuery(`CREATE INDEX IF NOT EXISTS idx_followups_completed ON follow_ups(completed)`);
+
+      console.log('[Migration 002] PostgreSQL tables created successfully');
+
+    } else {
+      // MySQL
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS user_profiles (
+          user_id VARCHAR(255) PRIMARY KEY,
+          first_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          total_sessions INT DEFAULT 0,
+          total_messages INT DEFAULT 0,
+          preferred_topics JSON,
+          segment VARCHAR(20) DEFAULT 'new',
+          average_satisfaction DECIMAL(3,2),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_segment (segment),
+          INDEX idx_last_seen (last_seen)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS user_preferences (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id VARCHAR(255) NOT NULL,
+          preference_key VARCHAR(100) NOT NULL,
+          preference_value TEXT NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY unique_user_pref (user_id, preference_key)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS feedback (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          session_id VARCHAR(255) NOT NULL,
+          message_id INT NOT NULL,
+          feedback_type VARCHAR(20) NOT NULL,
+          score INT NOT NULL,
+          comment TEXT,
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_session (session_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS follow_ups (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id VARCHAR(255) NOT NULL,
+          session_id VARCHAR(255) NOT NULL,
+          topic VARCHAR(255) NOT NULL,
+          action TEXT NOT NULL,
+          completed BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          completed_at TIMESTAMP NULL,
+          INDEX idx_user (user_id),
+          INDEX idx_completed (completed)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      console.log('[Migration 002] MySQL tables created successfully');
+    }
+
+    // Check table counts
+    const tables = ['user_profiles', 'user_preferences', 'feedback', 'follow_ups'];
+    const counts: any = {};
+    
+    for (const table of tables) {
+      const result = await executeQuery(`SELECT COUNT(*) as count FROM ${table}`, []) as any[];
+      counts[table] = result[0]?.count || 0;
+    }
+
+    return {
+      success: true,
+      message: 'Analytics Phase 2 tables created successfully',
+      details: { tables: tables.length, counts }
+    };
+
+  } catch (error: any) {
+    console.error('[Migration 002] Error:', error);
+    return {
+      success: false,
+      message: 'Migration 002 failed: ' + error.message,
+      details: error
+    };
+  }
+}
