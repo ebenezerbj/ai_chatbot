@@ -1615,7 +1615,8 @@
       let welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`;
       let welcomeButtons = [
         { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
-        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' },
+        { text: '🆘 Assistance', action: 'handover', value: 'assistance' }
       ];
       try {
         const greetingResp = await fetch('/api/greeting', {
