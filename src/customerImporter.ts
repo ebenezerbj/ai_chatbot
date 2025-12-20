@@ -246,8 +246,18 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
       return result;
     }
 
-    // Process each record
-    for (const record of records) {
+    // Process records in batches for better performance
+    const BATCH_SIZE = 500;
+    const totalBatches = Math.ceil(records.length / BATCH_SIZE);
+    
+    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+      const start = batchIndex * BATCH_SIZE;
+      const end = Math.min(start + BATCH_SIZE, records.length);
+      const batch = records.slice(start, end);
+      
+      console.log(`[CustomerImport] Processing batch ${batchIndex + 1}/${totalBatches} (${batch.length} records)...`);
+      
+      for (const record of batch) {
       try {
         // Parse date of birth
         let dobDate: string | null = null;
@@ -389,18 +399,23 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
         result.errors.push(errorMsg);
         console.error('[CustomerImport]', errorMsg);
         
-        // Only keep first 10 errors
-        if (result.errors.length > 10) {
-          result.errors = result.errors.slice(0, 10);
-          break;
+        // Only keep first 10 errors per batch
+        if (result.errors.length > 100) {
+          result.errors = result.errors.slice(0, 100);
         }
       }
     }
-
-    result.success = result.successCount > 0;
-    result.summary = `Imported ${result.successCount} of ${result.totalRecords} accounts (${result.errorCount} errors)`;
     
-    if (result.errorCount > 10) {
+    // Log batch completion
+    console.log(`[CustomerImport] Batch ${batchIndex + 1}/${totalBatches} complete: ${result.successCount} success, ${result.errorCount} errors`);
+  }
+
+    result.success = result.su0) {
+      result.errors = result.errors.slice(0, 100);
+      result.errors.push(`... and ${result.errorCount - 100} more errors (showing first 100)`);
+    }
+
+    console.log('[CustomerImport] Import complete:', result.summary);    if (result.errorCount > 10) {
       result.errors.push(`... and ${result.errorCount - 10} more errors`);
     }
 
