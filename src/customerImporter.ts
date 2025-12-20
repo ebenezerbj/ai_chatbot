@@ -410,15 +410,15 @@ export async function importCustomersWithBalances(buffer: Buffer): Promise<Impor
     console.log(`[CustomerImport] Batch ${batchIndex + 1}/${totalBatches} complete: ${result.successCount} success, ${result.errorCount} errors`);
   }
 
-    result.success = result.su0) {
+    result.success = result.successCount > 0;
+    result.summary = `Imported ${result.successCount} of ${result.totalRecords} customers`;
+    
+    if (result.errorCount > 100) {
       result.errors = result.errors.slice(0, 100);
       result.errors.push(`... and ${result.errorCount - 100} more errors (showing first 100)`);
     }
 
-    console.log('[CustomerImport] Import complete:', result.summary);    if (result.errorCount > 10) {
-      result.errors.push(`... and ${result.errorCount - 10} more errors`);
-    }
-
+    console.log('[CustomerImport] Import complete:', result.summary);
     return result;
   } catch (error: any) {
     console.error('[CustomerImport] Fatal error:', error);
