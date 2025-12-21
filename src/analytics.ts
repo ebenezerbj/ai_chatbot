@@ -1596,35 +1596,47 @@ export async function getIntentDistribution(): Promise<{ intent: string; count: 
 }
 
 /**
- * Get conversations needing escalation
+ * Get conversations needing escalation with enhanced details
  */
 export async function getEscalationQueue(): Promise<any[]> {
   try {
     const query = DB_TYPE === 'postgres'
-      ? `SELECT 
+      ? `SELECT DISTINCT
            sa.session_id, 
            sa.timestamp as start_time, 
            sa.sentiment, 
            sa.score, 
            sa.emotion_tags::text as emotion_tags,
-           sa.message_id
+           sa.message_id,
+           cs.message_count,
+           cs.last_activity,
+           cc.category,
+           cc.subcategory
          FROM sentiment_analysis sa
+         LEFT JOIN chat_sessions cs ON sa.session_id = cs.session_id
+         LEFT JOIN conversation_categories cc ON sa.session_id = cc.session_id
          WHERE sa.needs_escalation = TRUE
          ORDER BY sa.timestamp DESC
          LIMIT 50`
-      : `SELECT 
+      : `SELECT DISTINCT
            sa.session_id, 
            sa.timestamp as start_time, 
            sa.sentiment, 
            sa.score, 
            sa.emotion_tags,
-           sa.message_id
+           sa.message_id,
+           cs.message_count,
+           cs.last_activity,
+           cc.category,
+           cc.subcategory
          FROM sentiment_analysis sa
+         LEFT JOIN chat_sessions cs ON sa.session_id = cs.session_id
+         LEFT JOIN conversation_categories cc ON sa.session_id = cc.session_id
          WHERE sa.needs_escalation = 1
          ORDER BY sa.timestamp DESC
          LIMIT 50`;
     
-    console.log('[Analytics] Running escalation queue query...');
+    console.log('[Analytics] Running escalation queue query with enhanced details...');
     const results = await executeQuery(query, []);
     console.log('[Analytics] Escalation queue found:', results.length, 'records');
     

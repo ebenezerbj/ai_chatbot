@@ -1947,17 +1947,184 @@ https://example.com/products"></textarea>
                 const date = new Date(item.start_time).toLocaleString();
                 const score = parseFloat(item.score) || 0;
                 const shortId = item.session_id.substring(0, 16);
+                const escalationData = encodeURIComponent(JSON.stringify(item));
                 html += `
-                    <div style="padding: 10px; background: #fef2f2; border-left: 3px solid #f44336; border-radius: 4px; margin-bottom: 8px;">
+                    <div onclick="viewEscalationDetails('${item.session_id}', '${escalationData}')" style="padding: 10px; background: #fef2f2; border-left: 3px solid #f44336; border-radius: 4px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
                         <div style="font-weight: 600;">Session: ${shortId}...</div>
                         <div style="font-size: 0.875rem; color: #6b7280;">${date}</div>
                         <div style="font-size: 0.875rem; color: #6b7280;">Sentiment: ${item.sentiment} (${score.toFixed(2)})</div>
+                        ${item.category ? `<div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">Category: ${item.category}${item.subcategory ? ' → ' + item.subcategory : ''}</div>` : ''}
+                        <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">🔍 Click to view conversation</div>
                     </div>
                 `;
             });
             html += '</div>';
 
             document.getElementById('escalationContent').innerHTML = html;
+        }
+
+        async function viewEscalationDetails(sessionId, escalationDataEncoded) {
+            try {
+                // Show loading modal
+                showEscalationModal('Loading conversation details...');
+                
+                // Decode escalation data
+                const escalationData = escalationDataEncoded ? JSON.parse(decodeURIComponent(escalationDataEncoded)) : null;
+                
+                // Fetch conversation details
+                const response = await fetch(`/api/admin/analytics/session/${sessionId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch conversation');
+                }
+
+                const data = await response.json();
+                renderConversationDetails(data, sessionId, escalationData);
+            } catch (error) {
+                showEscalationModal('<p style="color:red;">Failed to load conversation details</p>');
+            }
+        }
+
+        function showEscalationModal(content) {
+            // Create modal if it doesn't exist
+            let modal = document.getElementById('escalationModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'escalationModal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000; overflow: auto; padding: 20px;';
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                };
+                document.body.appendChild(modal);
+            }
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 12px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+                    <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: white; z-index: 1; display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0; color: #1f2937;">🚨 Escalation Details</h2>
+                        <button onclick="document.getElementById('escalationModal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">×</button>
+                    </div>
+                    <div id="escalationModalContent" style="padding: 20px;">
+                        ${content}
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function renderConversationDetails(data, sessionId, escalationData) {
+            const { session, messages } = data;
+            
+            let html = '';
+            
+            // Session info with escalation data
+            html += '<div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
+            html += `<div style="font-weight: 600; margin-bottom: 8px; color: #1f2937;">Session ID: ${sessionId}</div>`;
+            if (session) {
+                html += `<div style="font-size: 0.875rem; color: #6b7280;">Start: ${new Date(session.start_time).toLocaleString()}</div>`;
+                html += `<div style="font-size: 0.875rem; color: #6b7280;">Messages: ${session.message_count || messages.length}</div>`;
+                if (session.last_activity) {
+                    html += `<div style="font-size: 0.875rem; color: #6b7280;">Last Activity: ${new Date(session.last_activity).toLocaleString()}</div>`;
+                }
+            }
+            html += '</div>';
+            
+            // Escalation details (sentiment, intent, category)
+            if (escalationData) {
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">';
+                
+                // Sentiment
+                html += '<div style="background: #fef2f2; padding: 12px; border-radius: 8px; border-left: 3px solid #ef4444;">';
+                html += '<div style="font-size: 0.75rem; color: #991b1b; font-weight: 600; margin-bottom: 4px;">😟 SENTIMENT</div>';
+                html += `<div style="font-weight: 600; color: #7f1d1d;">${escalationData.sentiment || 'Unknown'}</div>`;
+                if (escalationData.score) {
+                    const score = parseFloat(escalationData.score);
+                    html += `<div style="font-size: 0.875rem; color: #991b1b;">Score: ${score.toFixed(2)}</div>`;
+                }
+                if (escalationData.emotion_tags) {
+                    try {
+                        const emotions = typeof escalationData.emotion_tags === 'string' 
+                            ? JSON.parse(escalationData.emotion_tags) 
+                            : escalationData.emotion_tags;
+                        if (Array.isArray(emotions) && emotions.length > 0) {
+                            html += `<div style="font-size: 0.75rem; color: #991b1b; margin-top: 4px;">${emotions.join(', ')}</div>`;
+                        }
+                    } catch (e) {}
+                }
+                html += '</div>';
+                
+                // Category/Intent
+                if (escalationData.category) {
+                    html += '<div style="background: #eff6ff; padding: 12px; border-radius: 8px; border-left: 3px solid #3b82f6;">';
+                    html += '<div style="font-size: 0.75rem; color: #1e40af; font-weight: 600; margin-bottom: 4px;">🎯 INTENT</div>';
+                    html += `<div style="font-weight: 600; color: #1e3a8a; text-transform: capitalize;">${escalationData.category}</div>`;
+                    if (escalationData.subcategory) {
+                        html += `<div style="font-size: 0.875rem; color: #2563eb; text-transform: capitalize;">${escalationData.subcategory}</div>`;
+                    }
+                    html += '</div>';
+                }
+                
+                // Message count
+                html += '<div style="background: #f0fdf4; padding: 12px; border-radius: 8px; border-left: 3px solid #10b981;">';
+                html += '<div style="font-size: 0.75rem; color: #065f46; font-weight: 600; margin-bottom: 4px;">💬 MESSAGES</div>';
+                html += `<div style="font-weight: 600; color: #064e3b;">${escalationData.message_count || messages.length}</div>`;
+                html += '<div style="font-size: 0.75rem; color: #047857;">In conversation</div>';
+                html += '</div>';
+                
+                html += '</div>';
+            }
+            
+            // Messages
+            html += '<div style="margin-top: 20px;">';
+            html += '<h3 style="color: #1f2937; margin-bottom: 15px;">💬 Conversation History</h3>';
+            
+            if (!messages || messages.length === 0) {
+                html += '<p style="color: #6b7280;">No messages found</p>';
+            } else {
+                messages.forEach((msg, idx) => {
+                    const isUser = msg.role === 'user';
+                    const bgColor = isUser ? '#eff6ff' : '#f0fdf4';
+                    const borderColor = isUser ? '#3b82f6' : '#10b981';
+                    const icon = isUser ? '👤' : '🤖';
+                    const label = isUser ? 'User' : 'Assistant';
+                    
+                    html += `
+                        <div style="margin-bottom: 15px; padding: 12px; background: ${bgColor}; border-left: 3px solid ${borderColor}; border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div style="font-weight: 600; color: #1f2937;">${icon} ${label}</div>
+                                <div style="font-size: 0.75rem; color: #9ca3af;">Message #${msg.message_index || idx + 1}</div>
+                            </div>
+                            <div style="color: #374151; white-space: pre-wrap;">${escapeHtml(msg.content)}</div>
+                            ${msg.timestamp ? `<div style="font-size: 0.75rem; color: #9ca3af; margin-top: 6px;">${new Date(msg.timestamp).toLocaleString()}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+            
+            // Escalation reason
+            html += '<div style="margin-top: 20px; padding: 15px; background: #fff7ed; border-left: 3px solid #f59e0b; border-radius: 6px;">';
+            html += '<div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">⚠️ Why This Was Escalated</div>';
+            html += '<div style="color: #78350f; font-size: 0.875rem;">This conversation was flagged for escalation due to negative sentiment or frustration detected in the user\'s messages. The sentiment analysis indicated the user may need human assistance.</div>';
+            html += '</div>';
+            
+            showEscalationModal(html);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
         }
 
         async function loadCategories() {
