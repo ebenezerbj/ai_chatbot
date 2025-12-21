@@ -1600,11 +1600,8 @@ export async function getIntentDistribution(): Promise<{ intent: string; count: 
  */
 export async function getEscalationQueue(): Promise<any[]> {
   try {
-    // First check if tables exist
-    const tablesExist = await checkTablesExist(['sentiment_analysis', 'chat_sessions', 'conversation_categories']);
-    
     const query = DB_TYPE === 'postgres'
-      ? `SELECT DISTINCT ON (sa.session_id)
+      ? `SELECT 
            sa.session_id, 
            sa.timestamp as start_time, 
            sa.sentiment, 
@@ -1619,7 +1616,7 @@ export async function getEscalationQueue(): Promise<any[]> {
          LEFT JOIN chat_sessions cs ON sa.session_id = cs.session_id
          LEFT JOIN conversation_categories cc ON sa.session_id = cc.session_id
          WHERE sa.needs_escalation = TRUE
-         ORDER BY sa.session_id, sa.timestamp DESC
+         ORDER BY sa.timestamp DESC
          LIMIT 50`
       : `SELECT 
            sa.session_id, 
@@ -1636,13 +1633,16 @@ export async function getEscalationQueue(): Promise<any[]> {
          LEFT JOIN chat_sessions cs ON sa.session_id = cs.session_id
          LEFT JOIN conversation_categories cc ON sa.session_id = cc.session_id
          WHERE sa.needs_escalation = 1
-         GROUP BY sa.session_id
          ORDER BY sa.timestamp DESC
          LIMIT 50`;
     
-    console.log('[Analytics] Running escalation queue query with enhanced details...');
+    console.log('[Analytics] Running escalation queue query...');
     const results = await executeQuery(query, []);
     console.log('[Analytics] Escalation queue found:', results.length, 'records');
+    
+    if (results.length > 0) {
+      console.log('[Analytics] Sample escalation record:', JSON.stringify(results[0], null, 2));
+    }
     
     return results;
   } catch (error: any) {
@@ -1650,23 +1650,6 @@ export async function getEscalationQueue(): Promise<any[]> {
     console.error('[Analytics] Full error:', error);
     // Return empty array instead of throwing to prevent 500 errors
     return [];
-  }
-}
-
-/**
- * Helper to check if tables exist
- */
-async function checkTablesExist(tableNames: string[]): Promise<boolean> {
-  try {
-    const query = DB_TYPE === 'postgres'
-      ? `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ANY($1)`
-      : `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (${tableNames.map(() => '?').join(',')})`;
-    
-    const results = await executeQuery(query, tableNames);
-    return results.length === tableNames.length;
-  } catch (error) {
-    console.error('[Analytics] Error checking tables:', error);
-    return false;
   }
 }
 
