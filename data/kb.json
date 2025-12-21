@@ -1786,5 +1786,22 @@
       "ci register for mobile banking myself"
     ],
     "answer": "To register for Online Banking or Mobile Banking, please follow these steps:\n\n**Requirements:**\n1. You must have an account with Amankaa Community Bank\n2. Your Ghana Card Identification number must be linked to your Account\n3. Your preferred phone number must be linked with your account\n\n**Registration Process:**\n• Dial *992# on your registered phone number\n• Follow the prompts to get onboarded\n\n**Important Note:**\nPlease visit any nearest branch to get your customer details updated if your Ghana Card or phone number is not yet linked to your account.\n\nFor assistance, contact us at +233 24 231 2059. Thank you!"
+  },
+  {
+    "id": "board_directors_allowance",
+    "product": "Board of Directors",
+    "patterns": [
+      "board.*directors?.*allowance",
+      "board.*sitting.*allowance",
+      "directors?.*sitting.*allowance",
+      "directors?.*compensation",
+      "directors?.*fees?",
+      "board.*fees?",
+      "board.*compensation",
+      "board.*remuneration",
+      "how much.*board.*paid",
+      "board.*salaries"
+    ],
+    "answer": "Board of Directors' sitting allowance and compensation details are disclosed in our Annual Report and Financial Statements in accordance with corporate governance and regulatory requirements.\n\nFor specific information about Board compensation, directors' fees, or sitting allowances, please:\n\n1. **Review our Annual Report** - Available at our branches or on request\n2. **Contact Corporate Affairs** - Main office: +233 54 242 8935 or +233 50 129 0952\n3. **Request from Company Secretary** - For detailed governance information\n\nThese details are part of our commitment to transparency and good corporate governance practices."
   }
 ]
