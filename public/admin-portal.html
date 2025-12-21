@@ -1411,34 +1411,126 @@ https://example.com/products"></textarea>
                     </div>
                 </div>
 
-                <!-- Phase 1 Analytics Page (Iframe) -->
+                <!-- Phase 1 Analytics Page -->
                 <div class="page-section" id="page-phase1-analytics">
-                    <iframe src="/analytics.html" style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: 8px;"></iframe>
+                    <div class="card">
+                        <h2>Chatbot Analytics Dashboard</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Phase 1 analytics showing session and message statistics.</p>
+                        
+                        <div id="analyticsMetrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <p>Loading analytics...</p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- AI/ML Dashboard Page (Iframe) -->
+                <!-- AI/ML Dashboard Page -->
                 <div class="page-section" id="page-ai-ml-dashboard">
-                    <iframe src="/admin-ml-dashboard.html" style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: 8px;"></iframe>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>AI/ML Analytics Dashboard</h2>
+                        <button class="btn" onclick="resetMLCounters()" style="background: linear-gradient(135deg, #f44336 0%, #c62828 100%);">
+                            🔄 Reset ML Counters
+                        </button>
+                    </div>
+                    
+                    <div id="mlDashboardContent">
+                        <p>Loading AI/ML analytics...</p>
+                    </div>
                 </div>
 
-                <!-- Balance Upload Page (Iframe) -->
+                <!-- Balance Upload Page -->
                 <div class="page-section" id="page-balance-upload">
-                    <iframe src="/balance-upload.html" style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: 8px;"></iframe>
+                    <div class="card">
+                        <h2>Balance Upload</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Upload daily balance CSV file.</p>
+                        
+                        <form id="balanceUploadForm" style="margin-top: 24px;">
+                            <div class="form-group">
+                                <label for="balanceFile">Select CSV File</label>
+                                <input type="file" id="balanceFile" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Upload Balances</button>
+                        </form>
+                        
+                        <div id="balanceUploadResult" class="hidden" style="margin-top: 20px;"></div>
+                    </div>
                 </div>
 
-                <!-- Loan Upload Page (Iframe) -->
+                <!-- Loan Upload Page -->
                 <div class="page-section" id="page-loan-upload">
-                    <iframe src="/loan-upload.html" style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: 8px;"></iframe>
+                    <div class="card">
+                        <h2>Loan Upload</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Upload loan data CSV file.</p>
+                        
+                        <form id="loanUploadForm" style="margin-top: 24px;">
+                            <div class="form-group">
+                                <label for="loanFile">Select CSV File</label>
+                                <input type="file" id="loanFile" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Upload Loans</button>
+                        </form>
+                        
+                        <div id="loanUploadResult" class="hidden" style="margin-top: 20px;"></div>
+                    </div>
                 </div>
 
-                <!-- KB Management Page (Iframe) -->
+                <!-- KB Management Page -->
                 <div class="page-section" id="page-kb-management">
-                    <iframe src="/kb-admin.html" style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: 8px;"></iframe>
+                    <div class="card">
+                        <h2>Knowledge Base Management</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Manage chatbot knowledge base entries.</p>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <button class="btn btn-primary" onclick="loadKBEntries()">🔄 Refresh</button>
+                            <button class="btn btn-secondary" onclick="showAddKBForm()">+ Add Entry</button>
+                        </div>
+                        
+                        <div id="kbAddForm" class="hidden" style="margin-bottom: 20px;">
+                            <h3>Add New KB Entry</h3>
+                            <form id="addKBEntryForm">
+                                <div class="form-group">
+                                    <label for="kbQuestion">Question</label>
+                                    <input type="text" id="kbQuestion" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="kbAnswer">Answer</label>
+                                    <textarea id="kbAnswer" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Add Entry</button>
+                                <button type="button" class="btn btn-secondary" onclick="hideAddKBForm()">Cancel</button>
+                            </form>
+                        </div>
+                        
+                        <div id="kbEntriesList">
+                            <p>Loading knowledge base...</p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- System Tools Page (Iframe) -->
+                <!-- System Tools Page -->
                 <div class="page-section" id="page-system-tools">
-                    <iframe src="/admin.html" style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: 8px;"></iframe>
+                    <div class="card">
+                        <h2>System Tools</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px;">Administrative tools and utilities.</p>
+                        
+                        <div class="alert alert-info">
+                            <strong>Note:</strong> System tools provide various administrative functions.
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <h3>Available Tools</h3>
+                            <ul style="list-style: none; padding: 0;">
+                                <li style="padding: 10px; border-bottom: 1px solid #e5e7eb;">
+                                    <strong>Clear Cache</strong> - Clear application cache
+                                </li>
+                                <li style="padding: 10px; border-bottom: 1px solid #e5e7eb;">
+                                    <strong>System Logs</strong> - View logs in Render dashboard
+                                </li>
+                                <li style="padding: 10px;">
+                                    <strong>Database Status</strong> - Check database connection
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -1586,7 +1678,331 @@ https://example.com/products"></textarea>
             if (page === 'account-openings') {
                 loadAccountOpenings();
             }
+            if (page === 'phase1-analytics') {
+                loadPhase1Analytics();
+            }
+            if (page === 'ai-ml-dashboard') {
+                loadAIMLDashboard();
+            }
+            if (page === 'kb-management') {
+                loadKBEntries();
+            }
         }
+
+        // Phase 1 Analytics
+        async function loadPhase1Analytics() {
+            const metricsDiv = document.getElementById('analyticsMetrics');
+            if (!metricsDiv) return;
+            
+            metricsDiv.innerHTML = '<p>Loading...</p>';
+            
+            try {
+                const res = await fetch('/api/admin/analytics/summary', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (res.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
+                if (!res.ok) {
+                    metricsDiv.innerHTML = '<p style="color:red;">Error loading analytics.</p>';
+                    return;
+                }
+                
+                const data = await res.json();
+                const avgDurationMin = typeof data.avgSessionDurationMinutes === 'number'
+                    ? data.avgSessionDurationMinutes
+                    : (data.avgSessionDuration ? (data.avgSessionDuration / 60) : 0);
+                    
+                metricsDiv.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Total Sessions</div>
+                        <div class="stat-value">${data.totalSessions || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Messages</div>
+                        <div class="stat-value">${data.totalMessages || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Messages/Session</div>
+                        <div class="stat-value">${data.avgMessagesPerSession ? data.avgMessagesPerSession.toFixed(2) : '0'}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Duration</div>
+                        <div class="stat-value">${avgDurationMin ? avgDurationMin.toFixed(2) : '0'} min</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value">${(data.totalUsers ?? 0)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Returning Users</div>
+                        <div class="stat-value">${(data.returningUsers ?? 0)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Satisfaction</div>
+                        <div class="stat-value">${(data.avgSatisfaction === null || data.avgSatisfaction === undefined) ? 'N/A' : Number(data.avgSatisfaction).toFixed(2)}</div>
+                    </div>
+                `;
+            } catch (e) {
+                metricsDiv.innerHTML = '<p style="color:red;">Error loading analytics.</p>';
+            }
+        }
+
+        // AI/ML Dashboard
+        async function loadAIMLDashboard() {
+            const contentDiv = document.getElementById('mlDashboardContent');
+            if (!contentDiv) return;
+            
+            contentDiv.innerHTML = '<p>AI/ML Dashboard features will be implemented here...</p>';
+            addActivityLog('Loaded AI/ML Dashboard', 'info');
+        }
+
+        // Reset ML Counters
+        async function resetMLCounters() {
+            if (!confirm('Are you sure you want to reset all ML analytics counters? This will delete all sentiment analysis, intent classification, conversation categories, and churn predictions.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/ml/reset-counters', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ ML Counters Reset Successfully!\n\n' +
+                          `Sentiment Analysis: ${result.deleted.sentimentAnalysis}\n` +
+                          `Intent Classification: ${result.deleted.intentClassification}\n` +
+                          `Conversation Categories: ${result.deleted.conversationCategories}\n` +
+                          `Churn Predictions: ${result.deleted.churnPredictions}`);
+                    loadAIMLDashboard();
+                    addActivityLog('Reset ML counters', 'success');
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to reset ML counters'));
+                }
+            } catch (error) {
+                alert('Failed to reset ML counters: ' + error.message);
+            }
+        }
+
+        // Knowledge Base Management
+        async function loadKBEntries() {
+            const listDiv = document.getElementById('kbEntriesList');
+            if (!listDiv) return;
+            
+            listDiv.innerHTML = '<p>Loading...</p>';
+            
+            try {
+                const response = await fetch('/api/kb', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
+                const entries = await response.json();
+                
+                if (entries.length === 0) {
+                    listDiv.innerHTML = '<p style="color: #6b7280;">No knowledge base entries found.</p>';
+                    return;
+                }
+                
+                listDiv.innerHTML = '<table><thead><tr><th>Question</th><th>Answer</th><th>Actions</th></tr></thead><tbody>' +
+                    entries.map(entry => `
+                        <tr>
+                            <td>${escapeHtml(entry.question)}</td>
+                            <td>${escapeHtml(entry.answer.substring(0, 100))}...</td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" onclick="deleteKBEntry(${entry.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('') +
+                    '</tbody></table>';
+                    
+                addActivityLog(`Loaded ${entries.length} KB entries`, 'info');
+            } catch (error) {
+                listDiv.innerHTML = '<p style="color:red;">Error loading knowledge base.</p>';
+            }
+        }
+
+        function showAddKBForm() {
+            document.getElementById('kbAddForm').classList.remove('hidden');
+        }
+
+        function hideAddKBForm() {
+            document.getElementById('kbAddForm').classList.add('hidden');
+            document.getElementById('addKBEntryForm').reset();
+        }
+
+        document.getElementById('addKBEntryForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const question = document.getElementById('kbQuestion').value;
+            const answer = document.getElementById('kbAnswer').value;
+            
+            try {
+                const response = await fetch('/api/kb', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ question, answer })
+                });
+                
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
+                if (response.ok) {
+                    alert('KB entry added successfully!');
+                    hideAddKBForm();
+                    loadKBEntries();
+                    addActivityLog('Added KB entry', 'success');
+                } else {
+                    alert('Failed to add KB entry');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        async function deleteKBEntry(id) {
+            if (!confirm('Delete this KB entry?')) return;
+            
+            try {
+                const response = await fetch(`/api/kb/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
+                if (response.ok) {
+                    loadKBEntries();
+                    addActivityLog('Deleted KB entry', 'success');
+                } else {
+                    alert('Failed to delete KB entry');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Balance Upload
+        document.getElementById('balanceUploadForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('balanceFile');
+            const resultDiv = document.getElementById('balanceUploadResult');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+            
+            resultDiv.textContent = 'Uploading...';
+            resultDiv.classList.remove('hidden');
+            resultDiv.className = 'alert alert-info';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/admin/upload-balances', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'alert alert-success';
+                    resultDiv.textContent = `✅ Success! ${data.updated || 0} accounts updated.`;
+                    fileInput.value = '';
+                    loadDashboardData();
+                    addActivityLog('Uploaded balance file', 'success');
+                } else {
+                    resultDiv.className = 'alert alert-error';
+                    resultDiv.textContent = '❌ Error: ' + (data.error || 'Upload failed');
+                }
+            } catch (error) {
+                resultDiv.className = 'alert alert-error';
+                resultDiv.textContent = '❌ Error: ' + error.message;
+            }
+        });
+
+        // Loan Upload
+        document.getElementById('loanUploadForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('loanFile');
+            const resultDiv = document.getElementById('loanUploadResult');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+            
+            resultDiv.textContent = 'Uploading...';
+            resultDiv.classList.remove('hidden');
+            resultDiv.className = 'alert alert-info';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/admin/upload-loans', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'alert alert-success';
+                    resultDiv.textContent = `✅ Success! ${data.imported || 0} loans uploaded.`;
+                    fileInput.value = '';
+                    addActivityLog('Uploaded loan file', 'success');
+                } else {
+                    resultDiv.className = 'alert alert-error';
+                    resultDiv.textContent = '❌ Error: ' + (data.error || 'Upload failed');
+                }
+            } catch (error) {
+                resultDiv.className = 'alert alert-error';
+                resultDiv.textContent = '❌ Error: ' + error.message;
+            }
+        });
 
         // Loan Applications
         async function loadLoanApplications() {
