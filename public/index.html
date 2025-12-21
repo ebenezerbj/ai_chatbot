@@ -3185,10 +3185,13 @@
               const lastMessages = chatEl.querySelectorAll('.message');
               const lastAssistantMsg = Array.from(lastMessages).slice(-3).find(msg => 
                 msg.classList.contains('assistant') && 
-                msg.textContent.includes('Would you like me to facilitate a connection with a customer representative')
+                (msg.textContent.includes('Would you like me to facilitate a connection') ||
+                 msg.textContent.includes('Would you like me to connect you with') ||
+                 msg.textContent.includes('connect you with a customer representative') ||
+                 msg.textContent.includes('connect you with a representative'))
               );
               const userJustSaidYes = lastAssistantMsg && 
-                /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me)$/i.test(msgText.trim());
+                /^(yes|yeah|yep|sure|ok|okay|y|please|connect me|help me|connect)$/i.test(msgText.trim());
               
               if (userJustSaidYes) {
                 // User confirmed they want handover - open form directly
@@ -3197,11 +3200,13 @@
                 }, 100);
               } else {
                 // Check if the reply already contains the handover question
-                const replyContainsHandover = data.reply.includes('Would you like me to facilitate a connection with a customer representative');
+                const replyContainsHandover = data.reply.includes('Would you like me to facilitate a connection') ||
+                                              data.reply.includes('Would you like me to connect you with') ||
+                                              data.reply.includes('connect you with a customer representative');
                 
                 if (!replyContainsHandover) {
                   // Only add handover message if not already in the reply
-                  addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?');
+                  addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to connect you with a customer representative who can provide the necessary assistance?');
                 }
                 renderHandoverCTA();
               }
