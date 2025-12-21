@@ -1432,8 +1432,48 @@ https://example.com/products"></textarea>
                         </button>
                     </div>
                     
-                    <div id="mlDashboardContent">
-                        <p>Loading AI/ML analytics...</p>
+                    <div id="mlDashboardContent" style="display: grid; gap: 20px;">
+                        <!-- Sentiment Analysis Card -->
+                        <div class="card">
+                            <h3>😊 Sentiment Analysis (Last 30 Days)</h3>
+                            <div id="sentimentContent">
+                                <p>Loading sentiment data...</p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                            <!-- Intent Distribution Card -->
+                            <div class="card">
+                                <h3>🎯 Intent Classification</h3>
+                                <div id="intentContent">
+                                    <p>Loading intents...</p>
+                                </div>
+                            </div>
+
+                            <!-- Escalation Queue Card -->
+                            <div class="card">
+                                <h3>🚨 Escalation Queue</h3>
+                                <div id="escalationContent">
+                                    <p>Loading escalations...</p>
+                                </div>
+                            </div>
+
+                            <!-- Conversation Categories Card -->
+                            <div class="card">
+                                <h3>📂 Conversation Categories</h3>
+                                <div id="categoryContent">
+                                    <p>Loading categories...</p>
+                                </div>
+                            </div>
+
+                            <!-- Churn Risk Card -->
+                            <div class="card">
+                                <h3>⚠️ High Churn Risk Users</h3>
+                                <div id="churnContent">
+                                    <p>Loading predictions...</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1753,11 +1793,264 @@ https://example.com/products"></textarea>
 
         // AI/ML Dashboard
         async function loadAIMLDashboard() {
-            const contentDiv = document.getElementById('mlDashboardContent');
-            if (!contentDiv) return;
+            addActivityLog('Loading AI/ML Dashboard', 'info');
             
-            contentDiv.innerHTML = '<p>AI/ML Dashboard features will be implemented here...</p>';
-            addActivityLog('Loaded AI/ML Dashboard', 'info');
+            // Load all ML data in parallel
+            await Promise.all([
+                loadSentimentTrends(),
+                loadIntentDistribution(),
+                loadEscalations(),
+                loadCategories(),
+                loadChurnRisk()
+            ]);
+        }
+
+        async function loadSentimentTrends() {
+            try {
+                const response = await fetch('/api/admin/ml/sentiment-trends', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unauthorized');
+                }
+
+                const data = await response.json();
+                renderSentiment(data);
+            } catch (error) {
+                document.getElementById('sentimentContent').innerHTML = '<p style="color:red;">Failed to load sentiment data</p>';
+            }
+        }
+
+        function renderSentiment(data) {
+            const { distribution } = data;
+            if (!distribution || distribution.length === 0) {
+                document.getElementById('sentimentContent').innerHTML = '<p>No sentiment data available yet</p>';
+                return;
+            }
+
+            const total = distribution.reduce((sum, item) => sum + parseInt(item.count), 0);
+            
+            // Sentiment bar chart
+            let html = '<div style="display: flex; height: 30px; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">';
+            distribution.forEach(item => {
+                const percentage = (parseInt(item.count) / total * 100).toFixed(1);
+                const colors = {
+                    'positive': '#4caf50',
+                    'neutral': '#ff9800',
+                    'negative': '#f44336'
+                };
+                html += `<div style="width: ${percentage}%; background: ${colors[item.sentiment] || '#ccc'}; 
+                         transition: width 0.3s;" title="${item.sentiment}: ${item.count}"></div>`;
+            });
+            html += '</div>';
+
+            // Sentiment legend
+            html += '<div style="display: grid; gap: 10px;">';
+            distribution.forEach(item => {
+                const percentage = (parseInt(item.count) / total * 100).toFixed(1);
+                const colors = {
+                    'positive': '#4caf50',
+                    'neutral': '#ff9800',
+                    'negative': '#f44336'
+                };
+                const icons = {
+                    'positive': '😊',
+                    'neutral': '😐',
+                    'negative': '😞'
+                };
+                html += `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 16px; height: 16px; border-radius: 4px; background: ${colors[item.sentiment] || '#ccc'};"></div>
+                        <span style="text-transform: capitalize; font-weight: 500;">${icons[item.sentiment] || ''} ${item.sentiment}</span>
+                        <span style="margin-left: auto; color: #6b7280;">${percentage}% (${item.count})</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            // Escalation warning
+            const escalations = distribution.reduce((sum, item) => sum + parseInt(item.escalations || 0), 0);
+            if (escalations > 0) {
+                html += `<p style="margin-top: 15px; color: #f44336; font-weight: 500;">⚠️ ${escalations} conversations need escalation</p>`;
+            }
+
+            document.getElementById('sentimentContent').innerHTML = html;
+        }
+
+        async function loadIntentDistribution() {
+            try {
+                const response = await fetch('/api/admin/ml/intent-distribution', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unauthorized');
+                }
+
+                const data = await response.json();
+                renderIntents(data.distribution);
+            } catch (error) {
+                document.getElementById('intentContent').innerHTML = '<p style="color:red;">Failed to load intent data</p>';
+            }
+        }
+
+        function renderIntents(intents) {
+            if (!intents || intents.length === 0) {
+                document.getElementById('intentContent').innerHTML = '<p>No intent data available yet</p>';
+                return;
+            }
+
+            let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            intents.slice(0, 10).forEach(intent => {
+                html += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px; 
+                         background: #f9fafb; border-radius: 6px;">
+                        <span style="text-transform: capitalize;">${intent.intent.replace(/_/g, ' ')}</span>
+                        <span style="font-weight: 600; color: #00796b;">${intent.count}</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('intentContent').innerHTML = html;
+        }
+
+        async function loadEscalations() {
+            try {
+                const response = await fetch('/api/admin/ml/escalations', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unauthorized');
+                }
+
+                const data = await response.json();
+                renderEscalations(data.escalations);
+            } catch (error) {
+                document.getElementById('escalationContent').innerHTML = '<p style="color:red;">Failed to load escalations</p>';
+            }
+        }
+
+        function renderEscalations(escalations) {
+            if (!escalations || escalations.length === 0) {
+                document.getElementById('escalationContent').innerHTML = '<p style="color: #4caf50;">✅ No escalations needed</p>';
+                return;
+            }
+
+            let html = `<div style="font-size: 2rem; font-weight: bold; color: #f44336;">${escalations.length}</div>`;
+            html += '<div style="color: #6b7280; margin-bottom: 15px;">Conversations needing attention</div>';
+            html += '<div style="max-height: 250px; overflow-y: auto;">';
+            
+            escalations.slice(0, 5).forEach(item => {
+                const date = new Date(item.start_time).toLocaleString();
+                const score = parseFloat(item.score) || 0;
+                const shortId = item.session_id.substring(0, 16);
+                html += `
+                    <div style="padding: 10px; background: #fef2f2; border-left: 3px solid #f44336; border-radius: 4px; margin-bottom: 8px;">
+                        <div style="font-weight: 600;">Session: ${shortId}...</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">${date}</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">Sentiment: ${item.sentiment} (${score.toFixed(2)})</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('escalationContent').innerHTML = html;
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/admin/ml/categories', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unauthorized');
+                }
+
+                const data = await response.json();
+                renderCategories(data.categories);
+            } catch (error) {
+                document.getElementById('categoryContent').innerHTML = '<p style="color:red;">Failed to load categories</p>';
+            }
+        }
+
+        function renderCategories(categories) {
+            if (!categories || categories.length === 0) {
+                document.getElementById('categoryContent').innerHTML = '<p>No category data available</p>';
+                return;
+            }
+
+            let html = '<div style="max-height: 300px; overflow-y: auto;">';
+            categories.slice(0, 10).forEach(cat => {
+                const confidence = cat.avg_confidence ? (cat.avg_confidence * 100).toFixed(0) : '0';
+                html += `
+                    <div style="padding: 10px; border-bottom: 1px solid #e5e7eb;">
+                        <div style="font-weight: 600; text-transform: capitalize;">${cat.category}</div>
+                        ${cat.subcategory ? `<div style="font-size: 0.875rem; color: #6b7280; text-transform: capitalize;">${cat.subcategory}</div>` : ''}
+                        <div style="display: flex; gap: 15px; margin-top: 4px; font-size: 0.875rem; color: #6b7280;">
+                            <span>Count: ${cat.count}</span>
+                            <span>Confidence: ${confidence}%</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('categoryContent').innerHTML = html;
+        }
+
+        async function loadChurnRisk() {
+            try {
+                const response = await fetch('/api/admin/ml/churn-risk', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unauthorized');
+                }
+
+                const data = await response.json();
+                renderChurnRisk(data.highRiskUsers);
+            } catch (error) {
+                document.getElementById('churnContent').innerHTML = '<p style="color:red;">Failed to load churn predictions</p>';
+            }
+        }
+
+        function renderChurnRisk(users) {
+            if (!users || users.length === 0) {
+                document.getElementById('churnContent').innerHTML = '<p style="color: #4caf50;">✅ No high-risk users detected</p>';
+                return;
+            }
+
+            let html = `<div style="font-size: 2rem; font-weight: bold; color: #f44336;">${users.length}</div>`;
+            html += '<div style="color: #6b7280; margin-bottom: 15px;">Users at high churn risk</div>';
+            html += '<div style="max-height: 250px; overflow-y: auto;">';
+            
+            users.slice(0, 5).forEach(user => {
+                const riskPercentage = (user.risk_score * 100).toFixed(0);
+                const riskColor = user.churn_risk === 'high' ? '#f44336' : '#ff9800';
+                const factors = Array.isArray(user.factors) ? user.factors : JSON.parse(user.factors || '[]');
+                html += `
+                    <div style="padding: 10px; background: #fef2f2; border-radius: 6px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600;">User: ${user.user_id.substring(0, 20)}...</span>
+                            <span style="background: ${riskColor}; color: white; padding: 2px 8px; 
+                                   border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                                ${riskPercentage}% risk
+                            </span>
+                        </div>
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-top: 4px;">
+                            Factors: ${factors.join(', ')}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            document.getElementById('churnContent').innerHTML = html;
         }
 
         // Reset ML Counters
