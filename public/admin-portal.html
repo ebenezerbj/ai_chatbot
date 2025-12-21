@@ -1948,13 +1948,67 @@ https://example.com/products"></textarea>
                 const score = parseFloat(item.score) || 0;
                 const shortId = item.session_id.substring(0, 16);
                 const escalationData = encodeURIComponent(JSON.stringify(item));
+                
+                // HCI: Visual affordances with hover/active states
                 html += `
-                    <div onclick="viewEscalationDetails('${item.session_id}', '${escalationData}')" style="padding: 10px; background: #fef2f2; border-left: 3px solid #f44336; border-radius: 4px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-                        <div style="font-weight: 600;">Session: ${shortId}...</div>
-                        <div style="font-size: 0.875rem; color: #6b7280;">${date}</div>
-                        <div style="font-size: 0.875rem; color: #6b7280;">Sentiment: ${item.sentiment} (${score.toFixed(2)})</div>
-                        ${item.category ? `<div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">Category: ${item.category}${item.subcategory ? ' → ' + item.subcategory : ''}</div>` : ''}
-                        <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 4px;">🔍 Click to view conversation</div>
+                    <div 
+                        onclick="viewEscalationDetails('${item.session_id}', '${escalationData}')" 
+                        role="button"
+                        tabindex="0"
+                        aria-label="View escalation details for session ${shortId}"
+                        onkeypress="if(event.key==='Enter') viewEscalationDetails('${item.session_id}', '${escalationData}')"
+                        style="
+                            padding: 14px; 
+                            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); 
+                            border-left: 4px solid #ef4444; 
+                            border-radius: 8px; 
+                            margin-bottom: 10px; 
+                            cursor: pointer; 
+                            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+                            position: relative;
+                            overflow: hidden;
+                        " 
+                        onmouseover="
+                            this.style.background='linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'; 
+                            this.style.transform='translateX(4px)';
+                            this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)';
+                        " 
+                        onmouseout="
+                            this.style.background='linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'; 
+                            this.style.transform='translateX(0)';
+                            this.style.boxShadow='0 1px 3px 0 rgba(0,0,0,0.1)';
+                        "
+                        onmousedown="this.style.transform='translateX(2px) scale(0.98)'"
+                        onmouseup="this.style.transform='translateX(4px) scale(1)'">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                            <div style="font-weight: 600; color: #991b1b; font-size: 15px;">Session: ${shortId}...</div>
+                            <div style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Urgent</div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
+                            <div style="font-size: 0.875rem; color: #7f1d1d; display: flex; align-items: center; gap: 6px;">
+                                <span>📅</span>
+                                <span>${date}</span>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #7f1d1d; display: flex; align-items: center; gap: 6px;">
+                                <span>😟</span>
+                                <span>Sentiment: ${item.sentiment} (${score.toFixed(2)})</span>
+                            </div>
+                            ${item.category ? `
+                                <div style="font-size: 0.875rem; color: #7f1d1d; display: flex; align-items: center; gap: 6px;">
+                                    <span>🎯</span>
+                                    <span>${item.category}${item.subcategory ? ' → ' + item.subcategory : ''}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div style="font-size: 0.75rem; color: #991b1b; display: flex; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                            <span style="font-size: 14px;">🔍</span>
+                            <span style="font-weight: 500;">Click to view full conversation</span>
+                            <span style="margin-left: auto; font-size: 16px;">→</span>
+                        </div>
                     </div>
                 `;
             });
@@ -1965,8 +2019,20 @@ https://example.com/products"></textarea>
 
         async function viewEscalationDetails(sessionId, escalationDataEncoded) {
             try {
-                // Show loading modal
-                showEscalationModal('Loading conversation details...');
+                // HCI: Loading state with skeleton
+                showEscalationModal(`
+                    <div style="display: flex; flex-direction: column; gap: 16px; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;">
+                        <div style="height: 80px; background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%); border-radius: 8px; background-size: 200% 100%; animation: shimmer 2s infinite;"></div>
+                        <div style="height: 120px; background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%); border-radius: 8px; background-size: 200% 100%; animation: shimmer 2s infinite;"></div>
+                        <div style="height: 200px; background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%); border-radius: 8px; background-size: 200% 100%; animation: shimmer 2s infinite;"></div>
+                    </div>
+                    <style>
+                        @keyframes shimmer {
+                            0% { background-position: -200% 0; }
+                            100% { background-position: 200% 0; }
+                        }
+                    </style>
+                `);
                 
                 // Decode escalation data
                 const escalationData = escalationDataEncoded ? JSON.parse(decodeURIComponent(escalationDataEncoded)) : null;
@@ -1983,7 +2049,32 @@ https://example.com/products"></textarea>
                 const data = await response.json();
                 renderConversationDetails(data, sessionId, escalationData);
             } catch (error) {
-                showEscalationModal('<p style="color:red;">Failed to load conversation details</p>');
+                // HCI: Error state with recovery action
+                showEscalationModal(`
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 64px; margin-bottom: 16px;">⚠️</div>
+                        <h3 style="color: #dc2626; margin-bottom: 8px; font-size: 20px; font-weight: 600;">Failed to Load Conversation</h3>
+                        <p style="color: #6b7280; margin-bottom: 24px;">We couldn't retrieve the conversation details. Please try again.</p>
+                        <button 
+                            onclick="viewEscalationDetails('${sessionId}', '${escalationDataEncoded}')"
+                            style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                border: none;
+                                padding: 12px 24px;
+                                border-radius: 8px;
+                                font-size: 14px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                            "
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `);
             }
         }
 
@@ -1993,27 +2084,81 @@ https://example.com/products"></textarea>
             if (!modal) {
                 modal = document.createElement('div');
                 modal.id = 'escalationModal';
-                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10000; overflow: auto; padding: 20px;';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0); display: none; justify-content: center; align-items: center; z-index: 10000; overflow: auto; padding: 20px; transition: background 0.3s ease; backdrop-filter: blur(0px);';
+                
+                // Click outside to close (HCI: User Control)
                 modal.onclick = function(e) {
                     if (e.target === modal) {
-                        modal.style.display = 'none';
+                        closeEscalationModal();
                     }
                 };
+                
+                // ESC key to close (HCI: Keyboard Navigation)
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && modal.style.display === 'flex') {
+                        closeEscalationModal();
+                    }
+                });
+                
                 document.body.appendChild(modal);
             }
             
             modal.innerHTML = `
-                <div style="background: white; border-radius: 12px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
-                    <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: white; z-index: 1; display: flex; justify-content: space-between; align-items: center;">
-                        <h2 style="margin: 0; color: #1f2937;">🚨 Escalation Details</h2>
-                        <button onclick="document.getElementById('escalationModal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">×</button>
+                <div id="escalationModalDialog" style="background: white; border-radius: 16px; max-width: 900px; width: 100%; max-height: 90vh; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column;">
+                    <div style="padding: 24px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: white; z-index: 1; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);">
+                        <h2 style="margin: 0; color: #1f2937; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 28px;">🚨</span>
+                            <span>Escalation Details</span>
+                        </h2>
+                        <button 
+                            onclick="closeEscalationModal()" 
+                            aria-label="Close modal"
+                            style="background: #f3f4f6; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 0; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s ease; font-weight: 300;" 
+                            onmouseover="this.style.background='#e5e7eb'; this.style.color='#1f2937'; this.style.transform='rotate(90deg)'" 
+                            onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280'; this.style.transform='rotate(0deg)'">×</button>
                     </div>
-                    <div id="escalationModalContent" style="padding: 20px;">
+                    <div id="escalationModalContent" style="padding: 24px; overflow-y: auto; flex: 1;">
                         ${content}
                     </div>
                 </div>
             `;
+            
+            // Show modal with animation (HCI: Feedback)
             modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.style.background = 'rgba(0,0,0,0.6)';
+                modal.style.backdropFilter = 'blur(4px)';
+                const dialog = document.getElementById('escalationModalDialog');
+                if (dialog) {
+                    dialog.style.transform = 'scale(1)';
+                    dialog.style.opacity = '1';
+                }
+            });
+            
+            // Focus management (HCI: Accessibility)
+            setTimeout(() => {
+                const closeBtn = modal.querySelector('button[aria-label="Close modal"]');
+                if (closeBtn) closeBtn.focus();
+            }, 300);
+        }
+        
+        function closeEscalationModal() {
+            const modal = document.getElementById('escalationModal');
+            const dialog = document.getElementById('escalationModalDialog');
+            
+            if (!modal) return;
+            
+            // Animate out (HCI: Feedback)
+            modal.style.background = 'rgba(0,0,0,0)';
+            modal.style.backdropFilter = 'blur(0px)';
+            if (dialog) {
+                dialog.style.transform = 'scale(0.95)';
+                dialog.style.opacity = '0';
+            }
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
         }
 
         function renderConversationDetails(data, sessionId, escalationData) {
@@ -2021,85 +2166,160 @@ https://example.com/products"></textarea>
             
             let html = '';
             
-            // Session info with escalation data
-            html += '<div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-            html += `<div style="font-weight: 600; margin-bottom: 8px; color: #1f2937;">Session ID: ${sessionId}</div>`;
-            if (session) {
-                html += `<div style="font-size: 0.875rem; color: #6b7280;">Start: ${new Date(session.start_time).toLocaleString()}</div>`;
-                html += `<div style="font-size: 0.875rem; color: #6b7280;">Messages: ${session.message_count || messages.length}</div>`;
-                if (session.last_activity) {
-                    html += `<div style="font-size: 0.875rem; color: #6b7280;">Last Activity: ${new Date(session.last_activity).toLocaleString()}</div>`;
-                }
-            }
-            html += '</div>';
+            // HCI: Clear visual hierarchy with cards
+            // Session info with better design
+            html += `
+                <div style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);">
+                    <div style="font-weight: 700; margin-bottom: 12px; color: #111827; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+                        <span>📋</span>
+                        <span>Session Information</span>
+                    </div>
+                    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <div style="font-family: 'Courier New', monospace; font-weight: 600; margin-bottom: 12px; color: #1f2937; font-size: 15px; word-break: break-all;">${sessionId}</div>
+            `;
             
-            // Escalation details (sentiment, intent, category)
-            if (escalationData) {
-                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">';
+            if (session) {
+                html += `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px; color: #6b7280; font-size: 14px;">
+                            <span style="font-size: 18px;">🕐</span>
+                            <div>
+                                <div style="font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Started</div>
+                                <div style="color: #374151; font-weight: 500;">${new Date(session.start_time).toLocaleString()}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; color: #6b7280; font-size: 14px;">
+                            <span style="font-size: 18px;">💬</span>
+                            <div>
+                                <div style="font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Messages</div>
+                                <div style="color: #374151; font-weight: 500;">${session.message_count || messages.length}</div>
+                            </div>
+                        </div>
+                `;
                 
-                // Sentiment
-                html += '<div style="background: #fef2f2; padding: 12px; border-radius: 8px; border-left: 3px solid #ef4444;">';
-                html += '<div style="font-size: 0.75rem; color: #991b1b; font-weight: 600; margin-bottom: 4px;">😟 SENTIMENT</div>';
-                html += `<div style="font-weight: 600; color: #7f1d1d;">${escalationData.sentiment || 'Unknown'}</div>`;
-                if (escalationData.score) {
-                    const score = parseFloat(escalationData.score);
-                    html += `<div style="font-size: 0.875rem; color: #991b1b;">Score: ${score.toFixed(2)}</div>`;
+                if (session.last_activity) {
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 8px; color: #6b7280; font-size: 14px;">
+                            <span style="font-size: 18px;">⏱️</span>
+                            <div>
+                                <div style="font-size: 11px; color: #9ca3af; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Last Active</div>
+                                <div style="color: #374151; font-weight: 500;">${new Date(session.last_activity).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
                 }
+                
+                html += `</div>`;
+            }
+            html += `</div></div>`;
+            
+            // HCI: Visual indicators for key metrics
+            if (escalationData) {
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">';
+                
+                // Sentiment card with visual indicator
+                const score = parseFloat(escalationData.score) || 0;
+                const sentimentColor = score < -0.5 ? '#dc2626' : score < 0 ? '#f59e0b' : '#10b981';
+                const sentimentBg = score < -0.5 ? '#fef2f2' : score < 0 ? '#fffbeb' : '#f0fdf4';
+                
+                html += `
+                    <div style="background: ${sentimentBg}; padding: 18px; border-radius: 12px; border-left: 4px solid ${sentimentColor}; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <span style="font-size: 28px;">😟</span>
+                            <div>
+                                <div style="font-size: 11px; color: ${sentimentColor}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Sentiment</div>
+                                <div style="font-weight: 700; color: ${sentimentColor}; font-size: 18px; text-transform: capitalize;">${escalationData.sentiment || 'Unknown'}</div>
+                            </div>
+                        </div>
+                        <div style="background: white; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 12px;">
+                            <div style="background: ${sentimentColor}; height: 100%; width: ${Math.abs(score * 100)}%; transition: width 0.5s ease; border-radius: 4px;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: ${sentimentColor}; margin-top: 6px; font-weight: 600;">Score: ${score.toFixed(2)}</div>
+                `;
+                
                 if (escalationData.emotion_tags) {
                     try {
                         const emotions = typeof escalationData.emotion_tags === 'string' 
                             ? JSON.parse(escalationData.emotion_tags) 
                             : escalationData.emotion_tags;
                         if (Array.isArray(emotions) && emotions.length > 0) {
-                            html += `<div style="font-size: 0.75rem; color: #991b1b; margin-top: 4px;">${emotions.join(', ')}</div>`;
+                            html += `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">`;
+                            emotions.slice(0, 3).forEach(emotion => {
+                                html += `<span style="background: white; color: ${sentimentColor}; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; border: 1px solid ${sentimentColor}20;">${emotion}</span>`;
+                            });
+                            html += `</div>`;
                         }
                     } catch (e) {}
                 }
                 html += '</div>';
                 
-                // Category/Intent
+                // Category/Intent card
                 if (escalationData.category) {
-                    html += '<div style="background: #eff6ff; padding: 12px; border-radius: 8px; border-left: 3px solid #3b82f6;">';
-                    html += '<div style="font-size: 0.75rem; color: #1e40af; font-weight: 600; margin-bottom: 4px;">🎯 INTENT</div>';
-                    html += `<div style="font-weight: 600; color: #1e3a8a; text-transform: capitalize;">${escalationData.category}</div>`;
-                    if (escalationData.subcategory) {
-                        html += `<div style="font-size: 0.875rem; color: #2563eb; text-transform: capitalize;">${escalationData.subcategory}</div>`;
-                    }
-                    html += '</div>';
+                    html += `
+                        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 18px; border-radius: 12px; border-left: 4px solid #3b82f6; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <span style="font-size: 28px;">🎯</span>
+                                <div>
+                                    <div style="font-size: 11px; color: #1e40af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Intent</div>
+                                    <div style="font-weight: 700; color: #1e3a8a; font-size: 18px; text-transform: capitalize;">${escalationData.category}</div>
+                                </div>
+                            </div>
+                            ${escalationData.subcategory ? `<div style="background: white; padding: 8px 12px; border-radius: 8px; font-size: 13px; color: #2563eb; font-weight: 600; text-transform: capitalize; margin-top: 10px; border: 1px solid #3b82f620;">${escalationData.subcategory}</div>` : ''}
+                        </div>
+                    `;
                 }
                 
-                // Message count
-                html += '<div style="background: #f0fdf4; padding: 12px; border-radius: 8px; border-left: 3px solid #10b981;">';
-                html += '<div style="font-size: 0.75rem; color: #065f46; font-weight: 600; margin-bottom: 4px;">💬 MESSAGES</div>';
-                html += `<div style="font-weight: 600; color: #064e3b;">${escalationData.message_count || messages.length}</div>`;
-                html += '<div style="font-size: 0.75rem; color: #047857;">In conversation</div>';
-                html += '</div>';
+                // Message count card
+                html += `
+                    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 18px; border-radius: 12px; border-left: 4px solid #10b981; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 28px;">💬</span>
+                            <div>
+                                <div style="font-size: 11px; color: #065f46; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Total Messages</div>
+                                <div style="font-weight: 700; color: #064e3b; font-size: 32px;">${escalationData.message_count || messages.length}</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #047857; margin-top: 8px; font-weight: 500;">In this conversation</div>
+                    </div>
+                `;
                 
                 html += '</div>';
             }
             
-            // Messages
-            html += '<div style="margin-top: 20px;">';
-            html += '<h3 style="color: #1f2937; margin-bottom: 15px;">💬 Conversation History</h3>';
+            // Messages with improved design
+            html += `
+                <div style="margin-top: 24px;">
+                    <h3 style="color: #111827; margin-bottom: 16px; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb;">
+                        <span style="font-size: 24px;">💬</span>
+                        <span>Conversation History</span>
+                        <span style="margin-left: auto; font-size: 14px; color: #6b7280; font-weight: 500;">${messages.length} messages</span>
+                    </h3>
+            `;
             
             if (!messages || messages.length === 0) {
-                html += '<p style="color: #6b7280;">No messages found</p>';
+                html += '<p style="color: #6b7280; text-align: center; padding: 40px; background: #f9fafb; border-radius: 8px;">No messages found</p>';
             } else {
                 messages.forEach((msg, idx) => {
                     const isUser = msg.role === 'user';
-                    const bgColor = isUser ? '#eff6ff' : '#f0fdf4';
+                    const bgGradient = isUser 
+                        ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' 
+                        : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)';
                     const borderColor = isUser ? '#3b82f6' : '#10b981';
                     const icon = isUser ? '👤' : '🤖';
                     const label = isUser ? 'User' : 'Assistant';
+                    const textColor = isUser ? '#1e40af' : '#065f46';
                     
                     html += `
-                        <div style="margin-bottom: 15px; padding: 12px; background: ${bgColor}; border-left: 3px solid ${borderColor}; border-radius: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <div style="font-weight: 600; color: #1f2937;">${icon} ${label}</div>
-                                <div style="font-size: 0.75rem; color: #9ca3af;">Message #${msg.message_index || idx + 1}</div>
+                        <div style="margin-bottom: 16px; padding: 16px; background: ${bgGradient}; border-left: 4px solid ${borderColor}; border-radius: 10px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='0 1px 3px 0 rgba(0,0,0,0.1)'">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 24px;">${icon}</span>
+                                    <span style="font-weight: 700; color: ${textColor}; font-size: 15px;">${label}</span>
+                                </div>
+                                <div style="background: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; color: #6b7280; font-weight: 600; border: 1px solid #e5e7eb;">Message #${msg.message_index || idx + 1}</div>
                             </div>
-                            <div style="color: #374151; white-space: pre-wrap;">${escapeHtml(msg.content)}</div>
-                            ${msg.timestamp ? `<div style="font-size: 0.75rem; color: #9ca3af; margin-top: 6px;">${new Date(msg.timestamp).toLocaleString()}</div>` : ''}
+                            <div style="color: #1f2937; white-space: pre-wrap; line-height: 1.6; font-size: 14px;">${escapeHtml(msg.content)}</div>
+                            ${msg.timestamp ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 10px; display: flex; align-items: center; gap: 6px;"><span>🕐</span><span>${new Date(msg.timestamp).toLocaleString()}</span></div>` : ''}
                         </div>
                     `;
                 });
@@ -2107,11 +2327,26 @@ https://example.com/products"></textarea>
             
             html += '</div>';
             
-            // Escalation reason
-            html += '<div style="margin-top: 20px; padding: 15px; background: #fff7ed; border-left: 3px solid #f59e0b; border-radius: 6px;">';
-            html += '<div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">⚠️ Why This Was Escalated</div>';
-            html += '<div style="color: #78350f; font-size: 0.875rem;">This conversation was flagged for escalation due to negative sentiment or frustration detected in the user\'s messages. The sentiment analysis indicated the user may need human assistance.</div>';
-            html += '</div>';
+            // Escalation reason with clear call-to-action
+            html += `
+                <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-left: 4px solid #f59e0b; border-radius: 12px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);">
+                    <div style="font-weight: 700; color: #92400e; margin-bottom: 12px; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">⚠️</span>
+                        <span>Why This Was Escalated</span>
+                    </div>
+                    <p style="color: #78350f; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+                        This conversation was flagged for escalation due to <strong>negative sentiment or frustration</strong> detected in the user's messages. 
+                        The sentiment analysis indicated the user may need <strong>immediate human assistance</strong>.
+                    </p>
+                    <div style="background: white; padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 12px; border: 1px solid #f59e0b20;">
+                        <span style="font-size: 24px;">💡</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #92400e; font-size: 13px; margin-bottom: 4px;">Recommended Action</div>
+                            <div style="color: #78350f; font-size: 12px;">Contact the customer promptly to address their concerns and provide personalized support.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
             
             showEscalationModal(html);
         }
