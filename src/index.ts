@@ -1190,15 +1190,15 @@ app.post('/api/handover', async (req: Request, res: Response) => {
 
     // AKCB Branch locations with coordinates (Amantin & Kasei Community Bank)
     const branches = [
-      { name: 'AMANTIN AND KASEI HO.', lat: 6.70, lng: -1.62, location: 'Head Office - Amantin', phone: '+233542428935' },
-      { name: 'AMANTIN n KASEI-EJURA', lat: 7.3833, lng: -1.3667, location: 'Ejura', phone: '+233202055172' },
-      { name: 'AMANTINnKASEI-AHWIAA', lat: 6.62, lng: -1.55, location: 'Ahwiaa', phone: '+233202099931' },
-      { name: 'AMANTINnKASEI-AMANTIN', lat: 6.73, lng: -1.74, location: 'Amantin', phone: '+233542428935' },
-      { name: 'AMANTINnKASEI-ATEBUBU', lat: 7.75, lng: -0.98, location: 'Atebubu', phone: '+233202055173' },
-      { name: 'AMANTINnKASEI-KAJAJI', lat: 6.70, lng: -1.60, location: 'Kajaji', phone: '+233240526372' },
-      { name: 'AMANTINnKASEI-KEJETIA', lat: 6.6880, lng: -1.6229, location: 'Kejetia', phone: '+233248698267' },
-      { name: 'AMANTINnKASEI-KWAME DS', lat: 7.35, lng: -1.40, location: 'Kwame Danso', phone: '+233202055174' },
-      { name: 'AMANTINnKASEI-YEJI', lat: 7.82, lng: -0.22, location: 'Yeji', phone: '+233202055175' }
+      { code: 'GH1510010', name: 'AMANTIN AND KASEI HO.', lat: 6.70, lng: -1.62, location: 'Head Office', phone: '+233542428935' },
+      { code: 'GH1510011', name: 'AMANTIN n KASEI-EJURA', lat: 7.3833, lng: -1.3667, location: 'Ejura', phone: '+233202055172' },
+      { code: 'GH1510012', name: 'AMANTINnKASEI-KWAME DS', lat: 7.35, lng: -1.40, location: 'Kwame Danso', phone: '+233202055174' },
+      { code: 'GH1510013', name: 'AMANTINnKASEI-ATEBUBU', lat: 7.75, lng: -0.98, location: 'Atebubu', phone: '+233202055173' },
+      { code: 'GH1510014', name: 'AMANTINnKASEI-YEJI', lat: 7.82, lng: -0.22, location: 'Yeji', phone: '+233202055175' },
+      { code: 'GH1510015', name: 'AMANTINnKASEI-AMANTIN', lat: 6.73, lng: -1.74, location: 'Amantin', phone: '+233542428935' },
+      { code: 'GH1510016', name: 'AMANTINnKASEI-AHWIAA', lat: 6.62, lng: -1.55, location: 'Ahwiaa', phone: '+233202099931' },
+      { code: 'GH1510017', name: 'AMANTINnKASEI-KAJAJI', lat: 6.70, lng: -1.60, location: 'Kajeji', phone: '+233240526372' },
+      { code: 'GH1510018', name: 'AMANTINnKASEI-KEJETIA', lat: 6.6880, lng: -1.6229, location: 'Kejetia', phone: '+233248698267' }
     ];
 
     // Determine target branch based on location (if provided)
@@ -1438,14 +1438,15 @@ app.post('/api/nearest-branch', async (req: Request, res: Response) => {
 
     // Branch locations with coordinates
     const branches = [
-      { name: 'Amantin (Head Office)', lat: 7.6667, lng: -1.4167, phone: '+233 54 242 8935', address: 'Amantin High Street' },
-      { name: 'Atebubu', lat: 7.7558, lng: -0.9922, phone: '+233 20 205 5173', address: 'Atebubu' },
-      { name: 'Kajaji', lat: 7.7367, lng: -1.4939, phone: '+233 24 052 6372', address: 'Kajaji East, Tatobatoi', plusCode: 'QQJG+P27' },
-      { name: 'Kwame Danso', lat: 7.6303, lng: -1.4770, phone: '+233 20 205 5174', address: 'Kwame Danso', plusCode: 'P8JF+2C6' },
-      { name: 'Yeji', lat: 7.8265, lng: -0.5043, phone: '+233 20 205 5175', address: 'Yeji', plusCode: '68GW+FHJ' },
-      { name: 'Ahwiaa', lat: 6.8047, lng: -1.4987, phone: '+233 20 209 9931', address: 'Kumasi-Techiman Road, Ahwiaa', plusCode: 'QC32+V79' },
-      { name: 'Ejura', lat: 7.3850, lng: -1.3622, phone: '+233 20 205 5172', address: 'Ejura' },
-      { name: 'Kumasi (Kejetia market)', lat: 6.6928, lng: -1.6236, phone: '+233 24 869 8267', address: 'Kejetia market, Kumasi' }
+      { code: 'GH1510010', name: 'Head Office', lat: 7.6667, lng: -1.4167, phone: '+233 54 242 8935', address: 'Amantin High Street' },
+      { code: 'GH1510011', name: 'Ejura', lat: 7.3850, lng: -1.3622, phone: '+233 20 205 5172', address: 'Ejura' },
+      { code: 'GH1510012', name: 'Kwame Danso', lat: 7.6303, lng: -1.4770, phone: '+233 20 205 5174', address: 'Kwame Danso', plusCode: 'P8JF+2C6' },
+      { code: 'GH1510013', name: 'Atebubu', lat: 7.7558, lng: -0.9922, phone: '+233 20 205 5173', address: 'Atebubu' },
+      { code: 'GH1510014', name: 'Yeji', lat: 7.8265, lng: -0.5043, phone: '+233 20 205 5175', address: 'Yeji', plusCode: '68GW+FHJ' },
+      { code: 'GH1510015', name: 'Amantin', lat: 6.73, lng: -1.74, phone: '+233 54 242 8935', address: 'Amantin' },
+      { code: 'GH1510016', name: 'Ahwiaa', lat: 6.8047, lng: -1.4987, phone: '+233 20 209 9931', address: 'Kumasi-Techiman Road, Ahwiaa', plusCode: 'QC32+V79' },
+      { code: 'GH1510017', name: 'Kajeji', lat: 7.7367, lng: -1.4939, phone: '+233 24 052 6372', address: 'Kajeji East, Tatobatoi', plusCode: 'QQJG+P27' },
+      { code: 'GH1510018', name: 'Kejetia', lat: 6.6928, lng: -1.6236, phone: '+233 24 869 8267', address: 'Kejetia market, Kumasi' }
     ];
 
     if (!lat || !lng) {
@@ -1488,6 +1489,7 @@ app.post('/api/nearest-branch', async (req: Request, res: Response) => {
     const geoUri = `geo:${nearest.lat},${nearest.lng}?q=${nearest.lat},${nearest.lng}(${encodeURIComponent(nearest.name)})`;
 
     const responseText = `📍 **Nearest Branch: ${nearest.name}**\n\n` +
+      `🏦 Branch Code: ${nearest.code}\n` +
       `📏 Distance: ~${distanceText}\n` +
       `📞 Phone: ${nearest.phone}\n` +
       `📌 Address: ${nearest.address}\n\n` +
@@ -1498,7 +1500,7 @@ app.post('/api/nearest-branch', async (req: Request, res: Response) => {
       `[Google Maps](${mapsUrlGoogle}) • [OpenStreetMap](${mapsUrlOSM}) • [Apple Maps](${mapsUrlApple})\n` +
       `Mobile: [Open in Maps App](${geoUri})`;
 
-    console.log('[NearestBranch] Found:', nearest.name, distanceText);
+    console.log('[NearestBranch] Found:', nearest.name, nearest.code, distanceText);
 
     res.json({ 
       success: true,

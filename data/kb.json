@@ -11,7 +11,7 @@
       "how many.*branch",
       "branch.*list"
     ],
-    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Amantin (Head Office)**: Amantin High Street. Phone: +233 54 242 8935\n- **Atebubu**: Phone: +233 20 205 5173\n- **Kajaji**: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso**: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji**: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa**: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura**: Ejura. Phone: +233 20 205 5172\n- **Kumasi (Kejetia market)**: Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
+    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Head Office** (GH1510010): Amantin High Street. Phone: +233 54 242 8935\n- **Atebubu** (GH1510013): Phone: +233 20 205 5173\n- **Kajeji** (GH1510017): [QQJG+P27, Kajeji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso** (GH1510012): [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji** (GH1510014): [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa** (GH1510016): [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura** (GH1510011): Ejura. Phone: +233 20 205 5172\n- **Amantin** (GH1510015): Amantin. Phone: +233 54 242 8935\n- **Kejetia** (GH1510018): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "nearest_branch_stub",
@@ -35,7 +35,7 @@
       "locate.*amantin",
       "find.*amantin.*branch"
     ],
-    "answer": "Amantin (Head Office): Amantin High Street. Phone: +233 54 242 8935"
+    "answer": "Head Office (GH1510010): Amantin High Street. Phone: +233 54 242 8935"
   },
   {
     "id": "branch_location_atebubu",
@@ -47,7 +47,7 @@
       "locate.*atebubu",
       "find.*atebubu.*branch"
     ],
-    "answer": "Atebubu: Phone: +233 20 205 5173"
+    "answer": "Atebubu (GH1510013): Phone: +233 20 205 5173"
   },
   {
     "id": "branch_location_kajaji",
@@ -59,7 +59,7 @@
       "locate.*kajaji",
       "find.*kajaji.*branch"
     ],
-    "answer": "Kajaji: [QQJG+P27, Kajaji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372"
+    "answer": "Kajeji (GH1510017): [QQJG+P27, Kajeji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372"
   },
   {
     "id": "branch_location_kwame_danso",
@@ -71,7 +71,7 @@
       "locate.*kwame\\s*danso",
       "find.*kwame\\s*danso.*branch"
     ],
-    "answer": "Kwame Danso: [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174"
+    "answer": "Kwame Danso (GH1510012): [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174"
   },
   {
     "id": "branch_location_yeji",
@@ -83,7 +83,7 @@
       "locate.*yeji",
       "find.*yeji.*branch"
     ],
-    "answer": "Yeji: [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175"
+    "answer": "Yeji (GH1510014): [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175"
   },
   {
     "id": "branch_location_ahwiaa",
@@ -95,7 +95,7 @@
       "locate.*ahwiaa",
       "find.*ahwiaa.*branch"
     ],
-    "answer": "Ahwiaa: [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931"
+    "answer": "Ahwiaa (GH1510016): [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931"
   },
   {
     "id": "branch_location_ejura",
@@ -107,7 +107,7 @@
       "locate.*ejura",
       "find.*ejura.*branch"
     ],
-    "answer": "Ejura: Ejura. Phone: +233 20 205 5172"
+    "answer": "Ejura (GH1510011): Ejura. Phone: +233 20 205 5172"
   },
   {
     "id": "branch_location_kejetia",
@@ -121,7 +121,7 @@
       "find.*kejetia.*branch",
       "kejetia.*branch"
     ],
-    "answer": "Kumasi (Kejetia market): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
+    "answer": "Kejetia (GH1510018): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "branch_managers_list",
