@@ -20,6 +20,20 @@ class AdminAuth {
         }
         this.isInitializing = true;
 
+        // Check if running in an iframe - if so, trust parent authentication
+        const isInIframe = window.self !== window.top;
+        if (isInIframe) {
+            console.log('[AdminAuth] Running in iframe, trusting parent authentication');
+            this.token = localStorage.getItem(this.tokenKey);
+            this.isReady = true;
+            this.readyCallbacks.forEach(callback => {
+                console.log('[AdminAuth] Calling ready callback (iframe mode)');
+                callback();
+            });
+            this.readyCallbacks = [];
+            return;
+        }
+
         // Try to load token from localStorage
         this.token = localStorage.getItem(this.tokenKey);
         console.log('[AdminAuth] Token from localStorage:', this.token ? `${this.token.substring(0, 10)}...` : 'NOT FOUND');

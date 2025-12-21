@@ -340,9 +340,10 @@
     const progress = document.getElementById('progress');
     const result = document.getElementById('result');
 
-    // Check if we have an auth token
+    // Check if we have an auth token (skip if in iframe)
+    const isInIframe = window.self !== window.top;
     const token = localStorage.getItem('adminToken');
-    if (!token) {
+    if (!token && !isInIframe) {
       alert('Please log in first');
       window.location.href = 'balance-upload.html';
     }
