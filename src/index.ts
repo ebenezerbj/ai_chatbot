@@ -2365,7 +2365,7 @@ app.get('/api/admin/ml/sentiment-trends', async (req: Request, res: Response) =>
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
   
-  if (token !== process.env.ADMIN_TOKEN) {
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -2428,7 +2428,7 @@ app.get('/api/admin/ml/intent-distribution', async (req: Request, res: Response)
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
   
-  if (token !== process.env.ADMIN_TOKEN) {
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -2448,7 +2448,7 @@ app.get('/api/admin/ml/escalations', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
   
-  if (token !== process.env.ADMIN_TOKEN) {
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -2472,7 +2472,7 @@ app.get('/api/admin/ml/categories', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
   
-  if (token !== process.env.ADMIN_TOKEN) {
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -2492,7 +2492,7 @@ app.get('/api/admin/ml/churn-risk', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
   
-  if (token !== process.env.ADMIN_TOKEN) {
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -2512,7 +2512,7 @@ app.get('/api/admin/ml/churn-stats', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
 
-  if (token !== process.env.ADMIN_TOKEN) {
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -2546,7 +2546,7 @@ app.post('/api/admin/ml/reset-counters', async (req: Request, res: Response) => 
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
 
-  if (token !== process.env.ADMIN_TOKEN) {
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
