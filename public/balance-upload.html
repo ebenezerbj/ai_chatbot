@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AKCB Admin - Balance Upload</title>
+  <script src="/admin-auth.js"></script>
   <style>
     * {
       margin: 0;
@@ -265,24 +266,10 @@
     </div>
 
     <div class="content">
-      <!-- Authentication Form -->
-      <div class="auth-form active" id="authForm">
-        <div class="info-box">
-          <h3>🔒 Secure Access</h3>
-          <p>Enter the admin password to access the balance upload system.</p>
-        </div>
-        
-        <form id="loginForm">
-          <div class="form-group">
-            <label for="password">Admin Password</label>
-            <input type="password" id="password" name="password" required autocomplete="current-password">
-          </div>
-          <button type="submit">Login</button>
-        </form>
-      </div>
-
       <!-- Upload Form -->
-      <div class="upload-form" id="uploadForm">
+      <div class="upload-form active" id="uploadForm">
+        <div id="userInfo" style="margin-bottom: 20px; text-align: center;"></div>
+        
         <div class="info-box">
           <h3>📊 CSV File Requirements</h3>
           <p>Upload the daily balance export CSV file. Accepted formats:</p>
@@ -309,41 +296,8 @@
   </div>
 
   <script>
-    let authToken = null;
-
-    // Login form handler
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const password = document.getElementById('password').value;
-      const btn = e.target.querySelector('button');
-      const originalText = btn.textContent;
-
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Authenticating...';
-
-      try {
-        const response = await fetch('/api/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          authToken = data.token;
-          document.getElementById('authForm').classList.remove('active');
-          document.getElementById('uploadForm').classList.add('active');
-        } else {
-          alert(data.error || 'Invalid password');
-        }
-      } catch (error) {
-        alert('Authentication failed. Please try again.');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
-      }
-    });
+    // Display user info
+    adminAuth.displayUserInfo('#userInfo');
 
     // Upload form handler
     document.getElementById('balanceUploadForm').addEventListener('submit', async (e) => {
@@ -368,11 +322,8 @@
       formData.append('balances', file);
 
       try {
-        const response = await fetch('/api/admin/upload-balances', {
+        const response = await adminAuth.fetchWithAuth('/api/admin/upload-balances', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          },
           body: formData
         });
 
@@ -424,14 +375,6 @@
         fileInput.value = ''; // Clear file input
       }
     });
-
-    function logout() {
-      authToken = null;
-      document.getElementById('uploadForm').classList.remove('active');
-      document.getElementById('authForm').classList.add('active');
-      document.getElementById('password').value = '';
-      document.getElementById('result').classList.remove('active');
-    }
   </script>
 </body>
 </html>

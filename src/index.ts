@@ -1557,6 +1557,26 @@ app.post('/api/admin/logout', (req: Request, res: Response) => {
   }
 });
 
+// Admin token verification endpoint
+app.get('/api/admin/verify', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (adminTokens.has(token) || token === process.env.ADMIN_TOKEN) {
+      return res.json({ valid: true });
+    } else {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  } catch (error: any) {
+    console.error('[Admin] Verify error:', error.message);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
 // Balance upload endpoint
 app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Request, res: Response) => {
   console.log('[Admin] Balance upload endpoint hit');

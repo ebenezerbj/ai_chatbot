@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI/ML Analytics Dashboard - Ama Bank</title>
+  <script src="/admin-auth.js"></script>
   <style>
     :root {
       --teal: #00796b;
@@ -499,12 +500,9 @@
     </div>
 
     <div class="auth-section" id="authSection">
-      <h3>🔐 Admin Authentication</h3>
+      <h3>🔐 Admin Session</h3>
       <div class="auth-form">
-        <div class="form-group">
-          <label for="adminToken">Admin Bearer Token</label>
-          <input type="password" id="adminToken" placeholder="Enter your admin token">
-        </div>
+        <div id="userInfo" style="flex: 1;"></div>
         <button class="btn" onclick="loadDashboard()">Load Dashboard</button>
         <button class="btn" onclick="resetMLCounters()" style="background: linear-gradient(135deg, #f44336 0%, #c62828 100%);" title="Reset AI/ML analytics counters">🔄 Reset ML Counters</button>
       </div>
@@ -593,16 +591,10 @@
   </div>
 
   <script>
-    let adminToken = '';
+    // Display user info
+    adminAuth.displayUserInfo('#userInfo');
 
     async function loadDashboard() {
-      adminToken = document.getElementById('adminToken').value.trim();
-      
-      if (!adminToken) {
-        showError('Please enter your admin token');
-        return;
-      }
-
       // Hide auth section, show dashboard
       document.getElementById('authSection').classList.add('hidden');
       document.getElementById('dashboardContent').classList.remove('hidden');
@@ -619,11 +611,7 @@
 
     async function loadSentimentTrends() {
       try {
-        const response = await fetch('/api/admin/ml/sentiment-trends', {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`
-          }
-        });
+        const response = await adminAuth.fetchWithAuth('/api/admin/ml/sentiment-trends');
 
         if (!response.ok) {
           throw new Error('Unauthorized');
@@ -677,11 +665,7 @@
 
     async function loadIntentDistribution() {
       try {
-        const response = await fetch('/api/admin/ml/intent-distribution', {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`
-          }
-        });
+        const response = await adminAuth.fetchWithAuth('/api/admin/ml/intent-distribution');
 
         if (!response.ok) {
           throw new Error('Unauthorized');
@@ -716,11 +700,7 @@
 
     async function loadEscalations() {
       try {
-        const response = await fetch('/api/admin/ml/escalations', {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`
-          }
-        });
+        const response = await adminAuth.fetchWithAuth('/api/admin/ml/escalations');
 
         if (!response.ok) {
           throw new Error('Unauthorized');
@@ -829,11 +809,7 @@
 
     async function loadCategories() {
       try {
-        const response = await fetch('/api/admin/ml/categories', {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`
-          }
-        });
+        const response = await adminAuth.fetchWithAuth('/api/admin/ml/categories');
 
         if (!response.ok) {
           throw new Error('Unauthorized');
@@ -872,11 +848,7 @@
 
     async function loadChurnRisk() {
       try {
-        const response = await fetch('/api/admin/ml/churn-risk', {
-          headers: {
-            'Authorization': `Bearer ${adminToken}`
-          }
-        });
+        const response = await adminAuth.fetchWithAuth('/api/admin/ml/churn-risk');
 
         if (!response.ok) {
           throw new Error('Unauthorized');
@@ -923,13 +895,6 @@
     }
 
     async function resetMLCounters() {
-      const token = document.getElementById('adminToken').value;
-      
-      if (!token) {
-        showError('Please enter admin token first');
-        return;
-      }
-
       if (!confirm('⚠️ WARNING: This will permanently delete ALL AI/ML analytics data including:\\n\\n' +
                    '• Intent Classifications\\n' +
                    '• Sentiment Analysis\\n' +
@@ -940,10 +905,9 @@
       }
 
       try {
-        const response = await fetch('/api/admin/ml/reset-counters', {
+        const response = await adminAuth.fetchWithAuth('/api/admin/ml/reset-counters', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });

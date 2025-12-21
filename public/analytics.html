@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Chatbot Analytics Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="/admin-auth.js"></script>
   <style>
     body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 2em; }
     h1 { color: #333; max-width: 600px; margin: 0 auto 1em; }
@@ -56,24 +57,23 @@
   </div>
   <h1>Chatbot Analytics Dashboard</h1>
   <div class="auth">
-    <label for="token">Admin Token:</label>
-    <input type="password" id="token" placeholder="Enter admin token">
+    <div id="userInfo"></div>
     <button onclick="loadAnalytics()">Load Analytics</button>
   </div>
   <div class="metrics" id="metrics">
-    <p>Enter your admin token and click "Load Analytics".</p>
+    <p>Click "Load Analytics" to view data.</p>
   </div>
   <script>
+    // Display user info
+    adminAuth.displayUserInfo('#userInfo');
+
     async function loadAnalytics() {
-      const token = document.getElementById('token').value;
       const metricsDiv = document.getElementById('metrics');
       metricsDiv.innerHTML = '<p>Loading...</p>';
       try {
-        const res = await fetch('/api/admin/analytics/summary', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
+        const res = await adminAuth.fetchWithAuth('/api/admin/analytics/summary');
         if (!res.ok) {
-          metricsDiv.innerHTML = '<p style="color:red;">Unauthorized or error loading analytics.</p>';
+          metricsDiv.innerHTML = '<p style="color:red;">Error loading analytics.</p>';
           return;
         }
         const data = await res.json();
