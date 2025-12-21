@@ -2833,7 +2833,7 @@ https://example.com/products"></textarea>
                         data: {
                             labels: data.byGender.map(item => item.gender),
                             datasets: [{
-                                data: data.byGender.map(item => item.count),
+                                data: data.byGender.map(item => Number(item.count)),
                                 backgroundColor: colors.gender,
                                 borderWidth: 0
                             }]
@@ -2872,7 +2872,7 @@ https://example.com/products"></textarea>
                             labels: data.ageGroups.map(item => item.age_group),
                             datasets: [{
                                 label: 'Customers',
-                                data: data.ageGroups.map(item => item.count),
+                                data: data.ageGroups.map(item => Number(item.count)),
                                 backgroundColor: colors.age,
                                 borderRadius: 6
                             }]
@@ -2915,7 +2915,7 @@ https://example.com/products"></textarea>
                         data: {
                             labels: data.byCustomerType.map(item => item.customer_type),
                             datasets: [{
-                                data: data.byCustomerType.map(item => item.count),
+                                data: data.byCustomerType.map(item => Number(item.count)),
                                 backgroundColor: colors.primary,
                                 borderWidth: 0
                             }]
@@ -2953,7 +2953,7 @@ https://example.com/products"></textarea>
                         data: {
                             labels: data.byStatus.map(item => item.status),
                             datasets: [{
-                                data: data.byStatus.map(item => item.count),
+                                data: data.byStatus.map(item => Number(item.count)),
                                 backgroundColor: colors.status,
                                 borderWidth: 0
                             }]
