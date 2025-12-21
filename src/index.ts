@@ -609,45 +609,35 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       });
     }
 
-    // If KB has matches, return those
-    if (kbMatches.length > 0) {
-      console.log('[Chat] Returning KB response');
-      const response = kbMatches[0];
-      
-      // Log bot response
-      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
-        console.error('[Analytics] Failed to log bot message:', e)
-      );
-      
-      return res.json({ 
-        reply: response,
-        source: 'kb',
-        kbMatches: kbMatches.length,
-        sessionId: effectiveSessionId
-      });
-    }
-
-    // No KB match, try OpenAI with KB context
-    console.log('[Chat] No KB match, trying OpenAI with KB context...');
+    // ALWAYS use OpenAI with full KB context for sophisticated reasoning
+    // This enables temporal logic, ethical reasoning, Theory of Mind, causal reasoning, etc.
+    // KB matches are provided as context, not returned directly
+    console.log(`[Chat] Processing request with OpenAI (KB matches available: ${kbMatches.length})...`);
 
     // Try OpenAI if configured
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      const defaultResponse = 'I can help with banking questions. Please ask about our services, fees, or products.';
+      // Fallback to KB matches if OpenAI not configured
+      if (kbMatches.length > 0) {
+        const response = kbMatches[0];
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
+        );
+        return res.json({ 
+          reply: response,
+          source: 'kb-fallback',
+          sessionId: effectiveSessionId
+        });
+      }
       
-      // Log bot response
+      const defaultResponse = 'I can help with banking questions. Please ask about our services, fees, or products.';
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', defaultResponse).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
       );
-      
-      return res.json({ 
-        reply: defaultResponse,
-        source: 'default',
-        sessionId: effectiveSessionId
-      });
+      return res.json({ reply: defaultResponse, source: 'default', sessionId: effectiveSessionId });
     }
 
-    // Build KB context summary for OpenAI
+    // Build KB context summary for OpenAI (use full KB, not just matches)
     const kbContext = kb.map(entry => {
       const patterns = Array.isArray(entry.patterns) ? entry.patterns.join(', ') : entry.pattern || '';
       return `Topic: ${entry.product}\nInfo: ${entry.answer || entry.response || ''}`;
