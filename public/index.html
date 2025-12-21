@@ -4170,77 +4170,179 @@
       );
     });
 
-    // Voice Input - Speech Recognition
+    // Voice Input - Speech Recognition (2025 Standard Implementation)
     const voiceInputBtn = document.getElementById('voiceInputBtn');
     let recognition = null;
     let isRecording = false;
+    let recognitionTimeout = null;
 
-    // Check if browser supports Web Speech API
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US'; // Default to English, can be made configurable
+    // Initialize Speech Recognition with modern API
+    const initializeSpeechRecognition = () => {
+      // Use standard SpeechRecognition API (with webkit fallback for compatibility)
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognitionAPI) {
+        console.warn('Speech Recognition API not supported');
+        voiceInputBtn?.remove();
+        return null;
+      }
 
-      recognition.onstart = () => {
+      const recognizer = new SpeechRecognitionAPI();
+      
+      // Modern configuration
+      recognizer.continuous = false; // Single utterance mode
+      recognizer.interimResults = true; // Show real-time results
+      recognizer.maxAlternatives = 1; // Get best match only
+      
+      // Detect browser language or fallback to English
+      recognizer.lang = navigator.language || 'en-US';
+      
+      // Event: Recognition starts
+      recognizer.addEventListener('start', () => {
         isRecording = true;
         voiceInputBtn.classList.add('recording');
-        voiceInputBtn.title = 'Recording... Click to stop';
-        input.placeholder = 'Listening...';
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        input.value = transcript;
-        input.dispatchEvent(new Event('input')); // Trigger input event to adjust height
-        input.focus();
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        let errorMessage = 'Speech recognition error.';
+        voiceInputBtn.setAttribute('title', 'Recording... Click to stop');
+        voiceInputBtn.setAttribute('aria-label', 'Recording voice input, click to stop');
+        input.placeholder = '🎤 Listening...';
         
-        if (event.error === 'no-speech') {
-          errorMessage = 'No speech detected. Please try again.';
-        } else if (event.error === 'audio-capture') {
-          errorMessage = 'No microphone found. Please check your microphone.';
-        } else if (event.error === 'not-allowed') {
-          errorMessage = 'Microphone access denied. Please allow microphone access.';
-        } else if (event.error === 'network') {
-          errorMessage = 'Network error. Please check your connection.';
+        // Auto-stop after 10 seconds of recording
+        recognitionTimeout = setTimeout(() => {
+          if (isRecording) {
+            recognizer.stop();
+          }
+        }, 10000);
+      });
+
+      // Event: Interim and final results
+      recognizer.addEventListener('result', (event) => {
+        const results = event.results;
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < results.length; i++) {
+          const transcript = results[i][0].transcript;
+          if (results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        // Update input with final transcript or show interim
+        if (finalTranscript) {
+          input.value = finalTranscript.trim();
+          input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+          input.focus();
+        } else if (interimTranscript) {
+          // Show interim results in placeholder
+          input.placeholder = `🎤 ${interimTranscript}...`;
+        }
+      });
+
+      // Event: Recognition ends
+      recognizer.addEventListener('end', () => {
+        clearTimeout(recognitionTimeout);
+        stopRecording();
+      });
+
+      // Event: Speech recognition errors
+      recognizer.addEventListener('error', (event) => {
+        console.error('Speech recognition error:', event.error, event);
+        clearTimeout(recognitionTimeout);
+        
+        const errorMessages = {
+          'no-speech': 'No speech detected. Please try again.',
+          'audio-capture': 'Microphone not accessible. Please check your device settings.',
+          'not-allowed': 'Microphone permission denied. Please enable microphone access in your browser settings.',
+          'network': 'Network error occurred. Please check your internet connection.',
+          'aborted': 'Speech recognition aborted.',
+          'service-not-allowed': 'Speech recognition service not available.',
+          'bad-grammar': 'Grammar error in speech recognition.',
+          'language-not-supported': 'Language not supported. Defaulting to English.'
+        };
+        
+        const errorMessage = errorMessages[event.error] || 'Speech recognition error occurred. Please try again.';
+        
+        // Only show error for user-actionable issues
+        if (!['aborted', 'no-speech'].includes(event.error)) {
+          addMsg('assistant', `🎤 ${errorMessage}`);
         }
         
-        addMsg('assistant', `🎤 ${errorMessage}`);
         stopRecording();
-      };
+      });
 
-      recognition.onend = () => {
-        stopRecording();
-      };
+      // Event: Speech detected (but not yet recognized)
+      recognizer.addEventListener('speechstart', () => {
+        console.log('Speech detected');
+      });
 
-      voiceInputBtn.addEventListener('click', () => {
+      // Event: Speech ended
+      recognizer.addEventListener('speechend', () => {
+        console.log('Speech ended');
+      });
+
+      // Event: Sound detected
+      recognizer.addEventListener('soundstart', () => {
+        console.log('Sound detected');
+      });
+
+      // Event: Sound ended
+      recognizer.addEventListener('soundend', () => {
+        console.log('Sound ended');
+      });
+
+      return recognizer;
+    };
+
+    // Initialize recognition
+    recognition = initializeSpeechRecognition();
+
+    // Voice button click handler
+    if (recognition && voiceInputBtn) {
+      voiceInputBtn.addEventListener('click', async () => {
         if (isRecording) {
+          // Stop recording
           recognition.stop();
+          clearTimeout(recognitionTimeout);
         } else {
+          // Request microphone permission and start recording
           try {
+            // Check microphone permission using modern Permissions API
+            if (navigator.permissions) {
+              try {
+                const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+                if (permissionStatus.state === 'denied') {
+                  addMsg('assistant', '🎤 Microphone access is blocked. Please enable it in your browser settings.');
+                  return;
+                }
+              } catch (e) {
+                // Permissions API not fully supported, continue anyway
+                console.log('Permissions API not available:', e);
+              }
+            }
+
             recognition.start();
           } catch (error) {
             console.error('Failed to start speech recognition:', error);
-            addMsg('assistant', '🎤 Could not start voice input. Please try again.');
+            
+            if (error.name === 'InvalidStateError') {
+              // Recognition already started, stop and restart
+              recognition.stop();
+              setTimeout(() => recognition.start(), 100);
+            } else {
+              addMsg('assistant', '🎤 Could not start voice input. Please ensure your microphone is connected and try again.');
+            }
           }
         }
       });
-    } else {
-      // Browser doesn't support speech recognition
-      voiceInputBtn.style.display = 'none';
-      console.log('Speech recognition not supported in this browser');
     }
 
+    // Stop recording helper function
     function stopRecording() {
       isRecording = false;
-      voiceInputBtn.classList.remove('recording');
-      voiceInputBtn.title = 'Voice input';
+      voiceInputBtn?.classList.remove('recording');
+      voiceInputBtn?.setAttribute('title', 'Voice input');
+      voiceInputBtn?.setAttribute('aria-label', 'Start voice input');
       input.placeholder = 'Ask about accounts, loans, branches...';
     }
 
