@@ -8,6 +8,8 @@ class AdminAuth {
         this.tokenKey = 'adminToken';
         this.token = null;
         this.isInitializing = false;
+        this.isReady = false;
+        this.readyCallbacks = [];
     }
 
     init() {
@@ -34,6 +36,20 @@ class AdminAuth {
         // Don't verify token on page load - only verify when making API calls
         // This prevents unnecessary redirects and improves UX
         console.log('[AdminAuth] Initialized with token:', this.token ? 'present' : 'missing');
+        
+        // Mark as ready and call any waiting callbacks
+        this.isReady = true;
+        this.readyCallbacks.forEach(callback => callback());
+        this.readyCallbacks = [];
+    }
+
+    // Allow pages to wait for auth to be ready
+    onReady(callback) {
+        if (this.isReady) {
+            callback();
+        } else {
+            this.readyCallbacks.push(callback);
+        }
     }
 
     redirectToLogin() {

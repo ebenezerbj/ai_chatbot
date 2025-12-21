@@ -93,8 +93,10 @@
       }
     }
 
-    // Auto-load analytics on page load
-    loadAnalytics();
+    // Auto-load analytics after adminAuth is ready
+    adminAuth.onReady(() => {
+      loadAnalytics();
+    });
   </script>
 </body>
 </html>

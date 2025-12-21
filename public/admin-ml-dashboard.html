@@ -927,8 +927,10 @@
       }
     }
 
-    // Auto-load dashboard on page load
-    loadDashboard();
+    // Auto-load dashboard after adminAuth is ready
+    adminAuth.onReady(() => {
+      loadDashboard();
+    });
   </script>
 </body>
 </html>
