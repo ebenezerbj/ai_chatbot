@@ -14,32 +14,41 @@ class AdminAuth {
 
     init() {
         // Prevent double initialization
-        if (this.isInitializing) return;
+        if (this.isInitializing) {
+            console.log('[AdminAuth] Already initializing, skipping');
+            return;
+        }
         this.isInitializing = true;
 
         // Try to load token from localStorage
         this.token = localStorage.getItem(this.tokenKey);
+        console.log('[AdminAuth] Token from localStorage:', this.token ? `${this.token.substring(0, 10)}...` : 'NOT FOUND');
         
         // Check if we're on a login/portal page (support various paths)
         const path = window.location.pathname.toLowerCase();
+        console.log('[AdminAuth] Current path:', path);
         const isLoginPage = path.includes('admin-portal.html') || 
                            path.endsWith('admin-portal') || 
                            path === '/admin-portal';
+        console.log('[AdminAuth] Is login page:', isLoginPage);
         
         // If no token and not on login page, redirect to login
         if (!this.token && !isLoginPage) {
-            console.log('[AdminAuth] No token found, redirecting to login');
+            console.log('[AdminAuth] No token found and not on login page, redirecting to login');
             this.redirectToLogin();
             return;
         }
         
         // Don't verify token on page load - only verify when making API calls
         // This prevents unnecessary redirects and improves UX
-        console.log('[AdminAuth] Initialized with token:', this.token ? 'present' : 'missing');
+        console.log('[AdminAuth] Initialized successfully with token:', this.token ? 'present' : 'missing');
         
         // Mark as ready and call any waiting callbacks
         this.isReady = true;
-        this.readyCallbacks.forEach(callback => callback());
+        this.readyCallbacks.forEach(callback => {
+            console.log('[AdminAuth] Calling ready callback');
+            callback();
+        });
         this.readyCallbacks = [];
     }
 
@@ -79,9 +88,10 @@ class AdminAuth {
 
     async fetchWithAuth(url, options = {}) {
         const token = this.getToken();
+        console.log('[AdminAuth] fetchWithAuth called for:', url, 'Token:', token ? 'present' : 'MISSING');
         
         if (!token) {
-            console.error('[AdminAuth] No token available for request');
+            console.error('[AdminAuth] No token available for request, redirecting to login');
             this.redirectToLogin();
             throw new Error('No authentication token');
         }
@@ -92,15 +102,19 @@ class AdminAuth {
             'Authorization': `Bearer ${token}`
         };
 
+        console.log('[AdminAuth] Making authenticated request to:', url);
+
         try {
             const response = await fetch(url, {
                 ...options,
                 headers
             });
 
+            console.log('[AdminAuth] Response status:', response.status);
+
             // Handle unauthorized - token may be expired or invalid
             if (response.status === 401) {
-                console.log('[AdminAuth] Unauthorized response, clearing token');
+                console.log('[AdminAuth] 401 Unauthorized, clearing token and logging out');
                 this.logout();
                 throw new Error('Session expired');
             }
