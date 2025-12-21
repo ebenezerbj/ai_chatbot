@@ -2761,9 +2761,9 @@ https://example.com/products"></textarea>
                 if (data.byGender) {
                     const genderTbody = document.getElementById('demo-gender-tbody');
                     genderTbody.innerHTML = '';
-                    const totalWithGender = data.byGender.reduce((sum, item) => sum + item.count, 0);
+                    const totalWithGender = data.byGender.reduce((sum, item) => sum + Number(item.count), 0);
                     data.byGender.forEach(item => {
-                        const percentage = ((item.count / totalWithGender) * 100).toFixed(1);
+                        const percentage = ((Number(item.count) / totalWithGender) * 100).toFixed(1);
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${item.gender}</td>
@@ -2781,9 +2781,9 @@ https://example.com/products"></textarea>
                 if (data.byCustomerType) {
                     const customerTypeTbody = document.getElementById('demo-customer-type-tbody');
                     customerTypeTbody.innerHTML = '';
-                    const totalWithType = data.byCustomerType.reduce((sum, item) => sum + item.count, 0);
+                    const totalWithType = data.byCustomerType.reduce((sum, item) => sum + Number(item.count), 0);
                     data.byCustomerType.forEach(item => {
-                        const percentage = ((item.count / totalWithType) * 100).toFixed(1);
+                        const percentage = ((Number(item.count) / totalWithType) * 100).toFixed(1);
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${item.customer_type}</td>
