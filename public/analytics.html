@@ -58,10 +58,9 @@
   <h1>Chatbot Analytics Dashboard</h1>
   <div class="auth">
     <div id="userInfo"></div>
-    <button onclick="loadAnalytics()">Load Analytics</button>
   </div>
   <div class="metrics" id="metrics">
-    <p>Click "Load Analytics" to view data.</p>
+    <p>Loading...</p>
   </div>
   <script>
     // Display user info
@@ -93,6 +92,9 @@
         metricsDiv.innerHTML = '<p style="color:red;">Error loading analytics.</p>';
       }
     }
+
+    // Auto-load analytics on page load
+    loadAnalytics();
   </script>
 </body>
 </html>

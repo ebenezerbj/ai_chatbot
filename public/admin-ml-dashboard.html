@@ -499,17 +499,15 @@
       <p>Phase 3: Real-time sentiment analysis, intent classification, and predictive insights</p>
     </div>
 
-    <div class="auth-section" id="authSection">
+    <div class="auth-section">
       <h3>🔐 Admin Session</h3>
       <div class="auth-form">
         <div id="userInfo" style="flex: 1;"></div>
-        <button class="btn" onclick="loadDashboard()">Load Dashboard</button>
         <button class="btn" onclick="resetMLCounters()" style="background: linear-gradient(135deg, #f44336 0%, #c62828 100%);" title="Reset AI/ML analytics counters">🔄 Reset ML Counters</button>
       </div>
-      <div class="error" id="authError"></div>
     </div>
 
-    <div id="dashboardContent" class="hidden">
+    <div id="dashboardContent">
       <div class="dashboard-grid">
         <!-- Sentiment Analysis Card -->
         <div class="card full-width">
@@ -595,10 +593,6 @@
     adminAuth.displayUserInfo('#userInfo');
 
     async function loadDashboard() {
-      // Hide auth section, show dashboard
-      document.getElementById('authSection').classList.add('hidden');
-      document.getElementById('dashboardContent').classList.remove('hidden');
-
       // Load all data in parallel
       await Promise.all([
         loadSentimentTrends(),
@@ -926,14 +920,15 @@
               `• Churn Predictions: ${result.deleted.churnPredictions}\\n\\n` +
               'ML counters have been reset.');
         
-        // Reload dashboard if it's visible
-        if (!document.getElementById('dashboardContent').classList.contains('hidden')) {
-          loadDashboard();
-        }
+        // Reload dashboard
+        loadDashboard();
       } catch (error) {
         showError('Failed to reset ML counters: ' + error.message);
       }
     }
+
+    // Auto-load dashboard on page load
+    loadDashboard();
   </script>
 </body>
 </html>
