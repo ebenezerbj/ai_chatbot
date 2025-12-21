@@ -2073,12 +2073,15 @@ https://example.com/products"></textarea>
                 const result = await response.json();
                 
                 if (response.ok) {
+                    const deletedCount = result.deleted || {};
                     alert('✅ ML Counters Reset Successfully!\n\n' +
-                          `Sentiment Analysis: ${result.deleted.sentimentAnalysis}\n` +
-                          `Intent Classification: ${result.deleted.intentClassification}\n` +
-                          `Conversation Categories: ${result.deleted.conversationCategories}\n` +
-                          `Churn Predictions: ${result.deleted.churnPredictions}`);
-                    loadAIMLDashboard();
+                          `Sentiment Analysis: ${deletedCount.sentimentAnalysis || 0}\n` +
+                          `Intent Classification: ${deletedCount.intentClassification || 0}\n` +
+                          `Conversation Categories: ${deletedCount.conversationCategories || 0}\n` +
+                          `Churn Predictions: ${deletedCount.churnPredictions || 0}`);
+                    
+                    // Reload dashboard data after user dismisses the alert
+                    await loadAIMLDashboard();
                     addActivityLog('Reset ML counters', 'success');
                 } else {
                     alert('Error: ' + (result.error || 'Failed to reset ML counters'));
