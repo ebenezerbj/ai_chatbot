@@ -342,15 +342,32 @@ export function shouldOpenAccountOpeningForm(message: string, isCustomer?: boole
     'open an account',
     'create account',
     'new account',
-    'i want to open',
+    'i want to open account',
+    'i want to open an account',
     'want to open account',
+    'want to open an account',
     'how to open account',
+    'how do i open account',
     'opening account',
+    'opening an account',
     'sign up',
     'become a customer',
     'join the bank',
     'register account'
   ];
+  
+  // Exclude vague phrases that need clarification first
+  const vagueExclusions = [
+    'i want to open something',
+    'open something',
+    'something for my future',
+    'for my future'
+  ];
+  
+  // Don't trigger on vague requests
+  if (vagueExclusions.some(exclusion => lowerMsg.includes(exclusion))) {
+    return false;
+  }
   
   return triggers.some(trigger => lowerMsg.includes(trigger));
 }
