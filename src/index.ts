@@ -681,29 +681,51 @@ CONVERSATION GUIDELINES:
    - Connect related topics from the KB when it helps the customer
    - Examples: "Opoku" or "Daniel" → Daniel Opoku (Unit Head, Marketing)
 
-3. **When You Cannot Help**:
+3. **Recognize Your Limits - CRITICAL**:
+   ⚠️ If asked about ANY of these topics, you MUST say "I don't have that specific information" and offer escalation:
+   
+   **Sensitive Topics (Always Escalate):**
+   - Employee salaries, compensation, or remuneration (CEO, staff, board, directors)
+   - Tax advice or tax implications
+   - Legal advice or legal matters
+   - Investment advice or portfolio management
+   - Confidential corporate information
+   - Personal financial planning
+   
+   **Response Template:**
+   "I don't have that specific information. This requires [specialist/detailed records/expertise]. Would you like me to connect you with a customer representative who can assist you?"
+   
+   **Examples:**
+   - "What's the CEO's salary?" → "I don't have information about executive compensation. Would you like me to connect you with our Corporate Affairs team?"
+   - "Tax implications?" → "I cannot provide tax advice. Would you like me to connect you with a representative who can guide you to appropriate resources?"
+
+4. **When You Cannot Help**:
    - Be honest when information isn't in your knowledge base
    - Say "I don't have that specific information" or "This is outside my current knowledge"
    - Then offer to connect them: "Would you like me to connect you with a customer representative?"
    - This triggers automatic escalation to human assistance
 
-4. **Handle Requests Intelligently**:
+5. **Handle Requests Intelligently**:
    - For agent requests: Acknowledge their request, provide contact info (0542428935 or 0501290952), and ask if they'd like to be connected now
    - For misspellings: Understand intent (e.g., "prodicts" → "products")
    - For unclear questions: Ask clarifying questions before answering
 
-5. **Provide Value**:
+6. **Be Proactive & Helpful**:
+   - When helping with applications (loans, accounts), provide preparatory information first:
+     • What documents they'll need
+     • Brief overview of options available
+     • Ask if they have questions before proceeding
+   - Anticipate follow-up questions and address them
+   - Offer related services when relevant
    - Give specific details: actual names, numbers, locations from KB
-   - Anticipate follow-up questions and address them proactively
-   - Offer additional relevant information when helpful
 
-6. **Natural Flow**:
+7. **Natural Flow**:
    - If customer says "yes" after you offer help, proceed naturally
    - If they ask follow-ups, continue the conversation thread
    - Don't repeat yourself unless customer didn't understand
    - End with helpful next steps or asking if they need anything else
 
-Remember: You're having a real conversation with a real person. Be helpful, be natural, be smart!`;
+Remember: You're having a real conversation with a real person. Be helpful, be natural, be smart, and know when to escalate!`;
 
       // Build messages array with conversation history
       const messages: Array<{ role: string; content: string }> = [
@@ -739,12 +761,23 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         }
       );
 
-      const reply = response.data.choices[0]?.message?.content || 'I could not generate a response.';
+      let reply = response.data.choices[0]?.message?.content || 'I could not generate a response.';
+      
+      // Fix undefined/empty response bug
+      if (!reply || reply.trim() === '' || reply === 'undefined' || reply === 'null') {
+        console.log('[Chat] Empty/undefined response detected, triggering escalation');
+        reply = "I'm having trouble processing that question right now. Let me connect you with someone who can help you better.";
+      }
+      
       console.log(`[Chat] OpenAI response: ${reply}`);
       
       // Detect if AI is suggesting to contact someone or can't help
       const replyLower = reply.toLowerCase();
+      const messageLower = message.toLowerCase();
+      
+      // Enhanced escalation detection
       const suggestHandover = 
+        // Standard escalation phrases
         replyLower.includes('call:') || 
         replyLower.includes('email:') ||
         replyLower.includes('contact') && (replyLower.includes('0542428935') || replyLower.includes('0501290952')) ||
@@ -753,18 +786,34 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         replyLower.includes('connect you with') ||
         replyLower.includes('i don\'t have that') ||
         replyLower.includes('i don\'t have specific') ||
+        replyLower.includes('i don\'t have information') ||
         replyLower.includes('don\'t have that specific') ||
+        replyLower.includes('don\'t have information about') ||
         replyLower.includes('outside my expertise') ||
         replyLower.includes('outside of my expertise') ||
+        replyLower.includes('outside my current knowledge') ||
         replyLower.includes('cannot help') ||
+        replyLower.includes('cannot provide') ||
         replyLower.includes('unable to assist') ||
         replyLower.includes('would you like me to connect') ||
         replyLower.includes('connect you with a customer representative') ||
         replyLower.includes('connect you with a representative') ||
-        replyLower.includes('visit our') && replyLower.includes('office');
+        replyLower.includes('connect you with our') ||
+        replyLower.includes('this requires') ||
+        replyLower.includes('visit our') && replyLower.includes('office') ||
+        // Sensitive topic detection in user query (backup)
+        messageLower.includes('salary') || 
+        messageLower.includes('compensation') || 
+        messageLower.includes('remuneration') ||
+        messageLower.includes('tax') && (messageLower.includes('advice') || messageLower.includes('implications')) ||
+        messageLower.includes('legal advice') ||
+        messageLower.includes('investment advice') ||
+        messageLower.includes('portfolio management') ||
+        // Empty/error response
+        reply.includes('having trouble processing');
       
       if (suggestHandover) {
-        console.log('[Chat] Handover suggested - AI indicated human assistance needed');
+        console.log('[Chat] Handover suggested - AI indicated human assistance needed or sensitive topic detected');
       }
       
       // Log bot response
