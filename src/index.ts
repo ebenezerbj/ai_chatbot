@@ -1577,6 +1577,98 @@ app.get('/api/admin/verify', (req: Request, res: Response) => {
   }
 });
 
+// Knowledge Base API endpoints
+app.get('/api/kb', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // Return KB entries with IDs
+    const entriesWithIds = kb.map((entry, index) => ({
+      ...entry,
+      id: entry.id || String(index),
+      question: entry.patterns?.[0] || entry.pattern || '',
+      answer: entry.answer || entry.response || ''
+    }));
+    
+    res.json(entriesWithIds);
+  } catch (error: any) {
+    console.error('[KB] Get error:', error.message);
+    res.status(500).json({ error: 'Failed to load KB' });
+  }
+});
+
+app.post('/api/kb', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const { question, answer, product, patterns } = req.body;
+    
+    const newEntry: kbModule.KBEntry = {
+      id: String(Date.now()),
+      product: product || 'General',
+      patterns: patterns || [question],
+      answer: answer
+    };
+    
+    kb.push(newEntry);
+    
+    // Save to file
+    const kbPath = kbModule.defaultKBPath();
+    fs.writeFileSync(kbPath, JSON.stringify(kb, null, 2));
+    
+    res.json({ success: true, entry: newEntry });
+  } catch (error: any) {
+    console.error('[KB] Add error:', error.message);
+    res.status(500).json({ error: 'Failed to add KB entry' });
+  }
+});
+
+app.delete('/api/kb/:id', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const { id } = req.params;
+    const initialLength = kb.length;
+    kb = kb.filter((entry, index) => (entry.id || String(index)) !== id);
+    
+    if (kb.length < initialLength) {
+      // Save to file
+      const kbPath = kbModule.defaultKBPath();
+      fs.writeFileSync(kbPath, JSON.stringify(kb, null, 2));
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: 'Entry not found' });
+    }
+  } catch (error: any) {
+    console.error('[KB] Delete error:', error.message);
+    res.status(500).json({ error: 'Failed to delete KB entry' });
+  }
+});
+
 // Balance upload endpoint
 app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Request, res: Response) => {
   console.log('[Admin] Balance upload endpoint hit');
