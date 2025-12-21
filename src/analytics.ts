@@ -1600,39 +1600,43 @@ export async function getIntentDistribution(): Promise<{ intent: string; count: 
  */
 export async function getEscalationQueue(): Promise<any[]> {
   try {
+    // First check if tables exist
+    const tablesExist = await checkTablesExist(['sentiment_analysis', 'chat_sessions', 'conversation_categories']);
+    
     const query = DB_TYPE === 'postgres'
-      ? `SELECT DISTINCT
+      ? `SELECT DISTINCT ON (sa.session_id)
            sa.session_id, 
            sa.timestamp as start_time, 
            sa.sentiment, 
            sa.score, 
            sa.emotion_tags::text as emotion_tags,
            sa.message_id,
-           cs.message_count,
-           cs.last_activity,
+           COALESCE(cs.message_count, 0) as message_count,
+           COALESCE(cs.last_activity, sa.timestamp) as last_activity,
            cc.category,
            cc.subcategory
          FROM sentiment_analysis sa
          LEFT JOIN chat_sessions cs ON sa.session_id = cs.session_id
          LEFT JOIN conversation_categories cc ON sa.session_id = cc.session_id
          WHERE sa.needs_escalation = TRUE
-         ORDER BY sa.timestamp DESC
+         ORDER BY sa.session_id, sa.timestamp DESC
          LIMIT 50`
-      : `SELECT DISTINCT
+      : `SELECT 
            sa.session_id, 
            sa.timestamp as start_time, 
            sa.sentiment, 
            sa.score, 
            sa.emotion_tags,
            sa.message_id,
-           cs.message_count,
-           cs.last_activity,
+           COALESCE(cs.message_count, 0) as message_count,
+           COALESCE(cs.last_activity, sa.timestamp) as last_activity,
            cc.category,
            cc.subcategory
          FROM sentiment_analysis sa
          LEFT JOIN chat_sessions cs ON sa.session_id = cs.session_id
          LEFT JOIN conversation_categories cc ON sa.session_id = cc.session_id
          WHERE sa.needs_escalation = 1
+         GROUP BY sa.session_id
          ORDER BY sa.timestamp DESC
          LIMIT 50`;
     
@@ -1643,7 +1647,26 @@ export async function getEscalationQueue(): Promise<any[]> {
     return results;
   } catch (error: any) {
     console.error('[Analytics] getEscalationQueue error:', error.message);
-    throw error;
+    console.error('[Analytics] Full error:', error);
+    // Return empty array instead of throwing to prevent 500 errors
+    return [];
+  }
+}
+
+/**
+ * Helper to check if tables exist
+ */
+async function checkTablesExist(tableNames: string[]): Promise<boolean> {
+  try {
+    const query = DB_TYPE === 'postgres'
+      ? `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ANY($1)`
+      : `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (${tableNames.map(() => '?').join(',')})`;
+    
+    const results = await executeQuery(query, tableNames);
+    return results.length === tableNames.length;
+  } catch (error) {
+    console.error('[Analytics] Error checking tables:', error);
+    return false;
   }
 }
 
