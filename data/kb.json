@@ -534,7 +534,7 @@
       "who.*ceo",
       "executive officer"
     ],
-    "answer": "Our Chief Executive Officer is **MICHAEL WILBERFORCE OSAE**."
+    "answer": "Our Chief Executive Officer is **MICHAEL WILBERFORCE OSAE**.\n\n**Note:** If questions involve salary, compensation, or other confidential matters, these require escalation to appropriate personnel."
   },
   {
     "id": "head_of_audit",
