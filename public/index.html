@@ -285,6 +285,15 @@
       height: 20px;
     }
     
+    .reset-btn:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-radius: 8px;
+    }
+    
+    .reset-btn i {
+      margin-right: 0.35rem;
+    }
+    
     .tts-stop-btn {
       background: var(--danger-color) !important;
       color: white !important;
@@ -1447,6 +1456,10 @@
               <i class="fa fa-volume-up" aria-hidden="true"></i>
               <span class="label">Voice</span>
             </button>
+            <button id="resetBtn" class="header-action-btn reset-btn" title="Reset conversation" aria-label="Reset conversation">
+              <i class="fa fa-refresh" aria-hidden="true"></i>
+              <span class="label">Reset</span>
+            </button>
           </div>
         </div>
 
@@ -1505,6 +1518,50 @@
   const useLocationBtn = document.getElementById('useLocationBtn');
 
     let sessionId = null;
+
+    // ===== Reset Chat Function =====
+    function resetChat() {
+      // Confirm reset
+      if (!confirm('Are you sure you want to reset the conversation? This will clear all messages and start a new session.')) {
+        return;
+      }
+      
+      // End current session if exists
+      if (sessionId) {
+        fetch('/api/session/end', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        }).catch(err => console.error('Failed to end session:', err));
+      }
+      
+      // End live chat if active
+      if (liveChatActive) {
+        endLiveChat();
+      }
+      
+      // Clear session
+      sessionId = null;
+      
+      // Clear chat messages
+      chatEl.innerHTML = '';
+      
+      // Stop any active TTS
+      if (currentUtterance) {
+        window.speechSynthesis.cancel();
+        currentUtterance = null;
+      }
+      
+      // Reset input placeholder
+      input.placeholder = 'Ask about accounts, loans, branches...';
+      
+      // Show welcome message
+      setTimeout(() => {
+        addMsg('assistant', `👋 Hello! I'm ${assistantName}, your digital banking assistant. How can I help you today?`, false, false);
+      }, 300);
+      
+      console.log('[Reset] Chat conversation reset successfully');
+    }
 
     // ===== Live Chat with Human Agent =====
     let liveChatSocket = null;
@@ -1890,6 +1947,12 @@
       
       // Init TTS UI state
       initTTS();
+      
+      // ===== Reset Button Event Listener =====
+      const resetBtn = document.getElementById('resetBtn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', resetChat);
+      }
       
       // Start idle timeout tracking
       startIdleTracking();
