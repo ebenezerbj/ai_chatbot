@@ -1417,6 +1417,38 @@ https://example.com/products"></textarea>
     <script>
         let authToken = null;
 
+        // Check if already logged in on page load
+        async function checkExistingSession() {
+            const existingToken = localStorage.getItem('adminToken');
+            if (existingToken) {
+                authToken = existingToken;
+                
+                // Verify token is still valid
+                try {
+                    const response = await fetch('/api/admin/verify', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        // Token valid, show dashboard
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('adminDashboard').classList.add('active');
+                        loadDashboardData();
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Token verification failed:', error);
+                }
+                
+                // Token invalid, clear it
+                authToken = null;
+                localStorage.removeItem('adminToken');
+            }
+        }
+
+        // Run session check on page load
+        checkExistingSession();
+
         // Login Form
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
