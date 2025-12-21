@@ -1608,8 +1608,8 @@ export async function getEscalationQueue(): Promise<any[]> {
            sa.score, 
            sa.emotion_tags::text as emotion_tags,
            sa.message_id,
-           COALESCE(cs.message_count, 0) as message_count,
-           COALESCE(cs.last_activity, sa.timestamp) as last_activity,
+           COALESCE(cs.total_messages, 0) as message_count,
+           COALESCE(cs.updated_at, sa.timestamp) as last_activity,
            cc.category,
            cc.subcategory
          FROM sentiment_analysis sa
@@ -1625,8 +1625,8 @@ export async function getEscalationQueue(): Promise<any[]> {
            sa.score, 
            sa.emotion_tags,
            sa.message_id,
-           COALESCE(cs.message_count, 0) as message_count,
-           COALESCE(cs.last_activity, sa.timestamp) as last_activity,
+           COALESCE(cs.total_messages, 0) as message_count,
+           COALESCE(cs.updated_at, sa.timestamp) as last_activity,
            cc.category,
            cc.subcategory
          FROM sentiment_analysis sa
