@@ -1020,7 +1020,7 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Branch Code</th>
+                                        <th>Branch</th>
                                         <th style="text-align: right;">Customers</th>
                                         <th style="text-align: right;">Percentage</th>
                                     </tr>
@@ -2729,11 +2729,14 @@ https://example.com/products"></textarea>
                 const branchTbody = document.getElementById('demo-branch-tbody');
                 branchTbody.innerHTML = '';
                 data.byBranch.forEach(item => {
-                    const percentage = ((item.count / data.totalCustomers) * 100).toFixed(1);
+                    const percentage = ((Number(item.count) / data.totalCustomers) * 100).toFixed(1);
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${item.branch_code || 'N/A'}</td>
-                        <td style="text-align: right;">${item.count.toLocaleString()}</td>
+                        <td>
+                            <div style="font-weight: 500;">${item.branch_name || 'Unknown'}</div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">${item.branch_code || 'N/A'}</div>
+                        </td>
+                        <td style="text-align: right;">${Number(item.count).toLocaleString()}</td>
                         <td style="text-align: right;">${percentage}%</td>
                     `;
                     branchTbody.appendChild(row);

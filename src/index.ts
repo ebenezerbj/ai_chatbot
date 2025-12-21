@@ -1828,6 +1828,18 @@ app.get('/api/admin/stats', async (req: Request, res: Response) => {
 // Customer demographics endpoint
 app.get('/api/admin/demographics', async (req: Request, res: Response) => {
   try {
+    // Branch code to name mapping
+    const branchMapping: { [key: string]: string } = {
+      'GH1510010': 'Head Office',
+      'GH1510011': 'Ejura',
+      'GH1510012': 'Kwame Danso',
+      'GH1510013': 'Atebubu',
+      'GH1510014': 'Yeji',
+      'GH1510015': 'Amantin',
+      'GH1510016': 'Ahwiaa',
+      'GH1510017': 'Kajeji',
+      'GH1510018': 'Kejetia'
+    };
     // Check authentication
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -1858,6 +1870,13 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
     const byBranch = await executeQuery<any>(
       'SELECT branch_code, COUNT(*) as count FROM customers GROUP BY branch_code ORDER BY count DESC LIMIT 20'
     );
+
+    // Enhance branch data with names
+    const byBranchWithNames = byBranch.map((branch: any) => ({
+      branch_code: branch.branch_code,
+      branch_name: branchMapping[branch.branch_code] || 'Unknown',
+      count: branch.count
+    }));
 
     // Get contact info stats
     const contactStats = await querySingle<any>(
@@ -1971,7 +1990,7 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       totalCustomers: totalCustomers.count,
       byStatus,
       byAccountType,
-      byBranch,
+      byBranch: byBranchWithNames,
       contactInfo: {
         total: contactStats.total,
         withPhone: contactStats.with_phone,
