@@ -97,7 +97,12 @@ class AdminAuth {
         console.log('[AdminAuth] Logging out');
         this.token = null;
         localStorage.removeItem(this.tokenKey);
-        window.location.href = '/admin-portal.html';
+        
+        // Don't redirect if in iframe - let parent handle it
+        const isInIframe = window.self !== window.top;
+        if (!isInIframe) {
+            window.location.href = '/admin-portal.html';
+        }
     }
 
     async fetchWithAuth(url, options = {}) {
@@ -105,6 +110,13 @@ class AdminAuth {
         console.log('[AdminAuth] fetchWithAuth called for:', url, 'Token:', token ? 'present' : 'MISSING');
         
         if (!token) {
+            // Check if we're in an iframe - if so, don't redirect, just fail gracefully
+            const isInIframe = window.self !== window.top;
+            if (isInIframe) {
+                console.error('[AdminAuth] No token in iframe, parent should handle authentication');
+                throw new Error('No authentication token available in iframe');
+            }
+            
             console.error('[AdminAuth] No token available for request, redirecting to login');
             this.redirectToLogin();
             throw new Error('No authentication token');
