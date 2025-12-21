@@ -668,11 +668,15 @@ IMPORTANT INSTRUCTIONS:
    - "Debrah" or "Michael Debrah" → Michael Debrah Bempong (Head of Credit)
    - Search the KB for any name mentioned
 3. **Product queries**: When asked about "products", "services", "savings", "loans", provide specific offerings from the KB
-4. **Agent requests**: If someone asks to "talk to an agent" or "speak to a human", provide contact info (0542428935 or 0501290952) and offer to help with their question
-5. **Misspellings**: Handle typos intelligently (e.g., "prodicts" → "products")
-6. **Be conversational and helpful**: Don't give generic responses - actively provide relevant information from the KB
-7. **Be specific**: Use actual names, numbers, and details from the KB
-8. If truly not in KB, say you don't have that specific info and suggest calling 0542428935 or 0501290952
+4. **When you cannot help**:
+   - If the information is not in your knowledge base, acknowledge this clearly
+   - Say "I don't have that specific information" or "This is outside my expertise"
+   - Then ask: "Would you like me to connect you with a customer representative who can assist you?"
+   - This will trigger automatic escalation to human assistance
+5. **Agent requests**: If someone asks to "talk to an agent" or "speak to a human", provide contact info (0542428935 or 0501290952) and ask if they'd like to be connected
+6. **Misspellings**: Handle typos intelligently (e.g., "prodicts" → "products")
+7. **Be conversational and helpful**: Don't give generic responses - actively provide relevant information from the KB
+8. **Be specific**: Use actual names, numbers, and details from the KB
 
 Respond naturally and helpfully using the knowledge base!`;
 
@@ -708,9 +712,15 @@ Respond naturally and helpfully using the knowledge base!`;
         replyLower.includes('talk to') && replyLower.includes('agent') ||
         replyLower.includes('connect you with') ||
         replyLower.includes('i don\'t have that') ||
+        replyLower.includes('i don\'t have specific') ||
+        replyLower.includes('don\'t have that specific') ||
         replyLower.includes('outside my expertise') ||
+        replyLower.includes('outside of my expertise') ||
         replyLower.includes('cannot help') ||
         replyLower.includes('unable to assist') ||
+        replyLower.includes('would you like me to connect') ||
+        replyLower.includes('connect you with a customer representative') ||
+        replyLower.includes('connect you with a representative') ||
         replyLower.includes('visit our') && replyLower.includes('office');
       
       if (suggestHandover) {
