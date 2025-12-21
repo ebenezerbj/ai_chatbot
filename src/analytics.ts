@@ -570,6 +570,24 @@ export async function logMessage(
   await executeQuery(logQuery, [sessionId, messageIndex, role, content, metadataStr]);
 }
 
+/**
+ * Get recent conversation history for a session
+ * Returns last N messages for context-aware AI responses
+ */
+export async function getConversationHistory(
+  sessionId: string,
+  limit: number = 10
+): Promise<Array<{ role: string; content: string }>> {
+  const query = DB_TYPE === 'postgres'
+    ? 'SELECT role, content FROM conversation_logs WHERE session_id = $1 ORDER BY message_index DESC LIMIT $2'
+    : 'SELECT role, content FROM conversation_logs WHERE session_id = ? ORDER BY message_index DESC LIMIT ?';
+  
+  const messages = await executeQuery<{ role: string; content: string }>(query, [sessionId, limit]);
+  
+  // Reverse to get chronological order (oldest to newest)
+  return messages.reverse();
+}
+
 // ===== Analytics Queries =====
 
 /**
