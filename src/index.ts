@@ -2428,6 +2428,48 @@ app.get('/api/admin/ml/churn-stats', async (req: Request, res: Response) => {
 });
 
 /**
+ * Reset AI/ML analytics counters (Admin only)
+ */
+app.post('/api/admin/ml/reset-counters', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+
+  if (token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    // Count records before deletion
+    const intentCount = await executeQuery('SELECT COUNT(*) as count FROM intent_classification', []);
+    const sentimentCount = await executeQuery('SELECT COUNT(*) as count FROM sentiment_analysis', []);
+    const categoryCount = await executeQuery('SELECT COUNT(*) as count FROM conversation_categories', []);
+    const churnCount = await executeQuery('SELECT COUNT(*) as count FROM churn_predictions', []);
+
+    // Delete all ML analytics data
+    await executeQuery('DELETE FROM intent_classification', []);
+    await executeQuery('DELETE FROM sentiment_analysis', []);
+    await executeQuery('DELETE FROM conversation_categories', []);
+    await executeQuery('DELETE FROM churn_predictions', []);
+
+    console.log('[ML] Reset counters - All AI/ML analytics data deleted');
+
+    res.json({
+      success: true,
+      message: 'AI/ML analytics counters reset successfully',
+      deleted: {
+        intents: Number((intentCount[0] as any)?.count || 0),
+        sentiments: Number((sentimentCount[0] as any)?.count || 0),
+        categories: Number((categoryCount[0] as any)?.count || 0),
+        churnPredictions: Number((churnCount[0] as any)?.count || 0)
+      }
+    });
+  } catch (error: any) {
+    console.error('[ML] Reset counters error:', error);
+    res.status(500).json({ error: 'Failed to reset ML counters' });
+  }
+});
+
+/**
  * Get engagement score for a user
  */
 app.post('/api/ml/engagement-score', async (req: Request, res: Response) => {

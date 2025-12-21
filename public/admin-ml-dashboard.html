@@ -506,6 +506,7 @@
           <input type="password" id="adminToken" placeholder="Enter your admin token">
         </div>
         <button class="btn" onclick="loadDashboard()">Load Dashboard</button>
+        <button class="btn" onclick="resetMLCounters()" style="background: linear-gradient(135deg, #f44336 0%, #c62828 100%);" title="Reset AI/ML analytics counters">🔄 Reset ML Counters</button>
       </div>
       <div class="error" id="authError"></div>
     </div>
@@ -919,6 +920,55 @@
       setTimeout(() => {
         errorEl.style.display = 'none';
       }, 5000);
+    }
+
+    async function resetMLCounters() {
+      const token = document.getElementById('adminToken').value;
+      
+      if (!token) {
+        showError('Please enter admin token first');
+        return;
+      }
+
+      if (!confirm('⚠️ WARNING: This will permanently delete ALL AI/ML analytics data including:\\n\\n' +
+                   '• Intent Classifications\\n' +
+                   '• Sentiment Analysis\\n' +
+                   '• Conversation Categories\\n' +
+                   '• Churn Predictions\\n\\n' +
+                   'This action CANNOT be undone. Continue?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/admin/ml/reset-counters', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to reset counters');
+        }
+
+        const result = await response.json();
+        alert('✅ Success!\\n\\n' + 
+              'Deleted records:\\n' +
+              `• Intent Classifications: ${result.deleted.intents}\\n` +
+              `• Sentiment Analysis: ${result.deleted.sentiments}\\n` +
+              `• Conversation Categories: ${result.deleted.categories}\\n` +
+              `• Churn Predictions: ${result.deleted.churnPredictions}\\n\\n` +
+              'ML counters have been reset.');
+        
+        // Reload dashboard if it's visible
+        if (!document.getElementById('dashboardContent').classList.contains('hidden')) {
+          loadDashboard();
+        }
+      } catch (error) {
+        showError('Failed to reset ML counters: ' + error.message);
+      }
     }
   </script>
 </body>
