@@ -3446,31 +3446,64 @@ https://example.com/products"></textarea>
 
                 if (response.ok && data.success) {
                     resultDiv.className = 'alert alert-success';
-                    let successMessage = `
-                        <strong>✅ Upload Successful!</strong><br>
-                        <strong>Total Records:</strong> ${data.totalRecords}<br>
-                        <strong>Successful:</strong> ${data.successCount}<br>
-                        <strong>Errors:</strong> ${data.errorCount}
-                    `;
                     
-                    if (data.customersCreated > 0) {
-                        successMessage += `<br><strong>New Customers Created:</strong> ${data.customersCreated} 🎉`;
+                    // Check if processing in background
+                    if (data.processing) {
+                        let successMessage = `
+                            <strong>✅ Upload Started Successfully!</strong><br>
+                            <strong>Total Records:</strong> ${data.totalRecords.toLocaleString()}<br>
+                            <strong>Status:</strong> Processing in background ⏳<br>
+                            <strong>Estimated Time:</strong> ${data.estimatedTime || 'Calculating...'}
+                        `;
+                        
+                        successMessage += `
+                            <div style="margin-top: 15px; padding: 12px; background: #e7f3ff; border-radius: 4px; border-left: 4px solid #0066cc;">
+                                📊 <strong>Large File Processing</strong><br>
+                                Your file is being processed in the background to avoid timeout errors.<br>
+                                The balances will be updated automatically - no need to wait or refresh.
+                            </div>
+                        `;
+                        
+                        successMessage += `
+                            <div style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                                💡 <strong>What's happening:</strong><br>
+                                • File uploaded successfully ✓<br>
+                                • Processing ${data.totalRecords.toLocaleString()} records in batches of 500<br>
+                                • Updates will appear in the chatbot as they complete<br>
+                                • You can safely navigate away from this page
+                            </div>
+                        `;
+                        
+                        resultDiv.innerHTML = successMessage;
+                        addActivityLog(`Balance upload started: ${data.totalRecords.toLocaleString()} records (background processing)`, 'success');
+                    } else {
+                        // Synchronous processing complete
+                        let successMessage = `
+                            <strong>✅ Upload Successful!</strong><br>
+                            <strong>Total Records:</strong> ${data.totalRecords}<br>
+                            <strong>Successful:</strong> ${data.successCount}<br>
+                            <strong>Errors:</strong> ${data.errorCount}
+                        `;
+                        
+                        if (data.customersCreated > 0) {
+                            successMessage += `<br><strong>New Customers Created:</strong> ${data.customersCreated} 🎉`;
+                        }
+                        
+                        if (data.summary) {
+                            successMessage += `<br><br>${data.summary}`;
+                        }
+                        
+                        if (data.errors && data.errors.length > 0) {
+                            successMessage += '<br><br><strong>Error Details:</strong><br>';
+                            data.errors.forEach(err => {
+                                successMessage += `<small>• ${err}</small><br>`;
+                            });
+                        }
+                        
+                        resultDiv.innerHTML = successMessage;
+                        addActivityLog(`Balance upload: ${data.successCount} accounts updated${data.customersCreated > 0 ? ', ' + data.customersCreated + ' new customers' : ''}`, 'success');
+                        loadDashboardData(); // Refresh stats
                     }
-                    
-                    if (data.summary) {
-                        successMessage += `<br><br>${data.summary}`;
-                    }
-                    
-                    if (data.errors && data.errors.length > 0) {
-                        successMessage += '<br><br><strong>Error Details:</strong><br>';
-                        data.errors.forEach(err => {
-                            successMessage += `<small>• ${err}</small><br>`;
-                        });
-                    }
-                    
-                    resultDiv.innerHTML = successMessage;
-                    addActivityLog(`Balance upload: ${data.successCount} accounts updated${data.customersCreated > 0 ? ', ' + data.customersCreated + ' new customers' : ''}`, 'success');
-                    loadDashboardData(); // Refresh stats
                 } else {
                     resultDiv.className = 'alert alert-error';
                     let errorMsg = `<strong>❌ Upload Failed</strong><br>${data.error || 'Unknown error'}`;
