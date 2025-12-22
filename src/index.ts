@@ -1875,16 +1875,54 @@ app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Re
       return res.status(400).json({ error: 'No file uploaded' });
     }
     
-    console.log('[Admin] Processing balance upload, file size:', req.file.size, 'bytes');
+    const fileSize = req.file.size;
+    console.log('[Admin] Processing balance upload, file size:', fileSize, 'bytes');
     
     try {
-      // Parse CSV
+      // Parse CSV first (quick operation)
       console.log('[Admin] Starting CSV parse...');
       const updates = await balanceUpdater.parseCSV(req.file.buffer);
       console.log('[Admin] Parsed', updates.length, 'records from CSV');
       
-      // Update balances
-      console.log('[Admin] Starting balance updates...');
+      // For large files (>5000 records or >1MB), process in background to avoid Render timeout
+      if (updates.length > 5000 || fileSize > 1000000) {
+        console.log('[Admin] Large file detected (' + updates.length + ' records, ' + Math.round(fileSize/1024) + 'KB), processing in background to avoid timeout');
+        
+        // Send immediate response
+        res.json({
+          success: true,
+          processing: true,
+          totalRecords: updates.length,
+          message: `✅ Upload received! Processing ${updates.length} records in background. This will take approximately ${Math.ceil(updates.length / 200)} minutes. The balances will be updated automatically - no need to wait or refresh.`,
+          summary: `Background processing started for ${updates.length} records`,
+          estimatedTime: Math.ceil(updates.length / 200) + ' minutes'
+        });
+        
+        // Process in background (don't await)
+        (async () => {
+          try {
+            console.log('[Admin] Background processing started for', updates.length, 'records');
+            const startTime = Date.now();
+            const result = await balanceUpdater.updateBalances(updates);
+            const duration = Math.round((Date.now() - startTime) / 1000);
+            console.log('[Admin] ✅ Background update complete in', duration, 'seconds:', result.successCount, 'successful,', result.errorCount, 'errors');
+            if (result.errorCount > 0) {
+              console.error('[Admin] ⚠️ Errors during background processing (first 10):', result.errors.slice(0, 10));
+            }
+            // Get final stats
+            const stats = await balanceUpdater.getUpdateStats();
+            console.log('[Admin] 📊 Final stats: Total accounts:', stats.totalAccounts, 'Last update:', stats.lastUpdate);
+          } catch (error: any) {
+            console.error('[Admin] ❌ Background update failed:', error.message);
+            console.error('[Admin] Stack trace:', error.stack);
+          }
+        })();
+        
+        return;
+      }
+      
+      // For smaller files, process synchronously
+      console.log('[Admin] Processing file synchronously...');
       const result = await balanceUpdater.updateBalances(updates);
       console.log('[Admin] Update complete:', result.successCount, 'successful,', result.errorCount, 'errors');
       

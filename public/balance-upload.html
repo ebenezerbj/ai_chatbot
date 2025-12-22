@@ -330,28 +330,57 @@
         const data = await response.json();
 
         if (response.ok) {
-          resultDiv.className = 'result active success';
-          resultDiv.innerHTML = `
-            <h3>✅ Success!</h3>
-            <div class="result-details">
-              <p><strong>Summary:</strong> ${data.summary}</p>
-              <p><strong>Total Records:</strong> ${data.totalRecords}</p>
-              <p><strong>Successfully Updated:</strong> ${data.successCount}</p>
-              ${data.errorCount > 0 ? `<p><strong>Errors:</strong> ${data.errorCount}</p>` : ''}
-              ${data.stats ? `
-                <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #c3e6cb;">
-                  <strong>Database Status:</strong><br>
-                  Total Accounts: ${data.stats.totalAccounts}<br>
-                  Last Updated: ${new Date(data.stats.lastUpdate).toLocaleString()}
+          // Check if processing in background
+          if (data.processing) {
+            resultDiv.className = 'result active success';
+            resultDiv.innerHTML = `
+              <h3>✅ Upload Started Successfully!</h3>
+              <div class="result-details">
+                <p><strong>Status:</strong> Processing in background ⏳</p>
+                <p><strong>Total Records:</strong> ${data.totalRecords.toLocaleString()}</p>
+                <p><strong>Estimated Time:</strong> ${data.estimatedTime || 'Calculating...'}</p>
+                <p style="color: #0066cc; margin-top: 15px; padding: 12px; background: #e7f3ff; border-radius: 4px;">
+                  📊 <strong>Large File Processing</strong><br>
+                  Your file is being processed in the background to avoid timeout errors. 
+                  The balances will be updated automatically - no need to wait or refresh.
                 </p>
-              ` : ''}
-              ${data.errors && data.errors.length > 0 ? `
-                <ul class="error-list">
-                  ${data.errors.map(err => `<li>${err}</li>`).join('')}
-                </ul>
-              ` : ''}
-            </div>
-          `;
+                <p style="color: #666; margin-top: 10px;">
+                  💡 <strong>What's happening:</strong><br>
+                  • File uploaded successfully ✓<br>
+                  • Processing ${data.totalRecords.toLocaleString()} records in batches of 500<br>
+                  • Updates will appear in the chatbot as they complete<br>
+                  • You can safely close this page
+                </p>
+                <p style="color: #666; margin-top: 10px; font-size: 0.9em;">
+                  ${data.message}
+                </p>
+              </div>
+            `;
+          } else {
+            // Normal synchronous processing complete
+            resultDiv.className = 'result active success';
+            resultDiv.innerHTML = `
+              <h3>✅ Success!</h3>
+              <div class="result-details">
+                <p><strong>Summary:</strong> ${data.summary}</p>
+                <p><strong>Total Records:</strong> ${data.totalRecords}</p>
+                <p><strong>Successfully Updated:</strong> ${data.successCount}</p>
+                ${data.errorCount > 0 ? `<p><strong>Errors:</strong> ${data.errorCount}</p>` : ''}
+                ${data.stats ? `
+                  <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #c3e6cb;">
+                    <strong>Database Status:</strong><br>
+                    Total Accounts: ${data.stats.totalAccounts}<br>
+                    Last Updated: ${new Date(data.stats.lastUpdate).toLocaleString()}
+                  </p>
+                ` : ''}
+                ${data.errors && data.errors.length > 0 ? `
+                  <ul class="error-list">
+                    ${data.errors.map(err => `<li>${err}</li>`).join('')}
+                  </ul>
+                ` : ''}
+              </div>
+            `;
+          }
         } else {
           resultDiv.className = 'result active error';
           resultDiv.innerHTML = `
