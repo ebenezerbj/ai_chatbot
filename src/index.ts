@@ -343,16 +343,31 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     if (!userSession.customerIdentified) {
       userSession.customerIdentified = true;
       
-      const welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`;
+      // Check if returning non-customer with stored info
+      const isReturningVisitor = userSession.visitorName && userSession.isCustomer === false;
       
-      const response = {
+      const welcomeMessage = isReturningVisitor 
+        ? `Welcome back, ${userSession.visitorName}! 👋\n\nHow can I assist you today?`
+        : `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`;
+      
+      const response: any = {
         response: welcomeMessage,
-        sessionId: effectiveSessionId,
-        buttons: [
+        sessionId: effectiveSessionId
+      };
+      
+      // Only show buttons if not a returning visitor
+      if (!isReturningVisitor) {
+        response.buttons = [
           { text: 'Yes - I\'m a customer', icon: 'fas fa-user-check', action: 'send', value: 'Yes' },
           { text: 'No - General inquiry', icon: 'fas fa-info-circle', action: 'send', value: 'No' }
-        ]
-      };
+        ];
+      } else {
+        // For returning visitors, skip to main menu
+        response.buttons = [
+          { text: 'Open an account', action: 'send', value: 'I want to open an account' },
+          { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' }
+        ];
+      }
       
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', welcomeMessage).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
@@ -381,22 +396,97 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       } 
       else if (/^(no|nope|not a customer|not yet|general|information)/i.test(normalizedMessage)) {
         userSession.isCustomer = false;
+        userSession.awaitingVisitorInfo = true;
         
-        const visitorWelcome = `Welcome to Amantin and Kasei Community Bank! 🏦\n\nI'm happy to help you with:\n• Branch locations and hours\n• Our banking products and services\n• Loan application information\n• Account opening requirements\n• General banking questions\n\nWhat would you like to know?`;
+        const visitorFormMessage = `Welcome to Amantin and Kasei Community Bank! 🏦\n\nPlease fill out the contact form to continue.`;
         
-        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', visitorWelcome).catch(e =>
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', visitorFormMessage).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
         );
         
         return res.json({ 
-          response: visitorWelcome, 
-          sessionId: effectiveSessionId,
-          buttons: [
-            { text: 'Open an account', action: 'send', value: 'I want to open an account' },
-            { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' }
-          ]
+          response: visitorFormMessage,
+          showVisitorForm: true,
+          sessionId: effectiveSessionId
         });
       }
+    }
+
+    // If waiting for visitor form submission (non-customer identification)
+    if (userSession.awaitingVisitorInfo && userSession.isCustomer === false) {
+      // Check if this is a form submission (JSON format)
+      let visitorData;
+      try {
+        visitorData = JSON.parse(message);
+        if (visitorData.__visitorForm) {
+          const { fullname, phone } = visitorData;
+          
+          // Validate name (at least 2 words, letters and spaces only)
+          if (!fullname || fullname.length < 3 || !/^[a-zA-Z\s]+$/.test(fullname) || fullname.split(/\s+/).length < 2) {
+            const nameError = `Please enter your complete full name (first and last name). This is required to proceed.`;
+            await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', nameError).catch(e =>
+              console.error('[Analytics] Failed to log bot message:', e)
+            );
+            return res.json({ 
+              response: nameError,
+              formError: 'name',
+              sessionId: effectiveSessionId
+            });
+          }
+          
+          // Validate Ghana phone number (10 digits, optionally starting with 0)
+          if (!phone || !/^0?\d{9,10}$/.test(phone.replace(/[\s-]/g, ''))) {
+            const phoneError = `Please enter a valid Ghana phone number (e.g., 0241234567 or 241234567). This is required to continue.`;
+            await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', phoneError).catch(e =>
+              console.error('[Analytics] Failed to log bot message:', e)
+            );
+            return res.json({ 
+              response: phoneError,
+              formError: 'phone',
+              sessionId: effectiveSessionId
+            });
+          }
+          
+          // Store visitor info
+          userSession.visitorName = fullname.trim();
+          userSession.visitorPhone = phone.trim();
+          userSession.awaitingVisitorInfo = false;
+          
+          console.log(`[Visitor Info] Name: ${userSession.visitorName}, Phone: ${userSession.visitorPhone}, Session: ${effectiveSessionId}`);
+          
+          const visitorWelcome = `Thank you, ${userSession.visitorName}! 🏦\n\nI'm happy to help you with:\n• Branch locations and hours\n• Our banking products and services\n• Loan application information\n• Account opening requirements\n• General banking questions\n\nWhat would you like to know?`;
+          
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', visitorWelcome).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
+          return res.json({ 
+            response: visitorWelcome,
+            visitorFormSuccess: true,
+            sessionId: effectiveSessionId,
+            visitorInfo: {
+              name: userSession.visitorName,
+              phone: userSession.visitorPhone
+            },
+            buttons: [
+              { text: 'Open an account', action: 'send', value: 'I want to open an account' },
+              { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' }
+            ]
+          });
+        }
+      } catch (e) {
+        // Not a JSON message, ignore
+      }
+      
+      // If we reach here, user sent a regular message while form is expected
+      const waitingForForm = `Please fill out the contact information form above to continue.`;
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', waitingForForm).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      return res.json({ 
+        response: waitingForForm,
+        sessionId: effectiveSessionId
+      });
     }
     
     // Block authentication for non-customers

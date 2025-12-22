@@ -330,8 +330,8 @@ export async function getAccountOpeningById(id: number): Promise<any> {
  * Only for non-customers
  */
 export function shouldOpenAccountOpeningForm(message: string, isCustomer?: boolean): boolean {
-  // Only show to non-customers
-  if (isCustomer === true) {
+  // Only show to confirmed non-customers (not undefined or true)
+  if (isCustomer !== false) {
     return false;
   }
   

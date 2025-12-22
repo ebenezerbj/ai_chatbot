@@ -23,6 +23,9 @@ export interface CustomerSession {
   customerName?: string;
   isCustomer?: boolean; // Track if user identified as customer or not
   customerIdentified?: boolean; // Track if we've asked the question
+  visitorName?: string; // Track non-customer name for escalation support
+  visitorPhone?: string; // Track non-customer phone for escalation support
+  awaitingVisitorInfo?: boolean; // Waiting for non-customer form submission
 }
 
 // In-memory session store (for production, use Redis or database)
@@ -31,6 +34,14 @@ const sessions = new Map<string, CustomerSession>();
 // Session timeout: 15 minutes
 const SESSION_TIMEOUT = 15 * 60 * 1000;
 const MAX_AUTH_ATTEMPTS = 3;
+
+/**
+ * Get an existing session
+ */
+export function getSession(sessionId: string): CustomerSession | undefined {
+  cleanupExpiredSessions();
+  return sessions.get(sessionId);
+}
 
 /**
  * Create a new customer session

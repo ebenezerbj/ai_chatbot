@@ -1530,6 +1530,8 @@
   const useLocationBtn = document.getElementById('useLocationBtn');
 
     let sessionId = null;
+    let userIdentified = false; // Track if user has been identified (customer or non-customer)
+    let visitorInfo = null; // Store visitor name and phone for non-customers
 
     // ===== Live Chat with Human Agent =====
     let liveChatSocket = null;
@@ -2326,12 +2328,9 @@
           // Handle click
           button.onclick = () => {
             if (btn.action === 'send') {
-              const inputElement = document.getElementById('input');
-              const sendBtn = form.querySelector('button[type="submit"]');
-              if (inputElement && sendBtn) {
-                inputElement.value = btn.value || btn.text;
-                sendBtn.click();
-              }
+              // Send message directly, bypassing disabled button
+              const messageToSend = btn.value || btn.text;
+              sendMessage(messageToSend);
             } else if (btn.action === 'handover') {
               // Show assistance options: Live Chat or Leave Message
               showAssistanceOptions();
@@ -2386,12 +2385,8 @@
         select.onchange = (e) => {
           const value = e.target.value;
           if (value) {
-            const inputElement = document.getElementById('input');
-            const sendBtn = form.querySelector('button[type="submit"]');
-            if (inputElement && sendBtn) {
-              inputElement.value = value;
-              sendBtn.click();
-            }
+            // Send message directly, bypassing disabled button
+            sendMessage(value);
           }
         };
         
@@ -3024,9 +3019,14 @@
       if (typing) typing.remove();
     }
 
-  async function sendMessage(message) {
+  async function sendMessage(message, skipDisplay = false) {
       const msgText = (message || input.value).trim();
       if (!msgText) return;
+
+      // Block sending messages until user is identified (except for initial identification responses)
+      if (!skipDisplay && !userIdentified && !isIdentificationResponse(msgText)) {
+        return;
+      }
 
       // Handle live chat mode
       if (liveChatActive && liveChatSessionId) {
@@ -3117,7 +3117,10 @@
       input.style.height = 'auto'; // Reset height
       sendButton.disabled = true;
       
-      addMsg('user', msgText);
+      // Only add user message to chat if not a form submission
+      if (!skipDisplay) {
+        addMsg('user', msgText);
+      }
       showTyping();
 
       try {
@@ -3163,8 +3166,53 @@
           messageOptions.dropdownPlaceholder = data.dropdownPlaceholder;
         }
         
+        // Handle successful form submission - hide form FIRST so message is visible
+        if (data?.visitorFormSuccess) {
+          console.log('[Form Success] Hiding form and displaying message:', messageText);
+          hideVisitorForm();
+          unfreezeChat();
+        }
+        
         if (messageText) {
+          console.log('[Adding Message] Text:', messageText, 'Options:', messageOptions);
           addMsg('assistant', messageText, messageOptions);
+          
+          // Scroll to bottom to ensure thank you message is visible
+          if (data?.visitorFormSuccess) {
+            setTimeout(() => {
+              const chatContainer = document.getElementById('chat-messages');
+              if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              }
+            }, 100);
+          }
+          
+          // Store visitor info if provided
+          if (data?.visitorInfo) {
+            visitorInfo = data.visitorInfo;
+            console.log('[Visitor Info] Stored:', visitorInfo);
+          }
+          
+          // Show visitor form if backend requests it
+          if (data?.showVisitorForm) {
+            showVisitorForm();
+          }
+          
+          // Handle form validation errors
+          if (data?.formError) {
+            showFormError(data.formError, messageText);
+          }
+          
+          // Unfreeze chat at appropriate points during identification
+          if (!userIdentified && !data?.showVisitorForm) {
+            const isCustomerAuthPrompt = messageText.includes('Please provide:') && messageText.includes('account number');
+            const isNonCustomerComplete = messageText.includes('What would you like to know?');
+            
+            if (isCustomerAuthPrompt || isNonCustomerComplete) {
+              unfreezeChat();
+            }
+          }
+          
           try {
             if (data?.openLoanApplicationForm) {
               setTimeout(() => {
@@ -3343,10 +3391,15 @@
       wrap.style.padding = '0.5rem';
       wrap.style.border = '1px solid var(--gray-200)';
       wrap.style.borderRadius = '8px';
+      
+      // Pre-populate with visitor info if available
+      const preFillName = visitorInfo?.name || '';
+      const preFillPhone = visitorInfo?.phone || '';
+      
       wrap.innerHTML = `
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center">
-          <input type="text" id="handoverName" placeholder="Your name (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="tel" id="handoverPhone" placeholder="Phone (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="handoverName" placeholder="Your name (optional)" value="${preFillName}" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="handoverPhone" placeholder="Phone (optional)" value="${preFillPhone}" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
         </div>
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
           <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
@@ -4366,8 +4419,101 @@
     window.addEventListener('resize', adjustSendButton);
     window.addEventListener('DOMContentLoaded', adjustSendButton);
 
-    // Focus input on load
-    input.focus();
+    // Helper function to check if message is part of identification flow
+    function isIdentificationResponse(msg) {
+      const lower = msg.toLowerCase().trim();
+      // Allow responses to customer identification question
+      if (/^(yes|no|yeah|yep|sure|nope|not a customer|not yet|general|information|i am|im a customer|customer)/i.test(lower)) {
+        return true;
+      }
+      // Allow name and phone responses (any text when not identified)
+      return true;
+    }
+
+    // Freeze chat input on load until user is identified
+    function freezeChat() {
+      input.disabled = true;
+      input.placeholder = 'Please wait for the initial question...';
+      sendButton.disabled = true;
+      if (useLocationBtn) useLocationBtn.disabled = true;
+      if (voiceInputBtn) voiceInputBtn.disabled = true;
+    }
+
+    function unfreezeChat() {
+      userIdentified = true;
+      input.disabled = false;
+      input.placeholder = 'Ask about accounts, loans, branches...';
+      sendButton.disabled = false;
+      if (useLocationBtn) useLocationBtn.disabled = false;
+      if (voiceInputBtn) voiceInputBtn.disabled = false;
+      input.focus();
+    }
+
+    // Visitor form functions
+    function showVisitorForm() {
+      const overlay = document.getElementById('visitorFormOverlay');
+      if (overlay) {
+        overlay.style.display = 'flex';
+        document.getElementById('visitorFullname').focus();
+      }
+    }
+
+    function hideVisitorForm() {
+      const overlay = document.getElementById('visitorFormOverlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+      }
+      // Clear any error messages
+      document.getElementById('nameError').style.display = 'none';
+      document.getElementById('phoneError').style.display = 'none';
+    }
+
+    function showFormError(field, message) {
+      if (field === 'name') {
+        const nameError = document.getElementById('nameError');
+        nameError.textContent = message;
+        nameError.style.display = 'block';
+        document.getElementById('visitorFullname').focus();
+      } else if (field === 'phone') {
+        const phoneError = document.getElementById('phoneError');
+        phoneError.textContent = message;
+        phoneError.style.display = 'block';
+        document.getElementById('visitorPhone').focus();
+      }
+    }
+
+    // Start with frozen chat
+    freezeChat();
+
+    // Focus input on load (will be frozen initially)
+    // input.focus(); // Removed - chat starts frozen
+
+    // Setup visitor form handler after DOM is ready
+    window.addEventListener('DOMContentLoaded', function() {
+      const visitorForm = document.getElementById('visitorForm');
+      if (visitorForm) {
+        visitorForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const fullname = document.getElementById('visitorFullname').value.trim();
+          const phone = document.getElementById('visitorPhone').value.trim();
+          
+          // Clear previous errors
+          document.getElementById('nameError').style.display = 'none';
+          document.getElementById('phoneError').style.display = 'none';
+          
+          // Send as special JSON message
+          const formData = JSON.stringify({
+            __visitorForm: true,
+            fullname: fullname,
+            phone: phone
+          });
+          
+          // Send to backend
+          sendMessage(formData, true); // true flag to skip display
+        });
+      }
+    });
 
     // Listen for parent visibility hints (optional)
     window.addEventListener('message', (e) => {
@@ -4382,5 +4528,59 @@
       } catch {}
     });
   </script>
+  <!-- Visitor Information Form Overlay -->
+  <div id="visitorFormOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; max-width: 450px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+      <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color); font-size: 1.25rem; font-weight: 600;">Contact Information</h3>
+      
+      <div style="margin: 0 0 1.5rem 0; padding: 1rem; background: var(--primary-50); border-left: 3px solid var(--primary-color); border-radius: 0.5rem;">
+        <p style="margin: 0 0 0.5rem 0; color: var(--gray-800); font-size: 0.875rem; font-weight: 600;">Before we proceed</p>
+        <p style="margin: 0; color: var(--gray-700); font-size: 0.8rem; line-height: 1.5;">We require some basic contact information to:</p>
+        <ul style="margin: 0.5rem 0 0 1.2rem; padding: 0; color: var(--gray-700); font-size: 0.8rem; line-height: 1.5;">
+          <li>Provide you with accurate and personalized assistance</li>
+          <li>Enable our team to follow up on your inquiry if needed</li>
+          <li>Maintain a record for quality assurance</li>
+        </ul>
+      </div>
+      
+      <form id="visitorForm" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label for="visitorFullname" style="display: block; margin-bottom: 0.5rem; color: var(--gray-700); font-weight: 500; font-size: 0.875rem;">Full Name <span style="color: var(--error-color);">*</span></label>
+          <input 
+            type="text" 
+            id="visitorFullname" 
+            name="fullname" 
+            required 
+            placeholder="Enter your first and last name"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem; box-sizing: border-box;"
+          />
+          <span id="nameError" style="display: none; color: var(--error-color); font-size: 0.75rem; margin-top: 0.25rem;"></span>
+        </div>
+        
+        <div>
+          <label for="visitorPhone" style="display: block; margin-bottom: 0.5rem; color: var(--gray-700); font-weight: 500; font-size: 0.875rem;">Phone Number <span style="color: var(--error-color);">*</span></label>
+          <input 
+            type="tel" 
+            id="visitorPhone" 
+            name="phone" 
+            required 
+            placeholder="e.g., 0241234567"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem; box-sizing: border-box;"
+          />
+          <span id="phoneError" style="display: none; color: var(--error-color); font-size: 0.75rem; margin-top: 0.25rem;"></span>
+        </div>
+        
+        <button 
+          type="submit" 
+          style="width: 100%; padding: 0.75rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+          onmouseover="this.style.background='var(--primary-light)'"
+          onmouseout="this.style.background='var(--primary-color)'"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  </div>
+
 </body>
 </html>
