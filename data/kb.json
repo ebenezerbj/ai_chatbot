@@ -1183,9 +1183,12 @@
       "what are branch operating hours",
       "does this branch accept deposits",
       "which branches have extended hours",
-      "locate atm that accepts deposits"
+      "locate atm that accepts deposits",
+      "atm locations",
+      "where are your atms",
+      "which branches have atm"
     ],
-    "answer": "Locate branches or ATMs and opening hours.\n\nTo locate branches or atms and opening hours, please use our branch locator on the mobile app or visit our website. You can also call +233 24 231 2059 for directions."
+    "answer": "ATM Locations:\n\nWe have ATMs available at:\n• **Kwame Danso Branch** - P8JF+2C6, Kwame Danso\n• **Amantin Branch** (Head Office) - Amantin High Street\n\nFor more branch locations and opening hours, please use our branch locator on the mobile app or visit our website. You can also call +233 24 231 2059 for directions."
   },
   {
     "id": "report_fraud",
