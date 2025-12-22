@@ -495,7 +495,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
       
       if (customerAuth.needsAuthentication(message) || hasAuthCredentials) {
-        const blockMessage = `I'm sorry, but account and loan details are only available to AKCB customers.\n\nIf you'd like to become a customer, I can help you with:\n• Account opening requirements\n• Required documents\n• Branch locations\n\nOr call us at 0542428935 / 0501290952 to speak with a representative.`;
+        const blockMessage = `I'm sorry, but account and loan details are only available to AKCB customers.\n\nIf you'd like to become a customer, I can help you with:\n• Account opening requirements\n• Required documents\n• Branch locations\n\nOr call us at 0501290952 to speak with a representative.`;
         
         await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', blockMessage).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
@@ -837,7 +837,7 @@ CONVERSATION GUIDELINES:
    - This triggers automatic escalation to human assistance
 
 6. **Handle Requests Intelligently**:
-   - For agent requests: Acknowledge their request, provide contact info (0542428935 or 0501290952), and ask if they'd like to be connected now
+   - For agent requests: Acknowledge their request, provide contact info (0501290952), and ask if they'd like to be connected now
    - For misspellings: Understand intent (e.g., "prodicts" → "products")
    
    **CRITICAL - Disambiguation for Vague Requests:**
@@ -950,7 +950,7 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         // Standard escalation phrases
         replyLower.includes('call:') || 
         replyLower.includes('email:') ||
-        replyLower.includes('contact') && (replyLower.includes('0542428935') || replyLower.includes('0501290952')) ||
+        replyLower.includes('contact') && replyLower.includes('0501290952') ||
         replyLower.includes('speak to') && replyLower.includes('agent') ||
         replyLower.includes('talk to') && replyLower.includes('agent') ||
         replyLower.includes('connect you with') ||

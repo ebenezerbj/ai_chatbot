@@ -247,7 +247,7 @@
       "customer.*service",
       "support.*agent"
     ],
-    "answer": "I'm here to help! For direct assistance:\n- Call: **0542428935** or **0501290952**\n- Email: info@amankacombank.com\n- Visit our Head Office at Amantin (GPS: BA-08182-6721)\n\nWhat banking question can I help you with right now?"
+    "answer": "I'm here to help! For direct assistance:\n- Call: **0501290952**\n- Email: info@amankacombank.com\n- Visit our Head Office at Amantin (GPS: BA-08182-6721)\n\nWhat banking question can I help you with right now?"
   },
   {
     "id": "hours",
@@ -623,7 +623,7 @@
       "\\bcfo\\b",
       "chief financial officer"
     ],
-    "answer": "For information about our Head of Finance or CFO, please contact our main office at 0542428935 / 0501290952 or visit our Amantin Head Office."
+    "answer": "For information about our Head of Finance or CFO, please contact our main office at 0501290952 or visit our Amantin Head Office."
   },
   {
     "id": "head_of_departments",
