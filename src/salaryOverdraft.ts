@@ -224,7 +224,7 @@ export function validateSalaryOverdraftPayload(raw: any): { ok: false; error: st
 export async function initializeSalaryOverdraftTable(): Promise<void> {
   const createTable = `
     CREATE TABLE IF NOT EXISTS salary_overdrafts (
-      id INTEGER PRIMARY KEY ${DB_TYPE === 'mysql' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'},
+      id ${DB_TYPE === 'mysql' ? 'INTEGER PRIMARY KEY AUTO_INCREMENT' : 'SERIAL PRIMARY KEY'},
       session_id TEXT,
       ip_address TEXT,
       user_agent TEXT,
@@ -238,16 +238,16 @@ export async function initializeSalaryOverdraftTable(): Promise<void> {
       position TEXT NOT NULL,
       employment_type TEXT NOT NULL,
       length_of_service TEXT NOT NULL,
-      net_monthly_salary ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'REAL'} NOT NULL,
-      requested_amount ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'REAL'} NOT NULL,
-      approved_amount ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'REAL'} NOT NULL,
+      net_monthly_salary ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'NUMERIC(15,2)'} NOT NULL,
+      requested_amount ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'NUMERIC(15,2)'} NOT NULL,
+      approved_amount ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'NUMERIC(15,2)'} NOT NULL,
       repayment_months INTEGER NOT NULL,
-      monthly_repayment ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'REAL'} NOT NULL,
-      salary_account_consent ${DB_TYPE === 'mysql' ? 'BOOLEAN' : 'INTEGER'} NOT NULL DEFAULT ${DB_TYPE === 'mysql' ? 'FALSE' : '0'},
-      employer_confirmation ${DB_TYPE === 'mysql' ? 'BOOLEAN' : 'INTEGER'} NOT NULL DEFAULT ${DB_TYPE === 'mysql' ? 'FALSE' : '0'},
-      borrower_declaration ${DB_TYPE === 'mysql' ? 'BOOLEAN' : 'INTEGER'} NOT NULL DEFAULT ${DB_TYPE === 'mysql' ? 'FALSE' : '0'},
-      status ${DB_TYPE === 'mysql' ? "VARCHAR(50) NOT NULL DEFAULT 'pending'" : "TEXT NOT NULL DEFAULT 'pending'"},
-      created_at ${DB_TYPE === 'mysql' ? 'TIMESTAMP' : 'TEXT'} NOT NULL DEFAULT ${DB_TYPE === 'mysql' ? 'CURRENT_TIMESTAMP' : "CURRENT_TIMESTAMP"}
+      monthly_repayment ${DB_TYPE === 'mysql' ? 'DECIMAL(15,2)' : 'NUMERIC(15,2)'} NOT NULL,
+      salary_account_consent ${DB_TYPE === 'mysql' ? 'BOOLEAN' : 'BOOLEAN'} NOT NULL DEFAULT FALSE,
+      employer_confirmation ${DB_TYPE === 'mysql' ? 'BOOLEAN' : 'BOOLEAN'} NOT NULL DEFAULT FALSE,
+      borrower_declaration ${DB_TYPE === 'mysql' ? 'BOOLEAN' : 'BOOLEAN'} NOT NULL DEFAULT FALSE,
+      status ${DB_TYPE === 'mysql' ? "VARCHAR(50) NOT NULL DEFAULT 'pending'" : "VARCHAR(50) NOT NULL DEFAULT 'pending'"},
+      created_at ${DB_TYPE === 'mysql' ? 'TIMESTAMP' : 'TIMESTAMP'} NOT NULL DEFAULT ${DB_TYPE === 'mysql' ? 'CURRENT_TIMESTAMP' : 'CURRENT_TIMESTAMP'}
     )
   `;
   await executeQuery(createTable, []);
