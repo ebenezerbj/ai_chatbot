@@ -314,9 +314,13 @@ export async function authenticateCustomer(
       session.awaitingOTP = false;
       sessions.set(sessionId, session);
       
+      // Get customer's first name for personalized greeting
+      const firstName = session.customerName ? session.customerName.split(' ')[0] : '';
+      const greeting = firstName ? `Welcome back, ${firstName}!` : 'Welcome back!';
+      
       return {
         success: true,
-        message: `Welcome back${session.customerName ? ', ' + session.customerName.split(' ')[0] : ''}! Your identity has been verified. How can I help you with your account today?`,
+        message: `${greeting} Your identity has been verified. How can I help you with your account today?`,
         session,
         awaitingOTP: false
       };

@@ -1882,7 +1882,7 @@
       "salary.*based.*overdraft",
       "overdraft.*for.*salary.*workers"
     ],
-    "answer": "Salary Overdraft Facility\n\nAmantin and Kasei Community Bank offers salary overdraft facilities exclusively for salary workers. This allows you to access funds up to 3 times your monthly net salary with flexible repayment terms.\n\nKey Features:\n- Maximum overdraft: 3x your monthly net salary\n- Repayment period: 1-6 months\n- Competitive interest rates\n- Quick approval process (24 hours)\n- Automatic salary deduction for repayment\n- Available to permanent and contract employees\n\nTo apply, you'll need:\n- Valid Ghana Card (national ID)\n- Active salary account with AKCB\n- Employment confirmation letter\n- Recent payslips (last 3 months)\n- Employer consent for salary deduction\n\nWould you like to apply for a salary overdraft now?"
+    "answer": "Salary Overdraft Facility\n\n⚠️ **Exclusively for Verified AKCB Bank Customers**\n\nThis facility is available only to verified customers of Amantin and Kasei Community Bank who are salary workers with their salary paid into their AKCB account.\n\nKey Features:\n- Maximum overdraft: 3x your monthly net salary\n- Repayment period: 1-6 months\n- Competitive interest rates\n- Quick approval process (24 hours)\n- Automatic salary deduction for repayment\n- Available to permanent and contract employees\n\n**Eligibility:**\n✓ Must be a verified AKCB customer\n✓ Must be a salary worker\n✓ Salary must be paid into AKCB account\n\nTo apply, you'll need:\n- Valid Ghana Card (national ID)\n- Active salary account with AKCB\n- Employment confirmation letter\n- Recent payslips (last 3 months)\n- Employer consent for salary deduction\n\nWould you like to apply for a salary overdraft now?"
   },
   {
     "id": "salary_overdraft_requirements",
@@ -1893,7 +1893,7 @@
       "what.*need.*salary.*overdraft",
       "how.*apply.*salary.*overdraft"
     ],
-    "answer": "Salary Overdraft Requirements:\n\n1. **Personal Documents:**\n   - Valid Ghana Card (national ID)\n   - Recent passport-sized photographs\n\n2. **Employment Documents:**\n   - Employment confirmation letter from employer\n   - Recent payslips (last 3 months)\n   - Employer's consent for salary deduction\n\n3. **Banking Requirements:**\n   - Active salary account with AKCB\n   - Account must receive regular salary payments\n   - Good account standing (no overdues)\n\n4. **Eligibility:**\n   - Must be a salary worker (permanent or contract)\n   - Minimum 6 months employment with current employer\n   - Net monthly salary of at least GHS 500\n\nReady to apply? I can help you submit your application right now!"
+    "answer": "Salary Overdraft Requirements:\n\n⚠️ **Important:** This facility is exclusively available to verified AKCB bank customers who are salary workers.\n\n1. **Personal Documents:**\n   - Valid Ghana Card (national ID)\n   - Recent passport-sized photographs\n\n2. **Employment Documents:**\n   - Employment confirmation letter from employer\n   - Recent payslips (last 3 months)\n   - Employer's consent for salary deduction\n\n3. **Banking Requirements:**\n   - Must be a verified AKCB customer\n   - Active salary account with AKCB\n   - Salary must be paid into your AKCB account\n   - Account must receive regular salary payments\n   - Good account standing (no overdues)\n\n4. **Eligibility:**\n   - Must be a salary worker (permanent or contract)\n   - Minimum 6 months employment with current employer\n   - Net monthly salary of at least GHS 500\n   - Must have completed customer authentication\n\nReady to apply? I can help you submit your application right now!"
   },
   {
     "id": "salary_overdraft_amount",
@@ -1942,7 +1942,7 @@
       "need.*salary.*overdraft",
       "start.*salary.*overdraft.*application"
     ],
-    "answer": "Great! I can help you apply for a salary overdraft right now.\n\nI'll need the following information:\n- Your full name and contact details\n- National ID number\n- Account number\n- Employer details and position\n- Net monthly salary\n- Requested overdraft amount\n- Preferred repayment period (1-6 months)\n\nThe system will automatically calculate your approved amount (maximum 3x your monthly salary) and monthly repayment.\n\nShall I open the application form for you?"
+    "answer": "Great! I can help you apply for a salary overdraft right now.\n\n⚠️ **Important Notice:**\nThis facility is exclusively available to verified AKCB bank customers who are salary workers. If you haven't verified your account yet, please authenticate first.\n\nI'll need the following information:\n- Your full name and contact details\n- National ID number\n- Account number\n- Employer details and position\n- Net monthly salary\n- Requested overdraft amount\n- Preferred repayment period (1-6 months)\n\nThe system will automatically calculate your approved amount (maximum 3x your monthly salary) and monthly repayment.\n\nShall I open the application form for you?"
   },
   {
     "id": "salary_overdraft_processing_time",

@@ -669,8 +669,9 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         responseData.buttons = [
           { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
           { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
-          { text: 'Loan information', action: 'send', value: 'Tell me about my loan' },
+          { text: 'Salary overdraft (salary workers)', action: 'send', value: 'I want to apply for salary overdraft', icon: 'fa fa-money-bill-wave' },
           { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' },
+          { text: 'Loan information', action: 'send', value: 'Tell me about my loan' },
           { text: 'Other inquiry', action: 'send', value: 'I have another question' }
         ];
       }
@@ -710,6 +711,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           responseData.buttons = [
             { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
             { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
+            { text: 'Salary overdraft (salary workers)', action: 'send', value: 'I want to apply for salary overdraft', icon: 'fa fa-money-bill-wave' },
+            { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' },
             { text: 'Loan information', action: 'send', value: 'Tell me about my loan' },
             { text: 'Other inquiry', action: 'send', value: 'I have another question' }
           ];
@@ -762,9 +765,25 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       });
     }
 
-    // Salary overdraft form (web chatbot will render inline form)
+    // Salary overdraft form (authenticated customers only - for salary workers)
     if (salaryOverdraft.shouldOpenSalaryOverdraftForm(message)) {
-      const reply = `Great! I can help you apply for a salary overdraft. Please fill in the form below with your employment and salary details.`;
+      // Check if user is authenticated
+      if (!userSession.isAuthenticated || userSession.isCustomer !== true) {
+        const reply = `Salary overdraft is exclusively available for verified bank customers who are salary workers. Please authenticate first if you have an account with us.`;
+
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
+        );
+
+        return res.json({
+          reply,
+          source: 'salary-overdraft',
+          sessionId: effectiveSessionId,
+          requiresAuth: true
+        });
+      }
+
+      const reply = `Great! I can help you apply for a salary overdraft.\n\n⚠️ **Important:** This facility is exclusively for salary workers whose salary is paid into their AKCB account.\n\nPlease fill in the form below with your employment and salary details.`;
 
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
