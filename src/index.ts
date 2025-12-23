@@ -1221,6 +1221,11 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         replyLower.includes('connect you with a customer representative') ||
         replyLower.includes('connect you with a representative') ||
         replyLower.includes('connect you with our') ||
+        replyLower.includes('live chat option') ||
+        replyLower.includes('use the live chat') ||
+        replyLower.includes('leave a message') ||
+        replyLower.includes('leave message') ||
+        replyLower.includes('via live chat') ||
         replyLower.includes('this requires') ||
         replyLower.includes('this is confidential') ||
         replyLower.includes('confidential information') ||

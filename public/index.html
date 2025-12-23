@@ -2479,6 +2479,23 @@
       
       chatEl.appendChild(div);
       chatEl.scrollTop = chatEl.scrollHeight;
+      
+      // Auto-detect escalation phrases and show assistance options
+      if (role === 'assistant') {
+        const textLower = text.toLowerCase();
+        const shouldShowAssistance = 
+          textLower.includes('live chat option') ||
+          textLower.includes('use the live chat') ||
+          textLower.includes('leave a message') ||
+          textLower.includes('via live chat');
+        
+        if (shouldShowAssistance) {
+          setTimeout(() => {
+            showAssistanceOptions();
+          }, 500);
+        }
+      }
+      
       // Notify parent about assistant messages to drive unread badge
       if (role === 'assistant') {
         try {
