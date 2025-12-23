@@ -41,29 +41,43 @@ function hashPassword(password: string): string {
 export async function initializeUsersTable(): Promise<void> {
   const createTableSQL = `
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
+      id INT AUTO_INCREMENT PRIMARY KEY,
       username VARCHAR(50) UNIQUE NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash VARCHAR(64) NOT NULL,
-      role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'customer_rep')),
+      role VARCHAR(20) NOT NULL,
       full_name VARCHAR(255) NOT NULL,
       is_active BOOLEAN DEFAULT true,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      last_login TIMESTAMP
-    );
-    
-    CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-    CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      last_login TIMESTAMP NULL
+    )
   `;
 
   await executeQuery(createTableSQL, []);
+  
+  // Create indexes separately (MySQL doesn't support IF NOT EXISTS for indexes before 8.0)
+  try {
+    await executeQuery('CREATE INDEX idx_users_username ON users(username)', []);
+  } catch (error) {
+    // Index might already exist
+  }
+  try {
+    await executeQuery('CREATE INDEX idx_users_email ON users(email)', []);
+  } catch (error) {
+    // Index might already exist
+  }
+  try {
+    await executeQuery('CREATE INDEX idx_users_role ON users(role)', []);
+  } catch (error) {
+    // Index might already exist
+  }
+  
   console.log('[UserManagement] Users table initialized');
 
   // Check if default admin exists
   const adminExists = await querySingle<{ count: number }>(
-    'SELECT COUNT(*) as count FROM users WHERE role = $1',
+    'SELECT COUNT(*) as count FROM users WHERE role = ?',
     ['admin']
   );
 
@@ -89,11 +103,10 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
   
   const sql = `
     INSERT INTO users (username, email, password_hash, role, full_name)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING id, username, email, role, full_name, is_active, created_at, updated_at
+    VALUES (?, ?, ?, ?, ?)
   `;
 
-  const result = await executeQuery<User>(sql, [
+  await executeQuery(sql, [
     payload.username,
     payload.email,
     passwordHash,
@@ -101,11 +114,13 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
     payload.full_name
   ]);
 
-  if (!result || result.length === 0) {
+  // Get the inserted user
+  const user = await getUserByUsername(payload.username);
+  if (!user) {
     throw new Error('Failed to create user');
   }
 
-  return result[0];
+  return user;
 }
 
 /**
@@ -121,7 +136,7 @@ export async function authenticateUser(
     const sql = `
       SELECT id, username, email, role, full_name, is_active, created_at, updated_at, last_login
       FROM users
-      WHERE username = $1 AND password_hash = $2
+      WHERE username = ? AND password_hash = ?
     `;
 
     const result = await executeQuery<User>(sql, [username, passwordHash]);
@@ -138,7 +153,7 @@ export async function authenticateUser(
 
     // Update last login
     await executeQuery(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
       [user.id]
     );
 
@@ -156,7 +171,7 @@ export async function getUserById(userId: number): Promise<User | null> {
   const sql = `
     SELECT id, username, email, role, full_name, is_active, created_at, updated_at, last_login
     FROM users
-    WHERE id = $1
+    WHERE id = ?
   `;
 
   const result = await executeQuery<User>(sql, [userId]);
@@ -170,7 +185,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
   const sql = `
     SELECT id, username, email, role, full_name, is_active, created_at, updated_at, last_login
     FROM users
-    WHERE username = $1
+    WHERE username = ?
   `;
 
   const result = await executeQuery<User>(sql, [username]);
@@ -188,7 +203,7 @@ export async function listUsers(role?: 'admin' | 'customer_rep'): Promise<User[]
   
   const params: any[] = [];
   if (role) {
-    sql += ' WHERE role = $1';
+    sql += ' WHERE role = ?';
     params.push(role);
   }
   
@@ -204,25 +219,24 @@ export async function listUsers(role?: 'admin' | 'customer_rep'): Promise<User[]
 export async function updateUser(userId: number, payload: UpdateUserPayload): Promise<User> {
   const updates: string[] = ['updated_at = CURRENT_TIMESTAMP'];
   const params: any[] = [];
-  let paramIndex = 1;
 
   if (payload.email !== undefined) {
-    updates.push(`email = $${paramIndex++}`);
+    updates.push('email = ?');
     params.push(payload.email);
   }
 
   if (payload.full_name !== undefined) {
-    updates.push(`full_name = $${paramIndex++}`);
+    updates.push('full_name = ?');
     params.push(payload.full_name);
   }
 
   if (payload.is_active !== undefined) {
-    updates.push(`is_active = $${paramIndex++}`);
+    updates.push('is_active = ?');
     params.push(payload.is_active);
   }
 
   if (payload.password !== undefined) {
-    updates.push(`password_hash = $${paramIndex++}`);
+    updates.push('password_hash = ?');
     params.push(hashPassword(payload.password));
   }
 
@@ -231,24 +245,25 @@ export async function updateUser(userId: number, payload: UpdateUserPayload): Pr
   const sql = `
     UPDATE users
     SET ${updates.join(', ')}
-    WHERE id = $${paramIndex}
-    RETURNING id, username, email, role, full_name, is_active, created_at, updated_at, last_login
+    WHERE id = ?
   `;
 
-  const result = await executeQuery<User>(sql, params);
+  await executeQuery(sql, params);
 
-  if (!result || result.length === 0) {
+  // Get updated user
+  const user = await getUserById(userId);
+  if (!user) {
     throw new Error('User not found');
   }
 
-  return result[0];
+  return user;
 }
 
 /**
  * Delete user (soft delete by setting is_active to false)
  */
 export async function deleteUser(userId: number): Promise<void> {
-  const sql = 'UPDATE users SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1';
+  const sql = 'UPDATE users SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
   await executeQuery(sql, [userId]);
 }
 
@@ -256,7 +271,7 @@ export async function deleteUser(userId: number): Promise<void> {
  * Hard delete user (permanently remove from database)
  */
 export async function hardDeleteUser(userId: number): Promise<void> {
-  const sql = 'DELETE FROM users WHERE id = $1';
+  const sql = 'DELETE FROM users WHERE id = ?';
   await executeQuery(sql, [userId]);
 }
 
@@ -277,7 +292,7 @@ export async function changePassword(
 
     const oldPasswordHash = hashPassword(oldPassword);
     const result = await executeQuery<{ count: number }>(
-      'SELECT COUNT(*) as count FROM users WHERE id = $1 AND password_hash = $2',
+      'SELECT COUNT(*) as count FROM users WHERE id = ? AND password_hash = ?',
       [userId, oldPasswordHash]
     );
 
@@ -288,7 +303,7 @@ export async function changePassword(
     // Update to new password
     const newPasswordHash = hashPassword(newPassword);
     await executeQuery(
-      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [newPasswordHash, userId]
     );
 

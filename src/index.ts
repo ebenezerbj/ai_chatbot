@@ -122,7 +122,8 @@ app.get('/api/admin/loan-applications', async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
-    if (!isValidAdminToken(token)) {
+    const authCheck = isValidRepToken(token);
+    if (!authCheck.valid) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -141,7 +142,8 @@ app.put('/api/admin/loan-applications/:id/status', async (req: Request, res: Res
   try {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
-    if (!isValidAdminToken(token)) {
+    const authCheck = isValidRepToken(token);
+    if (!authCheck.valid) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -207,7 +209,8 @@ app.get('/api/admin/salary-overdrafts', async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
-    if (!isValidAdminToken(token)) {
+    const authCheck = isValidRepToken(token);
+    if (!authCheck.valid) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -226,7 +229,8 @@ app.put('/api/admin/salary-overdrafts/:id/status', async (req: Request, res: Res
   try {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
-    if (!isValidAdminToken(token)) {
+    const authCheck = isValidRepToken(token);
+    if (!authCheck.valid) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -300,7 +304,8 @@ app.get('/api/admin/account-openings', async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
-    if (!isValidAdminToken(token)) {
+    const authCheck = isValidRepToken(token);
+    if (!authCheck.valid) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -324,7 +329,8 @@ app.put('/api/admin/account-openings/:id/status', async (req: Request, res: Resp
   try {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
-    if (!isValidAdminToken(token)) {
+    const authCheck = isValidRepToken(token);
+    if (!authCheck.valid) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
