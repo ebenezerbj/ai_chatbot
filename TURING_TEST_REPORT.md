@@ -65,7 +65,7 @@ The AKCB AI Chatbot has successfully passed a comprehensive Turing Test with a *
 | 3.2 | Handling urgency | ✅ PASS | 100% |
 
 **Sample Response (Urgency):**
-> "I understand that you need immediate assistance! You can reach our customer service at **0542428935** or **0501290952**. Would you like me to connect you with a representative right now?"
+> "I understand that you need immediate assistance! You can reach our customer service at **0501290952**. Would you like me to connect you with a representative right now?"
 
 **Key Findings:**
 - Recognizes emotional states (frustration, urgency)
@@ -227,7 +227,7 @@ The AKCB AI Chatbot has successfully passed a comprehensive Turing Test with a *
         (✅ Understands "one" refers to branches from previous message)
 
 👤 USER: What's the phone number for that one?
-🤖 BOT: Call: 0542428935 or 0501290952...
+🤖 BOT: Call: 0501290952...
         (✅ Maintains context, provides contact information)
 ```
 

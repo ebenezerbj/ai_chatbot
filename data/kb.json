@@ -11,7 +11,7 @@
       "how many.*branch",
       "branch.*list"
     ],
-    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Head Office** (GH1510010): Amantin High Street. Phone: +233 54 242 8935\n- **Atebubu** (GH1510013): Phone: +233 20 205 5173\n- **Kajeji** (GH1510017): [QQJG+P27, Kajeji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso** (GH1510012): [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji** (GH1510014): [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa** (GH1510016): [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura** (GH1510011): Ejura. Phone: +233 20 205 5172\n- **Amantin** (GH1510015): Amantin. Phone: +233 54 242 8935\n- **Kejetia** (GH1510018): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
+    "answer": "Branch locations for Amantin and Kasei Community Bank Ltd.\n\nBono East Region\n- **Head Office** (GH1510010): Amantin High Street\n- **Atebubu** (GH1510013): Phone: +233 20 205 5173\n- **Kajeji** (GH1510017): [QQJG+P27, Kajeji East, Tatobatoi](https://www.google.com/maps/search/?api=1&query=QQJG%2BP27%2C%20Kajaji%20East%2C%20Tatobatoi). Phone: +233 24 052 6372\n- **Kwame Danso** (GH1510012): [P8JF+2C6, Kwame Danso](https://www.google.com/maps/search/?api=1&query=P8JF%2B2C6%2C%20Kwame%20Danso). Phone: +233 20 205 5174\n- **Yeji** (GH1510014): [68GW+FHJ, Yeji](https://www.google.com/maps/search/?api=1&query=68GW%2BFHJ%2C%20Yeji). Phone: +233 20 205 5175\n\nAshanti Region\n- **Ahwiaa** (GH1510016): [QC32+V79, Kumasi-Techiman Road, Ahwiaa](https://www.google.com/maps/search/?api=1&query=QC32%2BV79%2C%20Kumasi-Techiman%20Road%2C%20Ahwiaa). Phone: +233 20 209 9931\n- **Ejura** (GH1510011): Ejura. Phone: +233 20 205 5172\n- **Amantin** (GH1510015): Amantin\n- **Kejetia** (GH1510018): Mobilization center located at the Kejetia market. Phone: +233 24 869 8267"
   },
   {
     "id": "nearest_branch_stub",
@@ -35,7 +35,7 @@
       "locate.*amantin",
       "find.*amantin.*branch"
     ],
-    "answer": "Head Office (GH1510010): Amantin High Street. Phone: +233 54 242 8935"
+    "answer": "Head Office (GH1510010): Amantin High Street"
   },
   {
     "id": "branch_location_atebubu",
@@ -307,7 +307,7 @@
       "register.*app",
       "app.*onboarding"
     ],
-    "answer": "AKCB Mobile Banking App\\n\\nDownload: Available on Play Store (Android) and App Store (iOS)\\n\\nKey Features:\\n• Check account balance and transaction history\\n• Transfer funds between accounts and to other banks\\n• Pay bills and utilities\\n• Mobile money services\\n• Loan applications and tracking\\n• Card management (block, activate, PIN change)\\n• Account statements\\n• Branch and ATM locator\\n• Secure login with biometric authentication\\n\\nRegistration:\\n1. Download the app from your app store\\n2. Select 'Register' or 'Sign Up'\\n3. Enter your account number and Ghana Card number\\n4. Complete identity verification\\n5. Create your secure PIN\\n6. Set up biometric login (optional)\\n\\nFor assistance: Call +233 54 242 8935 / +233 50 129 0952 or visit any branch."
+    "answer": "AKCB Mobile Banking App\\n\\nDownload: Available on Play Store (Android) and App Store (iOS)\\n\\nKey Features:\\n• Check account balance and transaction history\\n• Transfer funds between accounts and to other banks\\n• Pay bills and utilities\\n• Mobile money services\\n• Loan applications and tracking\\n• Card management (block, activate, PIN change)\\n• Account statements\\n• Branch and ATM locator\\n• Secure login with biometric authentication\\n\\nRegistration:\\n1. Download the app from your app store\\n2. Select 'Register' or 'Sign Up'\\n3. Enter your account number and Ghana Card number\\n4. Complete identity verification\\n5. Create your secure PIN\\n6. Set up biometric login (optional)\\n\\nFor assistance: Call +233 50 129 0952 or visit any branch."
   },
   {
     "id": "smart_banking",
@@ -746,7 +746,7 @@
       "balance enquiry",
       "how much funds are available"
     ],
-    "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for assistance."
+    "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
   },
   {
     "id": "balance_update_time",
@@ -780,7 +780,7 @@
       "provide recent account history",
       "show recent activity"
     ],
-    "answer": "Retrieve recent transactions / mini-statement.\n\nTo retrieve recent transactions / mini-statement, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for assistance."
+    "answer": "Retrieve recent transactions / mini-statement.\n\nTo retrieve recent transactions / mini-statement, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
   },
   {
     "id": "check_loan_balance",
@@ -795,7 +795,7 @@
       "loan.*status",
       "how much.*left.*loan"
     ],
-    "answer": "Check Loan Balance\n\nTo check your loan balance and details, please authenticate using your account number or phone number. Once verified with OTP, I will show you:\n\n• Current loan balance\n• Original loan amount\n• Monthly installment amount\n• Next payment due date\n• Loan maturity date\n• Remaining duration\n• Payment status\n\nYou can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for loan inquiries."
+    "answer": "Check Loan Balance\n\nTo check your loan balance and details, please authenticate using your account number or phone number. Once verified with OTP, I will show you:\n\n• Current loan balance\n• Original loan amount\n• Monthly installment amount\n• Next payment due date\n• Loan maturity date\n• Remaining duration\n• Payment status\n\nYou can also call our customer service at +233 50 129 0952 for loan inquiries."
   },
   {
     "id": "loan_payment_schedule",
@@ -810,7 +810,7 @@
       "how long.*loan",
       "loan.*duration"
     ],
-    "answer": "Loan Payment Schedule\n\nTo view your loan payment schedule including next payment date and maturity, please authenticate with your account details. I will provide:\n\n• Next payment due date\n• Monthly installment amount\n• Loan maturity date\n• Time remaining on your loan\n• Payment frequency\n\nFor detailed amortization schedules, please visit any branch or call +233 54 242 8935 / +233 50 129 0952."
+    "answer": "Loan Payment Schedule\n\nTo view your loan payment schedule including next payment date and maturity, please authenticate with your account details. I will provide:\n\n• Next payment due date\n• Monthly installment amount\n• Loan maturity date\n• Time remaining on your loan\n• Payment frequency\n\nFor detailed amortization schedules, please visit any branch or call +233 50 129 0952."
   },
   {
     "id": "loan_arrears",
@@ -823,7 +823,7 @@
       "defaulted.*loan",
       "loan.*penalty"
     ],
-    "answer": "Loan Arrears Information\n\nIf you have concerns about loan arrears or overdue payments, please contact our Credit Department immediately:\n\n📞 Phone: +233 54 242 8935 / +233 50 129 0952\n🏦 Visit: Any AKCB branch\n\nWe can help you with:\n• Current arrears amount\n• Payment restructuring options\n• Penalty waiver requests\n• Repayment plans\n\nPlease authenticate to check your current loan status and any outstanding arrears."
+    "answer": "Loan Arrears Information\n\nIf you have concerns about loan arrears or overdue payments, please contact our Credit Department immediately:\n\n📞 Phone: +233 50 129 0952\n🏦 Visit: Any AKCB branch\n\nWe can help you with:\n• Current arrears amount\n• Payment restructuring options\n• Penalty waiver requests\n• Repayment plans\n\nPlease authenticate to check your current loan status and any outstanding arrears."
   },
   {
     "id": "account_details",
@@ -831,7 +831,7 @@
     "patterns": [
       "type"
     ],
-    "answer": "\"Provide account details (number.\n\nTo \"provide account details (number, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 54 242 8935 / +233 50 129 0952 for assistance."
+    "answer": "\"Provide account details (number.\n\nTo \"provide account details (number, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
   },
   {
     "id": "make_transfer",
@@ -1824,7 +1824,7 @@
       "manager.*salary",
       "executive.*compensation"
     ],
-    "answer": "I don't have information about employee salaries and compensation. This is confidential information that is not publicly disclosed.\n\nFor inquiries about employment, compensation, or HR-related matters, please contact:\n- **Head of Administration & HR**: Mr. Samuel Acheampong\n- **Main Office**: +233 54 242 8935 or +233 50 129 0952\n\nWould you like me to connect you with a customer representative who can assist you?"
+    "answer": "I don't have information about employee salaries and compensation. This is confidential information that is not publicly disclosed.\n\nFor inquiries about employment, compensation, or HR-related matters, please contact:\n- **Head of Administration & HR**: Mr. Samuel Acheampong\n- **Main Office**: +233 50 129 0952\n\nWould you like me to connect you with a customer representative who can assist you?"
   },
   {
     "id": "tax_advice_disclaimer",
@@ -1869,7 +1869,7 @@
       "contract.*legal",
       "legal.*dispute"
     ],
-    "answer": "I cannot provide legal advice. Legal matters require consultation with a qualified attorney or legal professional who can assess your specific situation.\n\nFor banking-related legal documents or account agreements, please contact our main office at +233 54 242 8935 or +233 50 129 0952.\n\nWould you like me to connect you with a customer representative, or is there another way I can assist you with your banking needs?"
+    "answer": "I cannot provide legal advice. Legal matters require consultation with a qualified attorney or legal professional who can assess your specific situation.\n\nFor banking-related legal documents or account agreements, please contact our main office at +233 50 129 0952.\n\nWould you like me to connect you with a customer representative, or is there another way I can assist you with your banking needs?"
   },
   {
     "id": "salary_overdraft_overview",

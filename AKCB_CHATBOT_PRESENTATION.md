@@ -118,7 +118,7 @@ December 20, 2025
 **9 Branch Locations:**
 
 **Bono East Region:**
-- Amantin (Head Office): +233 54 242 8935
+- Amantin (Head Office)
 - Atebubu: +233 20 205 5173
 - Kajaji: +233 24 052 6372
 - Kwame Danso: +233 20 205 5174
