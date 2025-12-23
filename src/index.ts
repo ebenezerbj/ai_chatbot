@@ -775,6 +775,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           console.error('[Analytics] Failed to log bot message:', e)
         );
 
+        console.log('[SalaryOverdraft] User not authenticated or not a customer. isAuthenticated:', userSession.isAuthenticated, 'isCustomer:', userSession.isCustomer);
+
         return res.json({
           reply,
           source: 'salary-overdraft',
@@ -788,6 +790,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
       );
+
+      console.log('[SalaryOverdraft] Returning form trigger. isAuthenticated:', userSession.isAuthenticated, 'isCustomer:', userSession.isCustomer);
 
       return res.json({
         reply,

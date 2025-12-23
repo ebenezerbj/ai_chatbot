@@ -20,7 +20,9 @@ export function shouldOpenSalaryOverdraftForm(message: string): boolean {
     /salary.*overdraft.*application/
   ];
 
-  return applyPatterns.some(pattern => pattern.test(lowerMsg));
+  const matches = applyPatterns.some(pattern => pattern.test(lowerMsg));
+  console.log(`[SalaryOverdraft] Pattern check for message "${message}": ${matches ? 'MATCH' : 'NO MATCH'}`);
+  return matches;
 }
 
 export interface SalaryOverdraftPayload {

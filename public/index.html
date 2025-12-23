@@ -3240,11 +3240,14 @@
           } catch {}
           try {
             if (data?.openSalaryOverdraftForm) {
+              console.log('[Frontend] Received openSalaryOverdraftForm flag, opening form...');
               setTimeout(() => {
                 openSalaryOverdraftForm();
               }, 100);
             }
-          } catch {}
+          } catch (err) {
+            console.error('[Frontend] Error opening salary overdraft form:', err);
+          }
           try {
             if (data.suggestHandover) {
               // Check if user just said "yes" to a handover question
