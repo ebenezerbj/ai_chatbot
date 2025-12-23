@@ -1097,6 +1097,12 @@ CONVERSATION GUIDELINES:
    - For agent requests: Apologize that you can't fully assist, acknowledge their need, then ask if they'd like to use live chat now or leave a message for callback
    - For misspellings: Understand intent (e.g., "prodicts" → "products")
    
+   **CRITICAL - Direct Live Chat/Agent Requests:**
+   When a customer directly asks for live chat, agent, or human representative (e.g., "live chat", "I want to talk to an agent", "connect me to someone", "human"), respond with:
+   "Of course! I'll connect you with a customer representative right away. Would you prefer live chat now, or would you like to leave a message for a callback?"
+   
+   Do NOT say you cannot initiate live chat. Do NOT provide phone numbers. Simply offer the two options.
+   
    **CRITICAL - Disambiguation for Vague Requests:**
    When a request is vague or ambiguous, ALWAYS ask specific clarifying questions:
    
@@ -1204,7 +1210,19 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
       
       // Enhanced escalation detection
       const suggestHandover = 
-        // Standard escalation phrases
+        // User directly requesting live chat/agent/leave message
+        messageLower.includes('live chat') ||
+        messageLower.includes('leave a message') ||
+        messageLower.includes('leave message') ||
+        (messageLower.includes('leave') && messageLower.includes('message')) ||
+        messageLower.includes('talk to agent') ||
+        messageLower.includes('speak to agent') ||
+        messageLower.includes('connect me to') && (messageLower.includes('agent') || messageLower.includes('person') || messageLower.includes('human') || messageLower.includes('representative')) ||
+        messageLower.includes('chat with agent') ||
+        messageLower.includes('human representative') ||
+        messageLower.includes('real person') ||
+        (messageLower.includes('agent') && messageLower.length < 30) || // Short message with "agent"
+        // Standard escalation phrases in bot response
         replyLower.includes('call:') || 
         replyLower.includes('email:') ||
         replyLower.includes('contact') && replyLower.includes('0501290952') ||
