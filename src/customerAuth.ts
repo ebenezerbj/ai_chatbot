@@ -333,8 +333,10 @@ export async function authenticateCustomer(
       session.awaitingOTP = false;
       
       // Check if customer has multiple accounts awaiting selection
-      if (session.awaitingAccountSelection && session.availableAccounts && session.availableAccounts.length > 0) {
+      if (session.availableAccounts && session.availableAccounts.length > 0) {
         console.log('[Auth] OTP verified, now showing account selection');
+        // NOW set the flag so buttons will show
+        session.awaitingAccountSelection = true;
         sessions.set(sessionId, session);
         
         return {
@@ -408,7 +410,7 @@ export async function authenticateCustomer(
     if (validation.multipleAccounts && validation.accounts) {
       console.log('[Auth] Customer has multiple accounts, sending OTP first for security');
       session.availableAccounts = validation.accounts;
-      session.awaitingAccountSelection = true;
+      // Don't set awaitingAccountSelection yet - only after OTP verification
       session.phoneNumber = validation.phoneNumber;
       
       // Send OTP for verification BEFORE showing account numbers (security measure)
