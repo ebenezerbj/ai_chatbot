@@ -635,7 +635,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
       
       if (customerAuth.needsAuthentication(message) || hasAuthCredentials) {
-        const blockMessage = `I'm sorry, but account and loan details are only available to AKCB customers.\n\nIf you'd like to become a customer, I can help you with:\n• Account opening requirements\n• Required documents\n• Branch locations\n\nOr call us at 0501290952 to speak with a representative.`;
+        const blockMessage = `I sincerely apologize, but I understand you're trying to access account or loan information. However, these details are only available to registered AKCB customers for security reasons.\n\nIf you'd like to become a customer, I can help you with:\n• Account opening requirements\n• Required documents\n• Branch locations\n\nWould you like me to connect you with a customer representative via live chat to discuss opening an account, or would you prefer to leave a message?`;
         
         await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', blockMessage).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
@@ -1081,14 +1081,20 @@ CONVERSATION GUIDELINES:
      Response: "For security reasons, I cannot reset passwords through chat. Please visit any branch with valid ID, or use the 'Forgot Password' feature in the app with proper verification."
 
 5. **When You Cannot Help**:
-   - Be honest when information isn't in your knowledge base
-   - Say "I don't have that specific information" or "This is outside my current knowledge"
-   - Then offer to connect them: "Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message?"
+   - FIRST, apologize sincerely: "I sincerely apologize..." or "I'm truly sorry..."
+   - SECOND, show empathy and acknowledge their specific concern (reference what they asked about)
+   - THIRD, explain why you can't help: "I don't have that specific information" or "This is outside my current knowledge"
+   - FOURTH, ASK if they want assistance: "Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for a callback?"
+   - Wait for their response before showing options
    - This triggers automatic escalation to human assistance
    - NEVER provide phone numbers or contact details - always offer live chat or leave a message options
+   
+   **Example escalation flow:**
+   Customer: "What's the CEO's salary?"
+   You: "I sincerely apologize for not being able to assist with that. I understand you're looking for information about executive compensation, but this is confidential information that I don't have access to. Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for our management team to follow up with you?"
 
 6. **Handle Requests Intelligently**:
-   - For agent requests: Acknowledge their request and ask if they'd like to use live chat now or leave a message for callback
+   - For agent requests: Apologize that you can't fully assist, acknowledge their need, then ask if they'd like to use live chat now or leave a message for callback
    - For misspellings: Understand intent (e.g., "prodicts" → "products")
    
    **CRITICAL - Disambiguation for Vague Requests:**

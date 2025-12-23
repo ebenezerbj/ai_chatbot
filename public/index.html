@@ -2480,19 +2480,22 @@
       chatEl.appendChild(div);
       chatEl.scrollTop = chatEl.scrollHeight;
       
-      // Auto-detect escalation phrases and show assistance options
+      // Auto-detect when bot is ASKING about live chat/leave message (not just mentioning it)
       if (role === 'assistant') {
         const textLower = text.toLowerCase();
-        const shouldShowAssistance = 
-          textLower.includes('live chat option') ||
-          textLower.includes('use the live chat') ||
-          textLower.includes('leave a message') ||
-          textLower.includes('via live chat');
+        const isAskingForAssistance = 
+          (textLower.includes('would you like') || 
+           textLower.includes('do you want') || 
+           textLower.includes('shall i connect') ||
+           textLower.includes('would you prefer')) &&
+          (textLower.includes('live chat') || 
+           textLower.includes('leave a message') ||
+           textLower.includes('connect you with'));
         
-        if (shouldShowAssistance) {
-          setTimeout(() => {
-            showAssistanceOptions();
-          }, 500);
+        if (isAskingForAssistance) {
+          // Don't auto-show buttons - wait for user to say yes
+          // The buttons will be shown via suggestHandover flag after user confirms
+          console.log('[Escalation] Bot is asking about assistance - waiting for user confirmation');
         }
       }
       

@@ -297,7 +297,7 @@ export async function validateCredentials(
     console.error('[Auth] Stack:', error.stack);
     return {
       valid: false,
-      reason: "Unable to verify your details at this time. Please try again later or use the live chat option to speak with a representative."
+      reason: "I sincerely apologize for the inconvenience. I understand you're trying to verify your account, but I'm having technical difficulties accessing our systems right now. Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message?"
     };
   }
 }
@@ -393,7 +393,7 @@ export async function authenticateCustomer(
   if (session.attempts > MAX_AUTH_ATTEMPTS) {
     return {
       success: false,
-      message: "Maximum authentication attempts exceeded. Please use the live chat option or leave a message for our team to assist you.",
+      message: "I sincerely apologize for the difficulty. I understand you've tried multiple times to verify your account, and I know this must be frustrating. For your security and to help resolve this quickly, would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for our security team?",
       session,
       awaitingOTP: false
     };
@@ -652,17 +652,13 @@ export function formatLoanResponse(accountData: any): string {
     // Same message for all customers - system is being updated
     let response = `**Loan Information**\n\n`;
     response += `Thank you for your inquiry! 🏦\n\n`;
-    response += `Our loan records system is currently undergoing updates to ensure you receive the most accurate and up-to-date information.\n\n`;
-    response += `For accurate details about your loan status, balance, payment schedule, or to apply for a new loan, you can:\n\n`;
-    response += `💬 **Use the live chat** to speak with a representative\n`;
-    response += `📝 **Leave a message** and our team will get back to you\n`;
-    response += `📍 **Visit your nearest AKCB branch**\n\n`;
-    response += `Our friendly staff will be happy to provide you with comprehensive information and assistance.\n\n`;
-    response += `We appreciate your understanding and patience as we work to serve you better. Thank you for banking with AKCB! ✨`;
+    response += `I sincerely apologize for not being able to provide your loan information right now. I understand how important it is for you to access your loan details, balance, and payment schedule.\n\n`;
+    response += `Our loan records system is currently undergoing updates to ensure accuracy. Would you like me to connect you with a customer representative who can provide you with detailed loan information via live chat, or would you prefer to leave a message for a callback?\n\n`;
+    response += `You can also visit your nearest AKCB branch for immediate assistance. We appreciate your understanding! ✨`;
     return response;
   } catch (error: any) {
     console.error('[Auth] Error formatting loan response:', error);
-    return `**Loan Information**\n\nWe're experiencing technical difficulties retrieving your loan information. Please use the live chat option or leave a message for immediate assistance.`;
+    return `**Loan Information**\n\nI sincerely apologize for the inconvenience. I understand you need your loan information, but I'm experiencing technical difficulties right now. Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message?`;
   }
 }
 
@@ -672,7 +668,7 @@ export function formatLoanResponse(accountData: any): string {
 export function formatAccountBalanceOnly(accountData: any): string {
   // Check if customer has account
   if (!accountData || !accountData.accountNumber || !accountData.balance) {
-    return `**Account Information**\n\nYou have no account associated with the bank.\n\nIf you would like to open an account, please use the live chat option or leave a message and our team will guide you through the process.`;
+    return `**Account Information**\n\nI apologize, but I couldn't find an account associated with your details. If you'd like to open a new account with us, I'd be happy to help! Would you like me to connect you with a customer representative via live chat to discuss account opening options, or would you prefer to leave a message?`;
   }
   
   let lastUpdatedText = '';
@@ -718,7 +714,7 @@ export function formatBalanceResponse(accountData: any): string {
   
   // If customer has neither
   if (!hasAccount && !hasLoans) {
-    return `**Account Information**\n\nYou have no account or loan associated with the bank.\n\nIf you would like to open an account or apply for a loan, please use the live chat option or leave a message and our team will assist you.`;
+    return `**Account Information**\n\nI apologize, but I couldn't find any accounts or loans associated with your details. If you're interested in opening an account or applying for a loan, I'd be happy to help! Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message?`;
   }
   
   // If customer has loans but no account
