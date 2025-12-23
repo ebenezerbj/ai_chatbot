@@ -32,6 +32,8 @@ export interface SalaryOverdraftPayload {
   phoneNumber: string;
   nationalIdNumber: string;
   accountNumber: string;
+  branchName: string;
+  branchCode: string;
   employerName: string;
   position: string;
   employmentType: string;
@@ -60,6 +62,8 @@ export interface SalaryOverdraftRow {
   phone_number: string;
   national_id_number: string;
   account_number: string;
+  branch_name: string;
+  branch_code: string;
   employer_name: string;
   position: string;
   employment_type: string;
@@ -142,6 +146,12 @@ export function validateSalaryOverdraftPayload(raw: any): { ok: false; error: st
   const accountNumber = requiredString(raw.accountNumber);
   if (!accountNumber) errors.push('Account Number is required');
 
+  const branchName = requiredString(raw.branchName);
+  if (!branchName) errors.push('Branch Name is required');
+
+  const branchCode = requiredString(raw.branchCode);
+  if (!branchCode) errors.push('Branch Code is required');
+
   const employerName = requiredString(raw.employerName);
   if (!employerName) errors.push('Employer Name is required');
 
@@ -195,6 +205,8 @@ export function validateSalaryOverdraftPayload(raw: any): { ok: false; error: st
       phoneNumber,
       nationalIdNumber,
       accountNumber,
+      branchName,
+      branchCode,
       employerName,
       position,
       employmentType,
@@ -220,6 +232,8 @@ export async function initializeSalaryOverdraftTable(): Promise<void> {
       phone_number TEXT NOT NULL,
       national_id_number TEXT NOT NULL,
       account_number TEXT NOT NULL,
+      branch_name TEXT NOT NULL,
+      branch_code TEXT NOT NULL,
       employer_name TEXT NOT NULL,
       position TEXT NOT NULL,
       employment_type TEXT NOT NULL,
@@ -247,6 +261,7 @@ export async function createSalaryOverdraft(payload: SalaryOverdraftPayload): Pr
     INSERT INTO salary_overdrafts (
       session_id, ip_address, user_agent,
       full_name, phone_number, national_id_number, account_number,
+      branch_name, branch_code,
       employer_name, position, employment_type, length_of_service,
       net_monthly_salary, requested_amount, approved_amount, repayment_months, monthly_repayment,
       salary_account_consent, employer_confirmation, borrower_declaration,
@@ -254,6 +269,7 @@ export async function createSalaryOverdraft(payload: SalaryOverdraftPayload): Pr
     ) VALUES (
       ?, ?, ?,
       ?, ?, ?, ?,
+      ?, ?,
       ?, ?, ?, ?,
       ?, ?, ?, ?, ?,
       ?, ?, ?,
@@ -269,6 +285,8 @@ export async function createSalaryOverdraft(payload: SalaryOverdraftPayload): Pr
     payload.phoneNumber,
     payload.nationalIdNumber,
     payload.accountNumber,
+    payload.branchName,
+    payload.branchCode,
     payload.employerName,
     payload.position,
     payload.employmentType,
@@ -283,7 +301,7 @@ export async function createSalaryOverdraft(payload: SalaryOverdraftPayload): Pr
     payload.borrowerDeclaration ? 1 : 0,
   ];
 
-  const result = await executeQuery(insertSql, params);
+  const result: any = await executeQuery(insertSql, params);
   const applicationId = result.insertId || 0;
 
   return {
@@ -302,6 +320,7 @@ export async function listSalaryOverdrafts(limit: number, offset: number): Promi
     SELECT 
       id, session_id, ip_address, user_agent,
       full_name, phone_number, national_id_number, account_number,
+      branch_name, branch_code,
       employer_name, position, employment_type, length_of_service,
       net_monthly_salary, requested_amount, approved_amount, repayment_months, monthly_repayment,
       salary_account_consent, employer_confirmation, borrower_declaration,
@@ -322,6 +341,8 @@ export async function listSalaryOverdrafts(limit: number, offset: number): Promi
     phoneNumber: r.phone_number,
     nationalIdNumber: r.national_id_number,
     accountNumber: r.account_number,
+    branchName: r.branch_name,
+    branchCode: r.branch_code,
     employerName: r.employer_name,
     position: r.position,
     employmentType: r.employment_type,

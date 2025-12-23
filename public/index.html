@@ -4060,6 +4060,19 @@
           <input type="text" id="sodNationalId" placeholder="National ID Number *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <input type="text" id="sodAccountNumber" placeholder="Account Number *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
 
+          <select id="sodBranch" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px; background: white;">
+            <option value="">Select Your Branch *</option>
+            <option value="Head Office|GH1510010">Head Office (Amantin High Street)</option>
+            <option value="Atebubu|GH1510013">Atebubu</option>
+            <option value="Kajeji|GH1510017">Kajeji</option>
+            <option value="Kwame Danso|GH1510012">Kwame Danso</option>
+            <option value="Yeji|GH1510014">Yeji</option>
+            <option value="Ahwiaa|GH1510016">Ahwiaa</option>
+            <option value="Ejura|GH1510011">Ejura</option>
+            <option value="Amantin|GH1510015">Amantin</option>
+            <option value="Kejetia|GH1510018">Kejetia</option>
+          </select>
+
           <input type="text" id="sodEmployer" placeholder="Employer Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <input type="text" id="sodPosition" placeholder="Position *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
           <input type="text" id="sodEmploymentType" list="sodEmploymentTypeOptions" placeholder="Employment Type *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
@@ -4166,6 +4179,7 @@
           { id: 'sodPhone', name: 'Phone Number' },
           { id: 'sodNationalId', name: 'National ID' },
           { id: 'sodAccountNumber', name: 'Account Number' },
+          { id: 'sodBranch', name: 'Branch' },
           { id: 'sodEmployer', name: 'Employer Name' },
           { id: 'sodPosition', name: 'Position' },
           { id: 'sodEmploymentType', name: 'Employment Type' },
@@ -4201,12 +4215,18 @@
           }
         }
 
+        // Parse branch selection
+        const branchValue = getVal('sodBranch');
+        const [branchName, branchCode] = branchValue.split('|');
+
         const payload = {
           sessionId: sid,
           fullName: getVal('sodFullName'),
           phoneNumber: getVal('sodPhone'),
           nationalIdNumber: getVal('sodNationalId'),
           accountNumber: getVal('sodAccountNumber'),
+          branchName: branchName || '',
+          branchCode: branchCode || '',
           employerName: getVal('sodEmployer'),
           position: getVal('sodPosition'),
           employmentType: getVal('sodEmploymentType'),
