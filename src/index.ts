@@ -17,6 +17,7 @@ import { WebCrawler, CrawlConfig, CrawlResult, convertToKBEntries, updateKnowled
 import * as analytics from './analytics';
 import * as loanApplications from './loanApplications';
 import * as accountOpenings from './accountOpenings';
+import * as salaryOverdraft from './salaryOverdraft';
 import * as kbModule from './knowledge/kb';
 import * as migration from './migration';
 import { LiveChatManager } from './liveChat';
@@ -56,6 +57,14 @@ app.use((req, res, next) => {
         console.log('[Server] Loan applications module initialized');
       } catch (error) {
         console.error('[Server] Loan applications initialization failed:', error);
+      }
+
+      // Initialize salary overdraft table
+      try {
+        await salaryOverdraft.initializeSalaryOverdraftTable();
+        console.log('[Server] Salary overdraft module initialized');
+      } catch (error) {
+        console.error('[Server] Salary overdraft initialization failed:', error);
       }
     } catch (error) {
       console.error('[Server] Analytics initialization failed:', error);
@@ -115,6 +124,60 @@ app.get('/api/admin/loan-applications', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Loan applications list error:', error?.message || error);
     return res.status(500).json({ ok: false, error: 'Failed to load loan applications' });
+  }
+});
+
+// Salary overdraft application submit endpoint (used by chatbot UI)
+app.post('/api/salary-overdraft', async (req: Request, res: Response) => {
+  try {
+    const body = (req.body && typeof req.body === 'object') ? req.body : {};
+    const sessionId = (body as any)?.sessionId as string | undefined;
+    const ipAddress = req.ip || (req.headers['x-forwarded-for'] as string | undefined);
+    const userAgent = req.headers['user-agent'] as string | undefined;
+
+    console.log('[SalaryOverdraft] Received payload:', JSON.stringify(body, null, 2));
+
+    const validation = salaryOverdraft.validateSalaryOverdraftPayload({
+      ...body,
+      sessionId,
+      ipAddress,
+      userAgent
+    });
+
+    if (!validation.ok) {
+      console.log('[SalaryOverdraft] Validation failed:', validation.error);
+      return res.status(400).json({ ok: false, error: validation.error });
+    }
+
+    const result = await salaryOverdraft.createSalaryOverdraft(validation.value);
+    return res.json({
+      ok: true,
+      applicationId: result.applicationId,
+      approvedAmount: result.approvedAmount,
+      monthlyRepayment: result.monthlyRepayment
+    });
+  } catch (error: any) {
+    console.error('[SalaryOverdraft] Error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: 'Failed to submit salary overdraft application. Please try again.' });
+  }
+});
+
+// Admin: list salary overdraft applications
+app.get('/api/admin/salary-overdrafts', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const limit = Number((req.query as any)?.limit ?? 50);
+    const offset = Number((req.query as any)?.offset ?? 0);
+    const result = await salaryOverdraft.listSalaryOverdrafts(limit, offset);
+    return res.json({ ok: true, ...result });
+  } catch (error: any) {
+    console.error('[Admin] Salary overdrafts list error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: 'Failed to load salary overdraft applications' });
   }
 });
 
@@ -696,6 +759,22 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         source: 'account-opening',
         sessionId: effectiveSessionId,
         openAccountOpeningForm: true
+      });
+    }
+
+    // Salary overdraft form (web chatbot will render inline form)
+    if (salaryOverdraft.shouldOpenSalaryOverdraftForm(message)) {
+      const reply = `Great! I can help you apply for a salary overdraft. Please fill in the form below with your employment and salary details.`;
+
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+
+      return res.json({
+        reply,
+        source: 'salary-overdraft',
+        sessionId: effectiveSessionId,
+        openSalaryOverdraftForm: true
       });
     }
 

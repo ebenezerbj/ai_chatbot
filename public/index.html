@@ -3239,6 +3239,13 @@
             }
           } catch {}
           try {
+            if (data?.openSalaryOverdraftForm) {
+              setTimeout(() => {
+                openSalaryOverdraftForm();
+              }, 100);
+            }
+          } catch {}
+          try {
             if (data.suggestHandover) {
               // Check if user just said "yes" to a handover question
               const lastMessages = chatEl.querySelectorAll('.message');
@@ -4017,6 +4024,246 @@
         if (statusEl) {
           statusEl.style.color = 'var(--danger, #c62828)';
           statusEl.textContent = 'Network error submitting application. Please check your connection.';
+        }
+      }
+    }
+
+    // ============================================
+    // Salary Overdraft Application Form
+    // ============================================
+    function openSalaryOverdraftForm() {
+      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (last.querySelector('.salary-overdraft-form')) return;
+
+      // Ensure only one salary overdraft form exists at a time
+      try {
+        chatEl.querySelectorAll('.salary-overdraft-form').forEach(el => el.remove());
+      } catch {}
+
+      const wrap = document.createElement('div');
+      wrap.className = 'salary-overdraft-form';
+      wrap.style.marginTop = '0.5rem';
+      wrap.style.padding = '0.5rem';
+      wrap.style.border = '1px solid var(--gray-200)';
+      wrap.style.borderRadius = '8px';
+
+      wrap.innerHTML = `
+        <p style="font-size:0.9rem; margin:0 0 0.5rem 0; padding:0.5rem; background:rgba(255,193,7,0.1); border-left:3px solid #ffc107; border-radius:4px;">
+          <strong>💰 Salary Overdraft Application</strong><br>
+          Maximum overdraft: 3x your monthly salary | Repayment period: 1-6 months
+        </p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+          <input type="text" id="sodFullName" placeholder="Full Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="sodPhone" placeholder="Phone Number *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="sodNationalId" placeholder="National ID Number *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="sodAccountNumber" placeholder="Account Number *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+
+          <input type="text" id="sodEmployer" placeholder="Employer Name *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="sodPosition" placeholder="Position *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="sodEmploymentType" list="sodEmploymentTypeOptions" placeholder="Employment Type *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="sodEmploymentTypeOptions">
+            <option value="Permanent"></option>
+            <option value="Contract"></option>
+            <option value="Temporary"></option>
+          </datalist>
+          <input type="text" id="sodLengthService" placeholder="Length of Service *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="sodNetSalary" placeholder="Net Monthly Salary *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="sodRequestedAmount" placeholder="Requested Amount *" required style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="number" inputmode="numeric" step="1" min="1" max="6" id="sodRepaymentMonths" list="sodRepaymentOptions" placeholder="Repayment Months (1-6) *" required style="grid-column:1 / -1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <datalist id="sodRepaymentOptions">
+            <option value="1"></option>
+            <option value="2"></option>
+            <option value="3"></option>
+            <option value="4"></option>
+            <option value="5"></option>
+            <option value="6"></option>
+          </datalist>
+          <input type="text" id="sodApprovedAmount" placeholder="Approved Amount (System)" readonly style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px; background: rgba(0,0,0,0.02);" />
+          <input type="text" id="sodMonthlyRepayment" placeholder="Monthly Repayment (System)" readonly style="padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px; background: rgba(0,0,0,0.02);" />
+        </div>
+
+        <div style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.25rem;">
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="sodSalaryAccountConsent" required /> <span>I consent to salary account deduction *</span>
+          </label>
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="sodEmployerConfirmation" required /> <span>Employer confirmation received *</span>
+          </label>
+          <label style="display:flex; gap:0.5rem; align-items:center; font-size:0.95rem; color: var(--gray-700, #374151);">
+            <input type="checkbox" id="sodBorrowerDeclaration" required /> <span>I declare all information is accurate *</span>
+          </label>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center; flex-wrap:wrap;">
+          <button type="button" id="sodSubmit" class="msg-action-btn" style="white-space:nowrap; background: #f97316; border-color: #f97316; color: var(--white); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);" aria-label="Submit overdraft application" title="Submit overdraft application"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button>
+          <button type="button" id="sodCancel" class="msg-action-btn" style="white-space:nowrap;" aria-label="Cancel overdraft application" title="Cancel overdraft application"><i class="fa fa-xmark" aria-hidden="true"></i><span>Cancel</span></button>
+          <div id="sodAppStatus" style="font-size:0.85rem; color:var(--gray-600);"></div>
+        </div>
+      `;
+
+      last.appendChild(wrap);
+
+      const salaryEl = wrap.querySelector('#sodNetSalary');
+      const requestedEl = wrap.querySelector('#sodRequestedAmount');
+      const repaymentMonthsEl = wrap.querySelector('#sodRepaymentMonths');
+      const approvedEl = wrap.querySelector('#sodApprovedAmount');
+      const monthlyRepaymentEl = wrap.querySelector('#sodMonthlyRepayment');
+
+      const recalc = () => {
+        const salary = Number((salaryEl?.value || '').toString().replace(/,/g, ''));
+        const requested = Number((requestedEl?.value || '').toString().replace(/,/g, ''));
+        const months = Number((repaymentMonthsEl?.value || '').toString().replace(/,/g, ''));
+        
+        if (!Number.isFinite(salary) || salary <= 0) {
+          if (approvedEl) approvedEl.value = '';
+          if (monthlyRepaymentEl) monthlyRepaymentEl.value = '';
+          return;
+        }
+
+        // Calculate approved amount (max 3x salary)
+        const maxAllowed = salary * 3;
+        const approved = Math.min(requested || 0, maxAllowed);
+        
+        if (approvedEl) approvedEl.value = approved > 0 ? `GHS ${approved.toFixed(2)}` : '';
+
+        if (!Number.isFinite(months) || months <= 0 || approved <= 0) {
+          if (monthlyRepaymentEl) monthlyRepaymentEl.value = '';
+          return;
+        }
+        
+        const monthlyRepayment = Math.round((approved / months) * 100) / 100;
+        if (monthlyRepaymentEl) monthlyRepaymentEl.value = `GHS ${monthlyRepayment.toFixed(2)}`;
+      };
+
+      salaryEl?.addEventListener('input', recalc);
+      requestedEl?.addEventListener('input', recalc);
+      repaymentMonthsEl?.addEventListener('input', recalc);
+
+      const submitBtn = wrap.querySelector('#sodSubmit');
+      submitBtn?.addEventListener('click', () => submitSalaryOverdraft(wrap));
+
+      const cancelBtn = wrap.querySelector('#sodCancel');
+      cancelBtn?.addEventListener('click', () => {
+        wrap.remove();
+      });
+
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function submitSalaryOverdraft(wrapElement) {
+      const statusEl = wrapElement.querySelector('#sodAppStatus');
+      const sid = window.sessionId || '';
+      const getVal = (id) => wrapElement.querySelector(`#${id}`)?.value?.trim() || '';
+      const getChecked = (id) => wrapElement.querySelector(`#${id}`)?.checked || false;
+
+      try {
+        // Validate all fields
+        const requiredFields = [
+          { id: 'sodFullName', name: 'Full Name' },
+          { id: 'sodPhone', name: 'Phone Number' },
+          { id: 'sodNationalId', name: 'National ID' },
+          { id: 'sodAccountNumber', name: 'Account Number' },
+          { id: 'sodEmployer', name: 'Employer Name' },
+          { id: 'sodPosition', name: 'Position' },
+          { id: 'sodEmploymentType', name: 'Employment Type' },
+          { id: 'sodLengthService', name: 'Length of Service' },
+          { id: 'sodNetSalary', name: 'Net Monthly Salary' },
+          { id: 'sodRequestedAmount', name: 'Requested Amount' },
+          { id: 'sodRepaymentMonths', name: 'Repayment Months' }
+        ];
+
+        for (const field of requiredFields) {
+          if (!getVal(field.id)) {
+            if (statusEl) {
+              statusEl.style.color = 'var(--danger, #c62828)';
+              statusEl.textContent = `${field.name} is required.`;
+            }
+            return;
+          }
+        }
+
+        const checkboxes = [
+          { id: 'sodSalaryAccountConsent', name: 'Salary Account Consent' },
+          { id: 'sodEmployerConfirmation', name: 'Employer Confirmation' },
+          { id: 'sodBorrowerDeclaration', name: 'Borrower Declaration' }
+        ];
+
+        for (const checkbox of checkboxes) {
+          if (!getChecked(checkbox.id)) {
+            if (statusEl) {
+              statusEl.style.color = 'var(--danger, #c62828)';
+              statusEl.textContent = `${checkbox.name} is required.`;
+            }
+            return;
+          }
+        }
+
+        const payload = {
+          sessionId: sid,
+          fullName: getVal('sodFullName'),
+          phoneNumber: getVal('sodPhone'),
+          nationalIdNumber: getVal('sodNationalId'),
+          accountNumber: getVal('sodAccountNumber'),
+          employerName: getVal('sodEmployer'),
+          position: getVal('sodPosition'),
+          employmentType: getVal('sodEmploymentType'),
+          lengthOfService: getVal('sodLengthService'),
+          netMonthlySalary: getVal('sodNetSalary'),
+          requestedAmount: getVal('sodRequestedAmount'),
+          repaymentMonths: getVal('sodRepaymentMonths'),
+          salaryAccountConsent: getChecked('sodSalaryAccountConsent'),
+          employerConfirmation: getChecked('sodEmployerConfirmation'),
+          borrowerDeclaration: getChecked('sodBorrowerDeclaration')
+        };
+
+        console.log('[SalaryOverdraft] Payload being sent:', JSON.stringify(payload, null, 2));
+
+        if (statusEl) {
+          statusEl.style.color = 'var(--gray-600)';
+          statusEl.textContent = 'Submitting…';
+        }
+
+        const resp = await fetch('/api/salary-overdraft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        console.log('[SalaryOverdraft] Response status:', resp.status, resp.statusText);
+        
+        const data = await resp.json().catch((e) => {
+          console.error('[SalaryOverdraft] Failed to parse response:', e);
+          return {};
+        });
+        
+        console.log('[SalaryOverdraft] Response data:', data);
+
+        if (resp.ok && data?.ok) {
+          addMsg('assistant', `✓ Thank you! Your salary overdraft application has been submitted successfully.\\n\\nApplication Reference: ${data.applicationId}\\nApproved Amount: GHS ${data.approvedAmount.toFixed(2)}\\nMonthly Repayment: GHS ${data.monthlyRepayment.toFixed(2)}\\n\\nOur team will contact you within 24 hours to complete the setup.`);
+          
+          setTimeout(() => {
+            wrapElement.remove();
+          }, 1500);
+          
+          if (statusEl) {
+            statusEl.style.color = 'var(--success, #2e7d32)';
+            statusEl.innerHTML = '<i class="fa fa-check-circle"></i> Submitted successfully!';
+          }
+          return;
+        }
+
+        if (statusEl) {
+          statusEl.style.color = 'var(--danger, #c62828)';
+          statusEl.textContent = data?.error ? `Error: ${data.error}` : 'Sorry, something went wrong.';
+        }
+      } catch (e) {
+        console.error('[SalaryOverdraft] Exception during submission:', e);
+        if (statusEl) {
+          statusEl.style.color = 'var(--danger, #c62828)';
+          statusEl.textContent = 'Network error submitting application.';
         }
       }
     }
