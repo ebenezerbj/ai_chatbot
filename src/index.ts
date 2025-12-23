@@ -127,6 +127,37 @@ app.get('/api/admin/loan-applications', async (req: Request, res: Response) => {
   }
 });
 
+// Admin: update loan application status
+app.put('/api/admin/loan-applications/:id/status', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const applicationId = parseInt(req.params.id);
+    const { status, notes } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ ok: false, error: 'Status is required' });
+    }
+
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid application ID' });
+    }
+
+    // Update status in database
+    const sql = `UPDATE loan_applications SET status = ?, updated_at = NOW() WHERE id = ?`;
+    await executeQuery(sql, [status, applicationId]);
+    
+    return res.json({ ok: true, message: 'Status updated successfully' });
+  } catch (error: any) {
+    console.error('[Admin] Update loan status error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to update status' });
+  }
+});
+
 // Salary overdraft application submit endpoint (used by chatbot UI)
 app.post('/api/salary-overdraft', async (req: Request, res: Response) => {
   try {
@@ -178,6 +209,37 @@ app.get('/api/admin/salary-overdrafts', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Salary overdrafts list error:', error?.message || error);
     return res.status(500).json({ ok: false, error: 'Failed to load salary overdraft applications' });
+  }
+});
+
+// Admin: update salary overdraft status
+app.put('/api/admin/salary-overdrafts/:id/status', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length).trim() : undefined;
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const applicationId = parseInt(req.params.id);
+    const { status, notes } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ ok: false, error: 'Status is required' });
+    }
+
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid application ID' });
+    }
+
+    // Update status in database
+    const sql = `UPDATE salary_overdrafts SET status = ?, updated_at = NOW() WHERE id = ?`;
+    await executeQuery(sql, [status, applicationId]);
+    
+    return res.json({ ok: true, message: 'Status updated successfully' });
+  } catch (error: any) {
+    console.error('[Admin] Update overdraft status error:', error?.message || error);
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to update status' });
   }
 });
 
