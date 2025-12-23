@@ -26,6 +26,8 @@ export interface CustomerSession {
   visitorName?: string; // Track non-customer name for escalation support
   visitorPhone?: string; // Track non-customer phone for escalation support
   awaitingVisitorInfo?: boolean; // Waiting for non-customer form submission
+  availableAccounts?: Array<{accountNumber: string; accountName: string; accountType: string}>; // Multiple accounts for selection
+  awaitingAccountSelection?: boolean; // Waiting for user to select account
 }
 
 // In-memory session store (for production, use Redis or database)
@@ -200,7 +202,15 @@ function normalizePhoneForMatching(phone: string): string {
 export async function validateCredentials(
   accountNumber?: string,
   phoneNumber?: string
-): Promise<{ valid: boolean; reason?: string; customerName?: string; phoneNumber?: string; accountNumber?: string }> {
+): Promise<{ 
+  valid: boolean; 
+  reason?: string; 
+  customerName?: string; 
+  phoneNumber?: string; 
+  accountNumber?: string;
+  multipleAccounts?: boolean;
+  accounts?: Array<{accountNumber: string; accountName: string; accountType: string}>;
+}> {
   try {
     // Must have at least one identifier
     if (!accountNumber && !phoneNumber) {
@@ -238,30 +248,42 @@ export async function validateCredentials(
     }
     
     query += conditions.join(' OR ');
+    query += ' AND status = \'Active\' ORDER BY account_type, account_number';
     
     console.log('[Auth] Executing query:', query);
     console.log('[Auth] Query params:', params);
     
-    const customer = await querySingle<any>(query, params);
+    // Use executeQuery to get ALL matching accounts (not just first one)
+    const customers = await executeQuery<any>(query, params);
     
-    if (!customer) {
+    if (!customers || customers.length === 0) {
       console.log('[Auth] No customer found with provided credentials');
       const identifier = accountNumber ? 'account number' : 'phone number';
       return {
         valid: false,
-        reason: `No account found with the provided ${identifier}. Please verify your details.`
+        reason: `No active account found with the provided ${identifier}. Please verify your details.`
       };
     }
     
-    // Check account status
-    if (customer.status !== 'Active') {
-      console.log('[Auth] Account not active:', customer.status);
+    // If multiple accounts found (common with phone number auth)
+    if (customers.length > 1) {
+      console.log('[Auth] Multiple accounts found:', customers.length);
+      const accounts = customers.map(c => ({
+        accountNumber: c.account_number,
+        accountName: c.account_name,
+        accountType: c.account_type
+      }));
+      
       return {
-        valid: false,
-        reason: `Your account is ${customer.status.toLowerCase()}. Please visit any branch or call +233 54 242 8935 / +233 50 129 0952 for assistance.`
+        valid: true,
+        multipleAccounts: true,
+        accounts: accounts,
+        phoneNumber: customers[0].phone_number
       };
     }
     
+    // Single account found
+    const customer = customers[0];
     console.log('[Auth] Customer validated successfully:', customer.account_name);
     return {
       valid: true,
@@ -367,7 +389,23 @@ export async function authenticateCustomer(
   );
   
   if (validation.valid) {
-    // Update session with complete details from database
+    // Check if customer has multiple accounts
+    if (validation.multipleAccounts && validation.accounts) {
+      console.log('[Auth] Customer has multiple accounts, prompting selection');
+      session.availableAccounts = validation.accounts;
+      session.awaitingAccountSelection = true;
+      session.phoneNumber = validation.phoneNumber;
+      sessions.set(sessionId, session);
+      
+      return {
+        success: false,
+        message: `You have ${validation.accounts.length} accounts registered with this phone number. Please select which account you want to access or type your account number.`,
+        session,
+        awaitingOTP: false
+      };
+    }
+    
+    // Update session with complete details from database (single account)
     session.accountNumber = validation.accountNumber;
     session.phoneNumber = validation.phoneNumber;
     session.customerName = validation.customerName;
@@ -738,6 +776,81 @@ export function formatTransactionsResponse(accountData: any): string {
   response += `For a detailed statement, please visit any branch or use our mobile banking app.`;
   
   return response;
+}
+
+/**
+ * Handle account selection when customer has multiple accounts
+ */
+export async function selectAccount(
+  sessionId: string,
+  accountNumberOrIndex: string
+): Promise<{ success: boolean; message: string; session: CustomerSession; awaitingOTP?: boolean }> {
+  const session = getOrCreateSession(sessionId);
+  
+  if (!session.availableAccounts || session.availableAccounts.length === 0) {
+    return {
+      success: false,
+      message: "No account selection pending.",
+      session
+    };
+  }
+  
+  let selectedAccount: {accountNumber: string; accountName: string; accountType: string} | undefined;
+  
+  // Check if user typed account number
+  const matchByNumber = session.availableAccounts.find(acc => 
+    acc.accountNumber.toLowerCase() === accountNumberOrIndex.toLowerCase()
+  );
+  
+  if (matchByNumber) {
+    selectedAccount = matchByNumber;
+  } else {
+    // Check if user typed index (1, 2, 3, etc.)
+    const index = parseInt(accountNumberOrIndex) - 1;
+    if (!isNaN(index) && index >= 0 && index < session.availableAccounts.length) {
+      selectedAccount = session.availableAccounts[index];
+    }
+  }
+  
+  if (!selectedAccount) {
+    return {
+      success: false,
+      message: "Invalid selection. Please choose a valid account number or option.",
+      session
+    };
+  }
+  
+  // Set the selected account and proceed with OTP
+  session.accountNumber = selectedAccount.accountNumber;
+  session.customerName = selectedAccount.accountName;
+  session.awaitingAccountSelection = false;
+  
+  // Send OTP
+  const otpResult = await otpService.generateAndSendOTP(
+    selectedAccount.accountNumber,
+    session.phoneNumber!,
+    selectedAccount.accountName
+  );
+  
+  if (otpResult.success) {
+    session.otpSessionKey = otpResult.sessionKey;
+    session.awaitingOTP = true;
+    sessions.set(sessionId, session);
+    
+    return {
+      success: false,
+      message: otpResult.message,
+      session,
+      awaitingOTP: true
+    };
+  } else {
+    return {
+      success: false,
+      message: otpResult.message,
+      session,
+      awaitingOTP: false
+    };
+  }
 }
 
 /**

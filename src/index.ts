@@ -665,7 +665,15 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         awaitingOTP: authResult.awaitingOTP || false
       };
       
-      if (authResult.success) {
+      // If customer has multiple accounts, show selection buttons
+      if (authResult.session.awaitingAccountSelection && authResult.session.availableAccounts) {
+        responseData.buttons = authResult.session.availableAccounts.map((acc, index) => ({
+          text: `${index + 1}. ${acc.accountType} - ${acc.accountNumber}`,
+          action: 'send',
+          value: acc.accountNumber
+        }));
+      }
+      else if (authResult.success) {
         responseData.buttons = [
           { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
           { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
@@ -681,6 +689,35 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     
     // Check if user is sending OTP when session is awaiting verification
     const session = customerAuth.getOrCreateSession(effectiveSessionId);
+    
+    // Handle account selection when customer has multiple accounts
+    if (session.awaitingAccountSelection && session.availableAccounts) {
+      const authResult = await customerAuth.selectAccount(effectiveSessionId, message);
+      
+      // Log bot response
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', authResult.message).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
+      // Create response with account selection buttons
+      const responseData: any = {
+        reply: authResult.message,
+        source: 'account-selection',
+        sessionId: effectiveSessionId,
+        awaitingOTP: authResult.awaitingOTP || false
+      };
+      
+      // If still awaiting selection, show buttons
+      if (!authResult.success && authResult.session.awaitingAccountSelection) {
+        responseData.buttons = authResult.session.availableAccounts.map((acc, index) => ({
+          text: `${index + 1}. ${acc.accountType} - ${acc.accountNumber}`,
+          action: 'send',
+          value: acc.accountNumber
+        }));
+      }
+      
+      return res.json(responseData);
+    }
     
     if (session.awaitingOTP) {
       const authDetails = customerAuth.extractAuthDetails(message);
