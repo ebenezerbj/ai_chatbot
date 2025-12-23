@@ -1011,36 +1011,52 @@
                         <div class="value">${currentApplication.phoneNumber || currentApplication.phone_number}</div>
                     </div>
                     <div class="detail-item">
-                        <label>Email</label>
-                        <div class="value">${currentApplication.email || 'N/A'}</div>
+                        <label>National ID</label>
+                        <div class="value">${currentApplication.nationalIdNumber || currentApplication.national_id_number || 'N/A'}</div>
                     </div>
                     <div class="detail-item">
                         <label>Account Number</label>
                         <div class="value">${currentApplication.accountNumber || currentApplication.account_number || 'N/A'}</div>
                     </div>
                     <div class="detail-item">
-                        <label>Loan Type</label>
-                        <div class="value">${currentApplication.loanType || currentApplication.loan_type || 'N/A'}</div>
+                        <label>Loan Purpose</label>
+                        <div class="value">${currentApplication.loanPurpose || currentApplication.loan_purpose || 'N/A'}</div>
                     </div>
                     <div class="detail-item">
                         <label>Loan Amount</label>
                         <div class="value">GHS ${(currentApplication.loanAmount || currentApplication.loan_amount || 0).toLocaleString()}</div>
                     </div>
                     <div class="detail-item">
-                        <label>Purpose</label>
-                        <div class="value">${currentApplication.purpose || 'N/A'}</div>
+                        <label>Loan Tenor</label>
+                        <div class="value">${currentApplication.loanTenorMonths || currentApplication.loan_tenor_months || 0} months</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Monthly Instalment</label>
+                        <div class="value">GHS ${(currentApplication.monthlyInstalment || currentApplication.monthly_instalment || 0).toLocaleString()}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Employer</label>
+                        <div class="value">${currentApplication.employerName || currentApplication.employer_name || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Position</label>
+                        <div class="value">${currentApplication.position || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Employment Type</label>
+                        <div class="value">${currentApplication.employmentType || currentApplication.employment_type || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Length of Service</label>
+                        <div class="value">${currentApplication.lengthOfService || currentApplication.length_of_service || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Net Monthly Salary</label>
+                        <div class="value">GHS ${(currentApplication.netMonthlySalary || currentApplication.net_monthly_salary || 0).toLocaleString()}</div>
                     </div>
                     <div class="detail-item">
                         <label>Status</label>
                         <div class="value"><span class="status-badge ${currentApplication.status}">${currentApplication.status}</span></div>
-                    </div>
-                    <div class="detail-item">
-                        <label>Monthly Income</label>
-                        <div class="value">GHS ${(currentApplication.monthlyIncome || currentApplication.monthly_income || 0).toLocaleString()}</div>
-                    </div>
-                    <div class="detail-item">
-                        <label>Employment Status</label>
-                        <div class="value">${currentApplication.employmentStatus || currentApplication.employment_status || 'N/A'}</div>
                     </div>
                     <div class="detail-item">
                         <label>Date Applied</label>
