@@ -297,7 +297,7 @@ export async function validateCredentials(
     console.error('[Auth] Stack:', error.stack);
     return {
       valid: false,
-      reason: "Unable to verify your details at this time. Please try again later or contact customer service at +233 50 129 0952."
+      reason: "Unable to verify your details at this time. Please try again later or use the live chat option to speak with a representative."
     };
   }
 }
@@ -393,7 +393,7 @@ export async function authenticateCustomer(
   if (session.attempts > MAX_AUTH_ATTEMPTS) {
     return {
       success: false,
-      message: "Maximum authentication attempts exceeded. Please visit any branch or call +233 50 129 0952 for assistance.",
+      message: "Maximum authentication attempts exceeded. Please use the live chat option or leave a message for our team to assist you.",
       session,
       awaitingOTP: false
     };
@@ -653,15 +653,16 @@ export function formatLoanResponse(accountData: any): string {
     let response = `**Loan Information**\n\n`;
     response += `Thank you for your inquiry! 🏦\n\n`;
     response += `Our loan records system is currently undergoing updates to ensure you receive the most accurate and up-to-date information.\n\n`;
-    response += `For accurate details about your loan status, balance, payment schedule, or to apply for a new loan, we kindly request that you:\n\n`;
-    response += `📍 **Visit your nearest AKCB branch**\n`;
-    response += `📞 **Call us at:** +233 50 129 0952\n\n`;
+    response += `For accurate details about your loan status, balance, payment schedule, or to apply for a new loan, you can:\n\n`;
+    response += `💬 **Use the live chat** to speak with a representative\n`;
+    response += `📝 **Leave a message** and our team will get back to you\n`;
+    response += `📍 **Visit your nearest AKCB branch**\n\n`;
     response += `Our friendly staff will be happy to provide you with comprehensive information and assistance.\n\n`;
     response += `We appreciate your understanding and patience as we work to serve you better. Thank you for banking with AKCB! ✨`;
     return response;
   } catch (error: any) {
     console.error('[Auth] Error formatting loan response:', error);
-    return `**Loan Information**\n\nWe're experiencing technical difficulties retrieving your loan information. Please contact us at +233 50 129 0952 or visit any AKCB branch for assistance.`;
+    return `**Loan Information**\n\nWe're experiencing technical difficulties retrieving your loan information. Please use the live chat option or leave a message for immediate assistance.`;
   }
 }
 
@@ -671,7 +672,7 @@ export function formatLoanResponse(accountData: any): string {
 export function formatAccountBalanceOnly(accountData: any): string {
   // Check if customer has account
   if (!accountData || !accountData.accountNumber || !accountData.balance) {
-    return `**Account Information**\n\nYou have no account associated with the bank.\n\nIf you would like to open an account, please contact us at +233 50 129 0952 or visit any AKCB branch.`;
+    return `**Account Information**\n\nYou have no account associated with the bank.\n\nIf you would like to open an account, please use the live chat option or leave a message and our team will guide you through the process.`;
   }
   
   let lastUpdatedText = '';
@@ -717,7 +718,7 @@ export function formatBalanceResponse(accountData: any): string {
   
   // If customer has neither
   if (!hasAccount && !hasLoans) {
-    return `**Account Information**\n\nYou have no account or loan associated with the bank.\n\nIf you would like to open an account or apply for a loan, please contact us at +233 50 129 0952 or visit any AKCB branch.`;
+    return `**Account Information**\n\nYou have no account or loan associated with the bank.\n\nIf you would like to open an account or apply for a loan, please use the live chat option or leave a message and our team will assist you.`;
   }
   
   // If customer has loans but no account
