@@ -804,16 +804,27 @@ export async function selectAccount(
   
   let selectedAccount: {accountNumber: string; accountName: string; accountType: string} | undefined;
   
-  // Check if user typed account number
-  const matchByNumber = session.availableAccounts.find(acc => 
-    acc.accountNumber.toLowerCase() === accountNumberOrIndex.toLowerCase()
-  );
+  // Normalize the input for matching (remove spaces, lowercase)
+  const normalizedInput = accountNumberOrIndex.trim().toLowerCase().replace(/\s+/g, '');
+  
+  console.log('[Auth] Looking for match. Input:', accountNumberOrIndex, 'Normalized:', normalizedInput);
+  console.log('[Auth] Available accounts:', session.availableAccounts.map(a => a.accountNumber));
+  
+  // Check if user typed account number (flexible matching)
+  const matchByNumber = session.availableAccounts.find(acc => {
+    const normalizedAccountNum = acc.accountNumber.trim().toLowerCase().replace(/\s+/g, '');
+    const matches = normalizedAccountNum === normalizedInput || 
+                   normalizedAccountNum.includes(normalizedInput) ||
+                   normalizedInput.includes(normalizedAccountNum);
+    console.log('[Auth] Comparing', acc.accountNumber, 'normalized:', normalizedAccountNum, 'matches:', matches);
+    return matches;
+  });
   
   if (matchByNumber) {
     selectedAccount = matchByNumber;
     console.log('[Auth] Account matched by number:', selectedAccount.accountNumber);
   } else {
-    // Check if user typed index (1, 2, 3, etc.)
+    // Check if user typed index (1, 2, 3, etc.) or button clicked with account number
     const index = parseInt(accountNumberOrIndex) - 1;
     if (!isNaN(index) && index >= 0 && index < session.availableAccounts.length) {
       selectedAccount = session.availableAccounts[index];

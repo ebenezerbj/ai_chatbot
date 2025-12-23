@@ -585,6 +585,52 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         .catch(e => console.error('[ML] Churn prediction failed:', e));
     }
 
+    // Check for account selection FIRST (before auth checks) - when customer has multiple accounts
+    const session = customerAuth.getOrCreateSession(effectiveSessionId);
+    
+    console.log('[Chat] Session state:', {
+      awaitingAccountSelection: session.awaitingAccountSelection,
+      awaitingOTP: session.awaitingOTP,
+      hasAvailableAccounts: !!session.availableAccounts,
+      accountsCount: session.availableAccounts?.length || 0
+    });
+    
+    // Handle account selection when customer has multiple accounts
+    if (session.awaitingAccountSelection && session.availableAccounts && session.availableAccounts.length > 0) {
+      console.log('[Chat] Handling account selection for message:', message);
+      const authResult = await customerAuth.selectAccount(effectiveSessionId, message);
+      
+      console.log('[Chat] Account selection result:', {
+        success: authResult.success,
+        awaitingOTP: authResult.awaitingOTP,
+        stillAwaitingSelection: authResult.session.awaitingAccountSelection
+      });
+      
+      // Log bot response
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', authResult.message).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
+      // Create response with account selection buttons
+      const responseData: any = {
+        reply: authResult.message,
+        source: 'account-selection',
+        sessionId: effectiveSessionId,
+        awaitingOTP: authResult.awaitingOTP || false
+      };
+      
+      // If still awaiting selection, show buttons
+      if (!authResult.success && authResult.session.awaitingAccountSelection && authResult.session.availableAccounts) {
+        responseData.buttons = authResult.session.availableAccounts.map((acc, index) => ({
+          text: `${index + 1}. ${acc.accountType} - ${acc.accountNumber}`,
+          action: 'send',
+          value: acc.accountNumber
+        }));
+      }
+      
+      return res.json(responseData);
+    }
+
     // Check if customer needs authentication for account information
     const authDetails = customerAuth.extractAuthDetails(message);
     const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
@@ -688,51 +734,6 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     }
     
     // Check if user is sending OTP when session is awaiting verification
-    const session = customerAuth.getOrCreateSession(effectiveSessionId);
-    
-    console.log('[Chat] Session state:', {
-      awaitingAccountSelection: session.awaitingAccountSelection,
-      awaitingOTP: session.awaitingOTP,
-      hasAvailableAccounts: !!session.availableAccounts,
-      accountsCount: session.availableAccounts?.length || 0
-    });
-    
-    // Handle account selection when customer has multiple accounts
-    if (session.awaitingAccountSelection && session.availableAccounts && session.availableAccounts.length > 0) {
-      console.log('[Chat] Handling account selection for message:', message);
-      const authResult = await customerAuth.selectAccount(effectiveSessionId, message);
-      
-      console.log('[Chat] Account selection result:', {
-        success: authResult.success,
-        awaitingOTP: authResult.awaitingOTP,
-        stillAwaitingSelection: authResult.session.awaitingAccountSelection
-      });
-      
-      // Log bot response
-      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', authResult.message).catch(e =>
-        console.error('[Analytics] Failed to log bot message:', e)
-      );
-      
-      // Create response with account selection buttons
-      const responseData: any = {
-        reply: authResult.message,
-        source: 'account-selection',
-        sessionId: effectiveSessionId,
-        awaitingOTP: authResult.awaitingOTP || false
-      };
-      
-      // If still awaiting selection, show buttons
-      if (!authResult.success && authResult.session.awaitingAccountSelection && authResult.session.availableAccounts) {
-        responseData.buttons = authResult.session.availableAccounts.map((acc, index) => ({
-          text: `${index + 1}. ${acc.accountType} - ${acc.accountNumber}`,
-          action: 'send',
-          value: acc.accountNumber
-        }));
-      }
-      
-      return res.json(responseData);
-    }
-    
     if (session.awaitingOTP) {
       const authDetails = customerAuth.extractAuthDetails(message);
       
