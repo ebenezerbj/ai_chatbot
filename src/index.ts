@@ -708,7 +708,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       };
       
       // If still awaiting selection, show buttons
-      if (!authResult.success && authResult.session.awaitingAccountSelection) {
+      if (!authResult.success && authResult.session.awaitingAccountSelection && authResult.session.availableAccounts) {
         responseData.buttons = authResult.session.availableAccounts.map((acc, index) => ({
           text: `${index + 1}. ${acc.accountType} - ${acc.accountNumber}`,
           action: 'send',
