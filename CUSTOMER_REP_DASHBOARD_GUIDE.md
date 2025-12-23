@@ -8,11 +8,39 @@ The Customer Service Representative Dashboard is a dedicated interface for bank 
 **URL (Local):** http://localhost:4000/customer-rep-dashboard.html  
 **URL (Production):** https://your-app.onrender.com/customer-rep-dashboard.html
 
-### Default Credentials
-- **Username:** `csrep`
-- **Password:** `csrep123`
+### Authentication System
+The dashboard now uses **secure backend authentication**. Customer service representative accounts must be created by an administrator.
 
-⚠️ **Security Note:** Change these credentials in production by modifying the authentication logic in the dashboard HTML file.
+### Getting Your Credentials
+1. Contact your system administrator
+2. Admin will create your account via the Admin Portal → User Management
+3. You will receive your unique username and password
+4. Use these credentials to login to the dashboard
+
+### First-Time Setup for Admins
+If you're setting up the system for the first time:
+
+1. **Login as Admin:**
+   - URL: http://localhost:4000/admin-portal.html
+   - Username: `admin`
+   - Password: `admin123` (or value from ADMIN_PASSWORD env variable)
+
+2. **Create Customer Service Rep Account:**
+   - Navigate to "User Management" in the admin sidebar
+   - Click "Add New User"
+   - Fill in the form:
+     - Username: Choose a unique username
+     - Full Name: Rep's full name
+     - Email: Rep's email address
+     - Role: Select "Customer Service Rep"
+     - Password: Set a secure password
+   - Click "Create User"
+
+3. **Distribute Credentials:**
+   - Provide the username and password to the customer service rep
+   - Rep can now login to the dashboard
+
+⚠️ **Security Note:** Passwords are securely hashed in the database. Change the default admin password in production.
 
 ## Features
 
@@ -192,7 +220,16 @@ Submitted → Pending → [Processing] → Approved/Rejected
 - `PUT /api/admin/account-openings/:id/status` - Update account status
 
 ### Authentication
-The dashboard uses Bearer token authentication. The token is stored in localStorage after successful login.
+The dashboard uses Bearer token authentication with the following features:
+- Secure backend authentication via `/api/rep/login`
+- Session tokens stored in localStorage
+- Automatic token validation on page load
+- Automatic logout on token expiration
+- Password hashing (SHA-256) for security
+
+### User Roles
+- **Admin:** Full access to admin portal and user management
+- **Customer Service Rep:** Access to customer rep dashboard only
 
 ### Browser Compatibility
 - Chrome/Edge: Fully supported
@@ -202,11 +239,38 @@ The dashboard uses Bearer token authentication. The token is stored in localStor
 
 ## Troubleshooting
 
+### Cannot Login / "Failed to load applications"
+**Problem:** You see "Failed to load applications" or cannot login with old credentials (`csrep`/`csrep123`)
+
+**Solution:**
+1. The system now requires proper user accounts
+2. Old hardcoded credentials no longer work
+3. You need an account created by admin:
+   - Contact your administrator
+   - Admin creates account via Admin Portal → User Management
+   - Use the new credentials provided
+
+**For Admins Setting Up First Time:**
+```bash
+# 1. Ensure server is running
+npm start
+
+# 2. Login to admin portal
+# URL: http://localhost:4000/admin-portal.html
+# Username: admin
+# Password: admin123 (or your ADMIN_PASSWORD)
+
+# 3. Go to User Management
+# 4. Create customer service rep account
+# 5. Provide credentials to rep
+```
+
 ### Cannot Login
-- Verify credentials are correct
-- Check internet connection
-- Clear browser cache
+- Verify credentials are correct (case-sensitive)
+- Check that your account is active (admin can verify)
+- Clear browser cache and cookies
 - Try different browser
+- Ensure server is running
 
 ### Applications Not Loading
 - Click "Refresh" button

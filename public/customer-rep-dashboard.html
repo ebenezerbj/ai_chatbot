@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AKCB Customer Service Dashboard</title>
+    <script src="/rep-auth.js"></script>
     <style>
         * {
             margin: 0;
@@ -757,19 +758,31 @@
 
     <script>
         // Global state
-        let authToken = null;
         let currentTab = 'loans';
         let allData = [];
         let filteredData = [];
         let currentApplication = null;
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('csRepToken');
-            if (token) {
-                authToken = token;
-                showDashboard();
-            }
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for repAuth to be ready
+            repAuth.onReady(async () => {
+                const token = repAuth.getToken();
+                const user = repAuth.getUser();
+                
+                if (token && user) {
+                    // Verify token is still valid
+                    const isValid = await repAuth.verify();
+                    if (isValid) {
+                        document.getElementById('userName').textContent = user.full_name || user.username;
+                        showDashboard();
+                    } else {
+                        repAuth.showLoginScreen();
+                    }
+                } else {
+                    repAuth.showLoginScreen();
+                }
+            });
         });
 
         // Login
@@ -778,29 +791,26 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Simple authentication (replace with real auth)
-            if (username === 'csrep' && password === 'csrep123') {
-                authToken = 'demo-token-' + Date.now();
-                localStorage.setItem('csRepToken', authToken);
-                document.getElementById('loginError').classList.add('hidden');
-                document.getElementById('userName').textContent = username;
+            const loginError = document.getElementById('loginError');
+            loginError.classList.add('hidden');
+            
+            const result = await repAuth.login(username, password);
+            
+            if (result.success) {
+                document.getElementById('userName').textContent = result.user.full_name || result.user.username;
                 showDashboard();
             } else {
-                document.getElementById('loginError').textContent = 'Invalid credentials';
-                document.getElementById('loginError').classList.remove('hidden');
+                loginError.textContent = result.error || 'Invalid credentials';
+                loginError.classList.remove('hidden');
             }
         });
 
         function logout() {
-            localStorage.removeItem('csRepToken');
-            authToken = null;
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('dashboardScreen').classList.remove('active');
+            repAuth.logout();
         }
 
         function showDashboard() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboardScreen').classList.add('active');
+            repAuth.showDashboard();
             loadData();
         }
 
@@ -837,11 +847,7 @@
                     accounts: '/api/admin/account-openings?limit=100'
                 };
 
-                const response = await fetch(endpoints[currentTab], {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
+                const response = await repAuth.fetchWithAuth(endpoints[currentTab]);
 
                 if (!response.ok) throw new Error('Failed to load data');
 
@@ -1185,11 +1191,10 @@
                     accounts: `/api/admin/account-openings/${currentApplication.id}/status`
                 };
 
-                const response = await fetch(endpoints[currentTab], {
+                const response = await repAuth.fetchWithAuth(endpoints[currentTab], {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         status: 'approved',
@@ -1222,11 +1227,10 @@
                     accounts: `/api/admin/account-openings/${currentApplication.id}/status`
                 };
 
-                const response = await fetch(endpoints[currentTab], {
+                const response = await repAuth.fetchWithAuth(endpoints[currentTab], {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         status: 'rejected',

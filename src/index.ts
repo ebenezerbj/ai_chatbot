@@ -21,6 +21,7 @@ import * as salaryOverdraft from './salaryOverdraft';
 import * as kbModule from './knowledge/kb';
 import * as migration from './migration';
 import { LiveChatManager } from './liveChat';
+import * as userManagement from './userManagement';
 
 // Load environment variables
 dotenv.config();
@@ -65,6 +66,14 @@ app.use((req, res, next) => {
         console.log('[Server] Salary overdraft module initialized');
       } catch (error) {
         console.error('[Server] Salary overdraft initialization failed:', error);
+      }
+
+      // Initialize users table
+      try {
+        await userManagement.initializeUsersTable();
+        console.log('[Server] User management module initialized');
+      } catch (error) {
+        console.error('[Server] User management initialization failed:', error);
       }
     } catch (error) {
       console.error('[Server] Analytics initialization failed:', error);
@@ -2082,6 +2091,295 @@ app.get('/api/admin/verify', (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Verify error:', error.message);
     res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// ============================================================
+// USER MANAGEMENT ROUTES
+// ============================================================
+
+// Store active session tokens for customer service reps
+const repTokens = new Map<string, { userId: number; username: string; role: string }>();
+
+// Customer rep login endpoint
+app.post('/api/rep/login', async (req: Request, res: Response) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+    
+    const authResult = await userManagement.authenticateUser(username, password);
+    
+    if (!authResult.success || !authResult.user) {
+      return res.status(401).json({ error: authResult.error || 'Invalid credentials' });
+    }
+
+    const user = authResult.user;
+
+    // Generate session token
+    const token = generateToken();
+    repTokens.set(token, { userId: user.id, username: user.username, role: user.role });
+    
+    console.log(`[Rep] Login successful for ${user.username} (${user.role})`);
+    
+    return res.json({ 
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        full_name: user.full_name
+      }
+    });
+  } catch (error: any) {
+    console.error('[Rep] Login error:', error.message);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Customer rep logout endpoint
+app.post('/api/rep/logout', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      repTokens.delete(token);
+      console.log('[Rep] Logout successful');
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('[Rep] Logout error:', error.message);
+    res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
+// Customer rep token verification endpoint
+app.get('/api/rep/verify', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.substring(7);
+    const session = repTokens.get(token);
+    
+    if (session) {
+      return res.json({ 
+        valid: true,
+        user: {
+          userId: session.userId,
+          username: session.username,
+          role: session.role
+        }
+      });
+    } else {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  } catch (error: any) {
+    console.error('[Rep] Verify error:', error.message);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// Helper function to verify admin or customer rep token
+function isValidRepToken(token: string | undefined): { valid: boolean; session?: any } {
+  if (!token) return { valid: false };
+  
+  // Check if it's an admin token
+  if ((ADMIN_TOKEN && token === ADMIN_TOKEN) || adminTokens.has(token)) {
+    return { valid: true, session: { role: 'admin' } };
+  }
+  
+  // Check if it's a customer rep token
+  const session = repTokens.get(token);
+  if (session) {
+    return { valid: true, session };
+  }
+  
+  return { valid: false };
+}
+
+// ============================================================
+// ADMIN USER MANAGEMENT ROUTES (Admin only)
+// ============================================================
+
+// List all users (Admin only)
+app.get('/api/admin/users', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined;
+    
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const role = req.query.role as 'admin' | 'customer_rep' | undefined;
+    const users = await userManagement.listUsers(role);
+    
+    return res.json({ success: true, users });
+  } catch (error: any) {
+    console.error('[Admin] List users error:', error.message);
+    res.status(500).json({ error: 'Failed to list users' });
+  }
+});
+
+// Create new user (Admin only)
+app.post('/api/admin/users', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined;
+    
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { username, email, password, role, full_name } = req.body;
+
+    if (!username || !email || !password || !role || !full_name) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (role !== 'admin' && role !== 'customer_rep') {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    const user = await userManagement.createUser({
+      username,
+      email,
+      password,
+      role,
+      full_name
+    });
+
+    console.log(`[Admin] User created: ${username} (${role})`);
+    
+    return res.json({ success: true, user });
+  } catch (error: any) {
+    console.error('[Admin] Create user error:', error.message);
+    
+    if (error.message.includes('duplicate') || error.message.includes('unique')) {
+      return res.status(400).json({ error: 'Username or email already exists' });
+    }
+    
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+// Update user (Admin only)
+app.put('/api/admin/users/:id', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined;
+    
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    const { email, full_name, is_active, password } = req.body;
+
+    const user = await userManagement.updateUser(userId, {
+      email,
+      full_name,
+      is_active,
+      password
+    });
+
+    console.log(`[Admin] User updated: ${user.username}`);
+    
+    return res.json({ success: true, user });
+  } catch (error: any) {
+    console.error('[Admin] Update user error:', error.message);
+    
+    if (error.message.includes('not found')) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Delete user (Admin only)
+app.delete('/api/admin/users/:id', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : undefined;
+    
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    await userManagement.deleteUser(userId);
+
+    console.log(`[Admin] User deleted: ${userId}`);
+    
+    return res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error: any) {
+    console.error('[Admin] Delete user error:', error.message);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// Get current user info (for customer reps)
+app.get('/api/rep/me', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.substring(7);
+    const tokenCheck = isValidRepToken(token);
+    
+    if (!tokenCheck.valid || !tokenCheck.session) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const session = tokenCheck.session;
+    
+    if (session.role === 'admin') {
+      return res.json({
+        success: true,
+        user: {
+          username: 'admin',
+          role: 'admin',
+          full_name: 'Administrator'
+        }
+      });
+    }
+
+    const user = await userManagement.getUserById(session.userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        full_name: user.full_name
+      }
+    });
+  } catch (error: any) {
+    console.error('[Rep] Get user info error:', error.message);
+    res.status(500).json({ error: 'Failed to get user info' });
   }
 });
 
