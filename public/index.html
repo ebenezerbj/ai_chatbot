@@ -4035,15 +4035,28 @@
     // Salary Overdraft Application Form
     // ============================================
     function openSalaryOverdraftForm() {
+      console.log('[SalaryOverdraft] openSalaryOverdraftForm() called');
       const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
-      if (!nodes.length) return;
+      console.log('[SalaryOverdraft] Found', nodes.length, 'assistant messages');
+      if (!nodes.length) {
+        console.error('[SalaryOverdraft] No assistant messages found');
+        return;
+      }
       const last = nodes[nodes.length - 1];
-      if (last.querySelector('.salary-overdraft-form')) return;
+      console.log('[SalaryOverdraft] Last message element:', last);
+      if (last.querySelector('.salary-overdraft-form')) {
+        console.log('[SalaryOverdraft] Form already exists, skipping');
+        return;
+      }
 
       // Ensure only one salary overdraft form exists at a time
       try {
-        chatEl.querySelectorAll('.salary-overdraft-form').forEach(el => el.remove());
-      } catch {}
+        const existingForms = chatEl.querySelectorAll('.salary-overdraft-form');
+        console.log('[SalaryOverdraft] Removing', existingForms.length, 'existing forms');
+        existingForms.forEach(el => el.remove());
+      } catch (e) {
+        console.error('[SalaryOverdraft] Error removing existing forms:', e);
+      }
 
       const wrap = document.createElement('div');
       wrap.className = 'salary-overdraft-form';
@@ -4051,6 +4064,9 @@
       wrap.style.padding = '0.5rem';
       wrap.style.border = '1px solid var(--gray-200)';
       wrap.style.borderRadius = '8px';
+      wrap.style.display = 'block';
+      wrap.style.visibility = 'visible';
+      wrap.style.opacity = '1';
 
       wrap.innerHTML = `
         <p style="font-size:0.9rem; margin:0 0 0.5rem 0; padding:0.5rem; background:rgba(255,193,7,0.1); border-left:3px solid #ffc107; border-radius:4px;">
@@ -4166,7 +4182,18 @@
         wrap.remove();
       });
 
+      console.log('[SalaryOverdraft] Form appended to:', last);
+      console.log('[SalaryOverdraft] Form element:', wrap);
+      console.log('[SalaryOverdraft] Form display:', wrap.style.display);
+      console.log('[SalaryOverdraft] Form visibility:', wrap.style.visibility);
+      
       chatEl.scrollTop = chatEl.scrollHeight;
+      
+      // Extra scroll after a delay to ensure it's visible
+      setTimeout(() => {
+        chatEl.scrollTop = chatEl.scrollHeight;
+        console.log('[SalaryOverdraft] Scrolled to bottom');
+      }, 200);
     }
 
     async function submitSalaryOverdraft(wrapElement) {
