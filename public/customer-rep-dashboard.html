@@ -685,6 +685,9 @@
                 <button class="tab" data-tab="accounts" onclick="switchTab('accounts')">
                     Account Openings
                 </button>
+                <button class="tab" data-tab="reports" onclick="switchTab('reports')">
+                    📊 Reports
+                </button>
             </div>
 
             <!-- Content Card -->
@@ -720,6 +723,95 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reportsContent" class="content-card" style="display: none;">
+                <div class="content-header">
+                    <h2>Reports & Analytics</h2>
+                    <button class="btn btn-primary btn-sm" onclick="generateReports()">
+                        <span>↻</span> Generate
+                    </button>
+                </div>
+
+                <!-- Report Controls -->
+                <div class="filter-bar" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <select id="reportType" onchange="updateReportView()">
+                        <option value="overview">Overview Summary</option>
+                        <option value="applications">Applications by Type</option>
+                        <option value="status">Status Distribution</option>
+                        <option value="trends">Time Trends</option>
+                        <option value="performance">Performance Metrics</option>
+                    </select>
+                    
+                    <input type="date" id="reportStartDate" onchange="generateReports()">
+                    <input type="date" id="reportEndDate" onchange="generateReports()">
+                    
+                    <button class="btn btn-secondary btn-sm" onclick="exportReport('csv')">
+                        Export CSV
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportReport('pdf')">
+                        Export PDF
+                    </button>
+                </div>
+
+                <!-- Reports Display Area -->
+                <div id="reportDisplay" style="margin-top: 20px;">
+                    <div id="overviewReport" class="report-section">
+                        <h3>Overview Summary</h3>
+                        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+                            <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: bold; color: #007bff;" id="totalApplications">0</div>
+                                <div style="color: #6c757d; margin-top: 5px;">Total Applications</div>
+                            </div>
+                            <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: bold; color: #28a745;" id="approvedCount">0</div>
+                                <div style="color: #6c757d; margin-top: 5px;">Approved</div>
+                            </div>
+                            <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: bold; color: #ffc107;" id="pendingCount">0</div>
+                                <div style="color: #6c757d; margin-top: 5px;">Pending</div>
+                            </div>
+                            <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: bold; color: #dc3545;" id="rejectedCount">0</div>
+                                <div style="color: #6c757d; margin-top: 5px;">Rejected</div>
+                            </div>
+                        </div>
+
+                        <div class="application-types" style="margin-top: 30px;">
+                            <h4>Applications by Type</h4>
+                            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+                                <div class="stat-card" style="padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #1976d2;" id="loanCount">0</div>
+                                    <div style="color: #424242; margin-top: 5px;">Loan Applications</div>
+                                </div>
+                                <div class="stat-card" style="padding: 15px; background: #f3e5f5; border-radius: 8px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #7b1fa2;" id="overdraftCount">0</div>
+                                    <div style="color: #424242; margin-top: 5px;">Salary Overdrafts</div>
+                                </div>
+                                <div class="stat-card" style="padding: 15px; background: #e8f5e9; border-radius: 8px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #388e3c;" id="accountCount">0</div>
+                                    <div style="color: #424242; margin-top: 5px;">Account Openings</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="statusReport" class="report-section" style="display: none;">
+                        <h3>Status Distribution</h3>
+                        <div id="statusBreakdown"></div>
+                    </div>
+
+                    <div id="trendsReport" class="report-section" style="display: none;">
+                        <h3>Application Trends</h3>
+                        <div id="trendsChart"></div>
+                    </div>
+
+                    <div id="performanceReport" class="report-section" style="display: none;">
+                        <h3>Performance Metrics</h3>
+                        <div id="performanceData"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -826,16 +918,29 @@
                 }
             });
 
-            // Update title
-            const titles = {
-                loans: 'Loan Applications',
-                overdrafts: 'Salary Overdraft Applications',
-                accounts: 'Account Opening Applications'
-            };
-            document.getElementById('contentTitle').textContent = titles[tab];
+            // Show/hide appropriate content
+            const contentCard = document.querySelector('.content-card');
+            const reportsContent = document.getElementById('reportsContent');
+            
+            if (tab === 'reports') {
+                contentCard.style.display = 'none';
+                reportsContent.style.display = 'block';
+                generateReports();
+            } else {
+                contentCard.style.display = 'block';
+                reportsContent.style.display = 'none';
+                
+                // Update title
+                const titles = {
+                    loans: 'Loan Applications',
+                    overdrafts: 'Salary Overdraft Applications',
+                    accounts: 'Account Opening Applications'
+                };
+                document.getElementById('contentTitle').textContent = titles[tab];
 
-            // Load data
-            loadData();
+                // Load data
+                loadData();
+            }
         }
 
         // Load data
@@ -1268,6 +1373,298 @@
         function refreshData() {
             loadData();
         }
+
+        // Reports Functions
+        let reportData = {
+            loans: [],
+            overdrafts: [],
+            accounts: []
+        };
+
+        async function generateReports() {
+            try {
+                // Load all data for reports
+                const [loansRes, overdraftsRes, accountsRes] = await Promise.all([
+                    repAuth.fetchWithAuth('/api/admin/loan-applications?limit=1000'),
+                    repAuth.fetchWithAuth('/api/admin/salary-overdrafts?limit=1000'),
+                    repAuth.fetchWithAuth('/api/admin/account-openings?limit=1000')
+                ]);
+
+                if (!loansRes.ok || !overdraftsRes.ok || !accountsRes.ok) {
+                    throw new Error('Failed to load report data');
+                }
+
+                const loans = await loansRes.json();
+                const overdrafts = await overdraftsRes.json();
+                const accounts = await accountsRes.json();
+
+                reportData.loans = loans.items || [];
+                reportData.overdrafts = overdrafts.items || [];
+                reportData.accounts = accounts.items || [];
+
+                // Apply date filter if set
+                const startDate = document.getElementById('reportStartDate').value;
+                const endDate = document.getElementById('reportEndDate').value;
+
+                if (startDate || endDate) {
+                    reportData = filterByDateRange(reportData, startDate, endDate);
+                }
+
+                updateReportView();
+            } catch (error) {
+                console.error('Error generating reports:', error);
+                alert('Failed to generate reports. Please try again.');
+            }
+        }
+
+        function filterByDateRange(data, startDate, endDate) {
+            const filtered = { loans: [], overdrafts: [], accounts: [] };
+            
+            ['loans', 'overdrafts', 'accounts'].forEach(type => {
+                filtered[type] = data[type].filter(item => {
+                    const itemDate = new Date(item.createdAt);
+                    if (startDate && new Date(startDate) > itemDate) return false;
+                    if (endDate && new Date(endDate) < itemDate) return false;
+                    return true;
+                });
+            });
+            
+            return filtered;
+        }
+
+        function updateReportView() {
+            const reportType = document.getElementById('reportType').value;
+            
+            // Hide all report sections
+            document.querySelectorAll('.report-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            switch(reportType) {
+                case 'overview':
+                    showOverviewReport();
+                    document.getElementById('overviewReport').style.display = 'block';
+                    break;
+                case 'status':
+                    showStatusReport();
+                    document.getElementById('statusReport').style.display = 'block';
+                    break;
+                case 'trends':
+                    showTrendsReport();
+                    document.getElementById('trendsReport').style.display = 'block';
+                    break;
+                case 'performance':
+                    showPerformanceReport();
+                    document.getElementById('performanceReport').style.display = 'block';
+                    break;
+                case 'applications':
+                    showOverviewReport();
+                    document.getElementById('overviewReport').style.display = 'block';
+                    break;
+            }
+        }
+
+        function showOverviewReport() {
+            const allItems = [...reportData.loans, ...reportData.overdrafts, ...reportData.accounts];
+            
+            // Total applications
+            document.getElementById('totalApplications').textContent = allItems.length;
+            
+            // Count by status
+            const statusCounts = {
+                approved: 0,
+                pending: 0,
+                rejected: 0,
+                processing: 0
+            };
+            
+            allItems.forEach(item => {
+                const status = (item.status || 'pending').toLowerCase();
+                if (statusCounts.hasOwnProperty(status)) {
+                    statusCounts[status]++;
+                } else {
+                    statusCounts.pending++;
+                }
+            });
+            
+            document.getElementById('approvedCount').textContent = statusCounts.approved;
+            document.getElementById('pendingCount').textContent = statusCounts.pending + statusCounts.processing;
+            document.getElementById('rejectedCount').textContent = statusCounts.rejected;
+            
+            // Count by type
+            document.getElementById('loanCount').textContent = reportData.loans.length;
+            document.getElementById('overdraftCount').textContent = reportData.overdrafts.length;
+            document.getElementById('accountCount').textContent = reportData.accounts.length;
+        }
+
+        function showStatusReport() {
+            const allItems = [...reportData.loans, ...reportData.overdrafts, ...reportData.accounts];
+            
+            const statusBreakdown = {};
+            allItems.forEach(item => {
+                const status = item.status || 'pending';
+                statusBreakdown[status] = (statusBreakdown[status] || 0) + 1;
+            });
+            
+            let html = '<table style="width: 100%; margin-top: 20px;"><thead><tr><th>Status</th><th>Count</th><th>Percentage</th></tr></thead><tbody>';
+            
+            Object.entries(statusBreakdown).forEach(([status, count]) => {
+                const percentage = ((count / allItems.length) * 100).toFixed(1);
+                html += `<tr><td>${status}</td><td>${count}</td><td>${percentage}%</td></tr>`;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('statusBreakdown').innerHTML = html;
+        }
+
+        function showTrendsReport() {
+            const allItems = [...reportData.loans, ...reportData.overdrafts, ...reportData.accounts];
+            
+            // Group by date
+            const trendData = {};
+            allItems.forEach(item => {
+                const date = new Date(item.createdAt).toLocaleDateString();
+                trendData[date] = (trendData[date] || 0) + 1;
+            });
+            
+            let html = '<table style="width: 100%; margin-top: 20px;"><thead><tr><th>Date</th><th>Applications</th></tr></thead><tbody>';
+            
+            Object.entries(trendData)
+                .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+                .forEach(([date, count]) => {
+                    html += `<tr><td>${date}</td><td>${count}</td></tr>`;
+                });
+            
+            html += '</tbody></table>';
+            document.getElementById('trendsChart').innerHTML = html;
+        }
+
+        function showPerformanceReport() {
+            const allItems = [...reportData.loans, ...reportData.overdrafts, ...reportData.accounts];
+            
+            const approved = allItems.filter(item => item.status === 'approved').length;
+            const rejected = allItems.filter(item => item.status === 'rejected').length;
+            const pending = allItems.filter(item => ['pending', 'processing'].includes(item.status)).length;
+            
+            const approvalRate = allItems.length > 0 ? ((approved / allItems.length) * 100).toFixed(1) : 0;
+            const rejectionRate = allItems.length > 0 ? ((rejected / allItems.length) * 100).toFixed(1) : 0;
+            
+            let html = `
+                <div style="margin-top: 20px;">
+                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: bold; color: #28a745;">${approvalRate}%</div>
+                            <div style="color: #6c757d; margin-top: 5px;">Approval Rate</div>
+                        </div>
+                        <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: bold; color: #dc3545;">${rejectionRate}%</div>
+                            <div style="color: #6c757d; margin-top: 5px;">Rejection Rate</div>
+                        </div>
+                        <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: bold; color: #007bff;">${allItems.length}</div>
+                            <div style="color: #6c757d; margin-top: 5px;">Total Processed</div>
+                        </div>
+                        <div class="stat-card" style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: bold; color: #ffc107;">${pending}</div>
+                            <div style="color: #6c757d; margin-top: 5px;">Pending Review</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 30px;">Performance by Application Type</h4>
+                    <table style="width: 100%; margin-top: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Total</th>
+                                <th>Approved</th>
+                                <th>Rejected</th>
+                                <th>Pending</th>
+                                <th>Approval Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${generatePerformanceRow('Loans', reportData.loans)}
+                            ${generatePerformanceRow('Overdrafts', reportData.overdrafts)}
+                            ${generatePerformanceRow('Accounts', reportData.accounts)}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('performanceData').innerHTML = html;
+        }
+
+        function generatePerformanceRow(type, items) {
+            const approved = items.filter(item => item.status === 'approved').length;
+            const rejected = items.filter(item => item.status === 'rejected').length;
+            const pending = items.filter(item => ['pending', 'processing'].includes(item.status)).length;
+            const approvalRate = items.length > 0 ? ((approved / items.length) * 100).toFixed(1) : 0;
+            
+            return `
+                <tr>
+                    <td>${type}</td>
+                    <td>${items.length}</td>
+                    <td>${approved}</td>
+                    <td>${rejected}</td>
+                    <td>${pending}</td>
+                    <td>${approvalRate}%</td>
+                </tr>
+            `;
+        }
+
+        function exportReport(format) {
+            const reportType = document.getElementById('reportType').value;
+            const allItems = [...reportData.loans, ...reportData.overdrafts, ...reportData.accounts];
+            
+            if (format === 'csv') {
+                exportCSV(allItems, reportType);
+            } else if (format === 'pdf') {
+                alert('PDF export functionality coming soon!');
+            }
+        }
+
+        function exportCSV(data, reportType) {
+            if (data.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            // Get all unique keys from the data
+            const headers = [...new Set(data.flatMap(item => Object.keys(item)))];
+            
+            // Create CSV content
+            let csv = headers.join(',') + '\n';
+            
+            data.forEach(item => {
+                const row = headers.map(header => {
+                    const value = item[header] || '';
+                    // Escape commas and quotes
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                });
+                csv += row.join(',') + '\n';
+            });
+            
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `report_${reportType}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Set default date range (last 30 days)
+        window.addEventListener('DOMContentLoaded', () => {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('reportEndDate').valueAsDate = endDate;
+            document.getElementById('reportStartDate').valueAsDate = startDate;
+        });
     </script>
 </body>
 </html>
