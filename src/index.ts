@@ -690,9 +690,23 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // Check if user is sending OTP when session is awaiting verification
     const session = customerAuth.getOrCreateSession(effectiveSessionId);
     
+    console.log('[Chat] Session state:', {
+      awaitingAccountSelection: session.awaitingAccountSelection,
+      awaitingOTP: session.awaitingOTP,
+      hasAvailableAccounts: !!session.availableAccounts,
+      accountsCount: session.availableAccounts?.length || 0
+    });
+    
     // Handle account selection when customer has multiple accounts
-    if (session.awaitingAccountSelection && session.availableAccounts) {
+    if (session.awaitingAccountSelection && session.availableAccounts && session.availableAccounts.length > 0) {
+      console.log('[Chat] Handling account selection for message:', message);
       const authResult = await customerAuth.selectAccount(effectiveSessionId, message);
+      
+      console.log('[Chat] Account selection result:', {
+        success: authResult.success,
+        awaitingOTP: authResult.awaitingOTP,
+        stillAwaitingSelection: authResult.session.awaitingAccountSelection
+      });
       
       // Log bot response
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', authResult.message).catch(e =>

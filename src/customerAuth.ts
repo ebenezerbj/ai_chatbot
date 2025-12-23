@@ -787,6 +787,13 @@ export async function selectAccount(
 ): Promise<{ success: boolean; message: string; session: CustomerSession; awaitingOTP?: boolean }> {
   const session = getOrCreateSession(sessionId);
   
+  console.log('[Auth] selectAccount called with:', {
+    sessionId,
+    input: accountNumberOrIndex,
+    hasAccounts: !!session.availableAccounts,
+    accountsCount: session.availableAccounts?.length || 0
+  });
+  
   if (!session.availableAccounts || session.availableAccounts.length === 0) {
     return {
       success: false,
@@ -804,15 +811,18 @@ export async function selectAccount(
   
   if (matchByNumber) {
     selectedAccount = matchByNumber;
+    console.log('[Auth] Account matched by number:', selectedAccount.accountNumber);
   } else {
     // Check if user typed index (1, 2, 3, etc.)
     const index = parseInt(accountNumberOrIndex) - 1;
     if (!isNaN(index) && index >= 0 && index < session.availableAccounts.length) {
       selectedAccount = session.availableAccounts[index];
+      console.log('[Auth] Account matched by index', index + 1, ':', selectedAccount.accountNumber);
     }
   }
   
   if (!selectedAccount) {
+    console.log('[Auth] No account matched for input:', accountNumberOrIndex);
     return {
       success: false,
       message: "Invalid selection. Please choose a valid account number or option.",
@@ -824,6 +834,14 @@ export async function selectAccount(
   session.accountNumber = selectedAccount.accountNumber;
   session.customerName = selectedAccount.accountName;
   session.awaitingAccountSelection = false;
+  session.availableAccounts = undefined; // Clear the accounts list after selection
+  
+  console.log('[Auth] Account selected, updated session:', {
+    accountNumber: session.accountNumber,
+    customerName: session.customerName,
+    awaitingAccountSelection: session.awaitingAccountSelection,
+    hasAvailableAccounts: !!session.availableAccounts
+  });
   
   // Send OTP
   const otpResult = await otpService.generateAndSendOTP(
@@ -844,6 +862,8 @@ export async function selectAccount(
       awaitingOTP: true
     };
   } else {
+    // Save session even on OTP failure
+    sessions.set(sessionId, session);
     return {
       success: false,
       message: otpResult.message,
