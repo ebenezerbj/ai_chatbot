@@ -268,6 +268,17 @@ export async function validateCredentials(
     // If multiple accounts found (common with phone number auth)
     if (customers.length > 1) {
       console.log('[Auth] Multiple accounts found:', customers.length);
+      
+      // Check if phone number is available
+      const firstCustomerPhone = customers[0].phone_number;
+      if (!firstCustomerPhone || firstCustomerPhone.trim() === '') {
+        console.log('[Auth] Multiple accounts found but no phone number on record');
+        return {
+          valid: false,
+          reason: `We found ${customers.length} accounts associated with your details, but there's no phone number on record for verification.\n\nTo update your contact details and complete verification, please visit any AKCB branch with a valid ID. Our staff will help you update your information.\n\nWould you like me to connect you with a customer representative via live chat, or would you prefer to know the nearest branch location?`
+        };
+      }
+      
       const accounts = customers.map(c => ({
         accountNumber: c.account_number,
         accountName: c.account_name,
@@ -278,13 +289,23 @@ export async function validateCredentials(
         valid: true,
         multipleAccounts: true,
         accounts: accounts,
-        phoneNumber: customers[0].phone_number
+        phoneNumber: firstCustomerPhone
       };
     }
     
     // Single account found
     const customer = customers[0];
     console.log('[Auth] Customer validated successfully:', customer.account_name);
+    
+    // Check if phone number is missing or empty
+    if (!customer.phone_number || customer.phone_number.trim() === '') {
+      console.log('[Auth] Customer account found but no phone number on record');
+      return {
+        valid: false,
+        reason: `We found your account, but there's no phone number associated with it in our records.\n\nTo update your contact details and complete verification, please visit any AKCB branch with a valid ID. Our staff will help you update your information so you can access your account through our digital channels.\n\nWould you like me to connect you with a customer representative via live chat for more assistance, or would you prefer to know the nearest branch location?`
+      };
+    }
+    
     return {
       valid: true,
       customerName: customer.account_name,
