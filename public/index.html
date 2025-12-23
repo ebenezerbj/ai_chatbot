@@ -497,7 +497,7 @@
     }
 
     .send-button {
-      background: #0F4C81;
+      background: #f97316;
       color: white;
       border: none;
       border-radius: 12px;
@@ -513,15 +513,18 @@
       min-height: 44px;
       white-space: nowrap;
       outline: none;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
     }
 
     .send-button:hover:not(:disabled) {
-      background: #1a5a96;
+      background: #ea580c;
+      box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4);
     }
 
     .send-button:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(15, 76, 129, 0.3);
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.5);
+      background: #c2410c;
     }
 
     .send-button:focus-visible {
@@ -561,15 +564,17 @@
     }
     
     .icon-button:hover:not(:disabled) {
-      background: var(--gray-50);
-      border-color: var(--gray-300);
+      background: #fff7ed;
+      border-color: #fb923c;
       transform: translateY(-1px);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
+      color: #f97316;
     }
     
     .icon-button:active:not(:disabled) {
       transform: translateY(0);
-      background: var(--gray-100);
+      background: #ffedd5;
+      border-color: #f97316;
     }
     
     .icon-button:focus-visible {
@@ -2139,7 +2144,7 @@
             
             const copyBtn = document.createElement('button');
             copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Coordinates';
-            copyBtn.style.cssText = 'padding: 8px 14px; border-radius: 8px; border: 1px solid var(--primary-300); background: var(--primary-600); color: white; cursor: pointer; font-weight: 500;';
+            copyBtn.style.cssText = 'padding: 8px 14px; border-radius: 8px; border: 1px solid #fb923c; background: #f97316; color: white; cursor: pointer; font-weight: 500; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);';
             copyBtn.addEventListener('click', async () => {
               const text = `${latStr}, ${lngStr}`;
               let success = false;
@@ -2289,9 +2294,9 @@
           const button = document.createElement('button');
           button.className = 'quick-action-btn';
           button.style.cssText = `
-            background: var(--primary-50);
-            color: var(--primary-700);
-            border: 1px solid var(--primary-200);
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fb923c;
             padding: 8px 16px;
             border-radius: var(--radius-lg);
             font-size: var(--font-size-sm);
@@ -3175,7 +3180,13 @@
         
         if (messageText) {
           console.log('[Adding Message] Text:', messageText, 'Options:', messageOptions);
-          addMsg('assistant', messageText, messageOptions);
+          
+          // Check if this is a handover situation - if so, skip the bot's response and show options directly
+          const isHandoverSituation = data?.suggestHandover;
+          
+          if (!isHandoverSituation) {
+            addMsg('assistant', messageText, messageOptions);
+          }
           
           // Scroll to bottom to ensure thank you message is visible
           if (data?.visitorFormSuccess) {
@@ -3247,23 +3258,15 @@
                   openHandoverForm();
                 }, 100);
               } else {
-                // Check if the reply already contains the handover question
-                const replyContainsHandover = data.reply.includes('Would you like me to facilitate a connection') ||
-                                              data.reply.includes('Would you like me to connect you with') ||
-                                              data.reply.includes('connect you with a customer representative');
-                
-                if (!replyContainsHandover) {
-                  // Only add handover message if not already in the reply
-                  addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to connect you with a customer representative who can provide the necessary assistance?');
-                }
-                renderHandoverCTA();
+                // Show assistance options directly without additional message
+                showAssistanceOptions();
               }
             }
           } catch {}
         } else {
           addMsg('assistant', 'I\'m having some technical difficulties right now. Let me connect you with one of our human agents who can help you immediately.');
           setTimeout(() => {
-            renderHandoverCTA();
+            showAssistanceOptions();
           }, 100);
         }
       } catch (error) {
@@ -3272,7 +3275,7 @@
         addMsg('assistant', 'I\'m having some technical difficulties right now. Let me connect you with one of our human agents who can help you immediately.');
         // Automatically trigger handover when there's a connection error
         setTimeout(() => {
-          renderHandoverCTA();
+          showAssistanceOptions();
         }, 100);
       } finally {
         sendButton.disabled = false;
@@ -3291,11 +3294,11 @@
       messageDiv.innerHTML = `
         <div class="msg-content">
           <div class="msg-actions" style="margin-top: 0.5rem;">
-            <button type="button" class="msg-action-btn" style="background: var(--primary-color); color: white; border-color: var(--primary-color);">
+            <button type="button" class="msg-action-btn" style="background: #f97316; color: white; border-color: #f97316; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);">
               <i class="fa fa-comments" aria-hidden="true"></i>
               <span>Live Chat with Agent</span>
             </button>
-            <button type="button" class="msg-action-btn" style="background: var(--secondary-color); color: white; border-color: var(--secondary-color);">
+            <button type="button" class="msg-action-btn" style="background: #10b981; color: white; border-color: #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
               <i class="fa fa-envelope" aria-hidden="true"></i>
               <span>Leave a Message</span>
             </button>
@@ -3403,7 +3406,7 @@
         </div>
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
           <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <button type="button" id="handoverSend" class="msg-action-btn" style="white-space:nowrap; background: var(--primary-color); border-color: var(--primary-color); color: var(--white);" aria-label="Request callback from human agent" title="Request callback from human agent"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Request callback</span></button>
+          <button type="button" id="handoverSend" class="msg-action-btn" style="white-space:nowrap; background: #f97316; border-color: #f97316; color: var(--white); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);" aria-label="Request callback from human agent" title="Request callback from human agent"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Request callback</span></button>
         </div>
         <div id="locationStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color);"></div>
         <div id="handoverStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--gray-600);"></div>
@@ -3496,7 +3499,7 @@
         </div>
 
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center; flex-wrap:wrap;">
-          <button type="button" id="loanSubmit" class="msg-action-btn" style="white-space:nowrap; background: var(--primary-color); border-color: var(--primary-color); color: var(--white);" aria-label="Submit loan application" title="Submit loan application"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button>
+          <button type="button" id="loanSubmit" class="msg-action-btn" style="white-space:nowrap; background: #f97316; border-color: #f97316; color: var(--white); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);" aria-label="Submit loan application" title="Submit loan application"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button>
           <button type="button" id="loanCancel" class="msg-action-btn" style="white-space:nowrap;" aria-label="Cancel loan application" title="Cancel loan application"><i class="fa fa-xmark" aria-hidden="true"></i><span>Cancel</span></button>
           <div id="loanAppStatus" style="font-size:0.85rem; color:var(--gray-600);"></div>
         </div>
@@ -3814,7 +3817,7 @@
         </div>
 
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center; flex-wrap:wrap;">
-          <button type="button" id="accSubmit" class="msg-action-btn" style="white-space:nowrap; background: var(--primary-color); border-color: var(--primary-color); color: var(--white);" aria-label="Submit account opening" title="Submit account opening"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button>
+          <button type="button" id="accSubmit" class="msg-action-btn" style="white-space:nowrap; background: #f97316; border-color: #f97316; color: var(--white); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);" aria-label="Submit account opening" title="Submit account opening"><i class="fa fa-paper-plane" aria-hidden="true"></i><span>Submit</span></button>
           <button type="button" id="accCancel" class="msg-action-btn" style="white-space:nowrap;" aria-label="Cancel account opening" title="Cancel account opening"><i class="fa fa-xmark" aria-hidden="true"></i><span>Cancel</span></button>
           <div id="accStatus" style="font-size:0.85rem; color:var(--gray-600);"></div>
         </div>

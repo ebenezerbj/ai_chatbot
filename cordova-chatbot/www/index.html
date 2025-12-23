@@ -345,7 +345,7 @@
     }
 
     .send-button {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+      background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
       color: var(--white);
       border: none;
       border-radius: var(--radius-lg);
@@ -358,15 +358,18 @@
       align-items: center;
       gap: 0.5rem;
       min-height: 44px;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
     }
 
     .send-button:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4);
+      background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
     }
 
     .send-button:active:not(:disabled) {
       transform: translateY(0);
+      background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
     }
 
     .send-button:disabled {
@@ -983,9 +986,9 @@
           const button = document.createElement('button');
           button.className = 'quick-action-btn';
           button.style.cssText = `
-            background: var(--primary-50);
-            color: var(--primary-700);
-            border: 1px solid var(--primary-200);
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fb923c;
             padding: 8px 16px;
             border-radius: var(--radius-lg);
             font-size: var(--font-size-sm);
@@ -997,13 +1000,13 @@
           button.textContent = btn.text;
           
           button.onmouseenter = () => {
-            button.style.background = 'var(--primary-100)';
-            button.style.borderColor = 'var(--primary-300)';
+            button.style.background = '#ffedd5';
+            button.style.borderColor = '#f97316';
             button.style.transform = 'translateY(-1px)';
           };
           button.onmouseleave = () => {
-            button.style.background = 'var(--primary-50)';
-            button.style.borderColor = 'var(--primary-200)';
+            button.style.background = '#fff7ed';
+            button.style.borderColor = '#fb923c';
             button.style.transform = 'translateY(0)';
           };
           
