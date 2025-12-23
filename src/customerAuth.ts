@@ -330,10 +330,25 @@ export async function authenticateCustomer(
     const verification = otpService.verifyOTP(session.otpSessionKey, otp);
     
     if (verification.success) {
+      session.awaitingOTP = false;
+      
+      // Check if customer has multiple accounts awaiting selection
+      if (session.awaitingAccountSelection && session.availableAccounts && session.availableAccounts.length > 0) {
+        console.log('[Auth] OTP verified, now showing account selection');
+        sessions.set(sessionId, session);
+        
+        return {
+          success: false,
+          message: `OTP verified! ✓\n\nYou have ${session.availableAccounts.length} accounts registered. Please select which account you want to access:`,
+          session,
+          awaitingOTP: false
+        };
+      }
+      
+      // Single account - complete authentication
       session.isAuthenticated = true;
       session.authenticatedAt = new Date();
       session.expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
-      session.awaitingOTP = false;
       sessions.set(sessionId, session);
       
       // Get customer's first name for personalized greeting
@@ -391,18 +406,38 @@ export async function authenticateCustomer(
   if (validation.valid) {
     // Check if customer has multiple accounts
     if (validation.multipleAccounts && validation.accounts) {
-      console.log('[Auth] Customer has multiple accounts, prompting selection');
+      console.log('[Auth] Customer has multiple accounts, sending OTP first for security');
       session.availableAccounts = validation.accounts;
       session.awaitingAccountSelection = true;
       session.phoneNumber = validation.phoneNumber;
-      sessions.set(sessionId, session);
       
-      return {
-        success: false,
-        message: `You have ${validation.accounts.length} accounts registered with this phone number. Please select which account you want to access or type your account number.`,
-        session,
-        awaitingOTP: false
-      };
+      // Send OTP for verification BEFORE showing account numbers (security measure)
+      const otpResult = await otpService.generateAndSendOTP(
+        validation.phoneNumber!,
+        validation.phoneNumber!,
+        'Valued Customer'
+      );
+      
+      if (otpResult.success) {
+        session.otpSessionKey = otpResult.sessionKey;
+        session.awaitingOTP = true;
+        sessions.set(sessionId, session);
+        
+        return {
+          success: false,
+          message: `${otpResult.message}\n\nOnce verified, you'll be able to select from your ${validation.accounts.length} registered accounts.`,
+          session,
+          awaitingOTP: true
+        };
+      } else {
+        sessions.set(sessionId, session);
+        return {
+          success: false,
+          message: otpResult.message,
+          session,
+          awaitingOTP: false
+        };
+      }
     }
     
     // Update session with complete details from database (single account)
@@ -841,47 +876,34 @@ export async function selectAccount(
     };
   }
   
-  // Set the selected account and proceed with OTP
+  // Set the selected account and complete authentication (OTP already verified)
   session.accountNumber = selectedAccount.accountNumber;
   session.customerName = selectedAccount.accountName;
   session.awaitingAccountSelection = false;
   session.availableAccounts = undefined; // Clear the accounts list after selection
+  session.isAuthenticated = true;
+  session.authenticatedAt = new Date();
+  session.expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
   
-  console.log('[Auth] Account selected, updated session:', {
+  console.log('[Auth] Account selected, authentication complete:', {
     accountNumber: session.accountNumber,
     customerName: session.customerName,
     awaitingAccountSelection: session.awaitingAccountSelection,
-    hasAvailableAccounts: !!session.availableAccounts
+    isAuthenticated: session.isAuthenticated
   });
   
-  // Send OTP
-  const otpResult = await otpService.generateAndSendOTP(
-    selectedAccount.accountNumber,
-    session.phoneNumber!,
-    selectedAccount.accountName
-  );
+  sessions.set(sessionId, session);
   
-  if (otpResult.success) {
-    session.otpSessionKey = otpResult.sessionKey;
-    session.awaitingOTP = true;
-    sessions.set(sessionId, session);
-    
-    return {
-      success: false,
-      message: otpResult.message,
-      session,
-      awaitingOTP: true
-    };
-  } else {
-    // Save session even on OTP failure
-    sessions.set(sessionId, session);
-    return {
-      success: false,
-      message: otpResult.message,
-      session,
-      awaitingOTP: false
-    };
-  }
+  // Get customer's first name for personalized greeting
+  const firstName = selectedAccount.accountName ? selectedAccount.accountName.split(' ')[0] : '';
+  const greeting = firstName ? `Welcome, ${firstName}!` : 'Welcome!';
+  
+  return {
+    success: true,
+    message: `${greeting} You've selected account ${selectedAccount.accountNumber} (${selectedAccount.accountType}). How can I help you today?`,
+    session,
+    awaitingOTP: false
+  };
 }
 
 /**

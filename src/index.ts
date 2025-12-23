@@ -627,6 +627,17 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           value: acc.accountNumber
         }));
       }
+      // If account selection succeeded, show quick action buttons
+      else if (authResult.success) {
+        responseData.buttons = [
+          { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
+          { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
+          { text: 'Salary overdraft (salary workers)', action: 'send', value: 'I want to apply for salary overdraft', icon: 'fa fa-money-bill-wave' },
+          { text: 'Apply for a loan', action: 'send', value: 'I want to apply for a loan' },
+          { text: 'Loan information', action: 'send', value: 'Tell me about my loan' },
+          { text: 'Other inquiry', action: 'send', value: 'I have another question' }
+        ];
+      }
       
       return res.json(responseData);
     }
@@ -759,7 +770,15 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           awaitingOTP: authResult.awaitingOTP || false
         };
         
-        if (authResult.success) {
+        // If OTP verified but account selection needed, show account buttons
+        if (!authResult.awaitingOTP && authResult.session.awaitingAccountSelection && authResult.session.availableAccounts) {
+          responseData.buttons = authResult.session.availableAccounts.map((acc, index) => ({
+            text: `${index + 1}. ${acc.accountType} - ${acc.accountNumber}`,
+            action: 'send',
+            value: acc.accountNumber
+          }));
+        }
+        else if (authResult.success) {
           responseData.buttons = [
             { text: 'Check my balance', action: 'send', value: 'What is my account balance?' },
             { text: 'Recent transactions', action: 'send', value: 'Show me my recent transactions' },
