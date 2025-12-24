@@ -22,6 +22,7 @@ import * as kbModule from './knowledge/kb';
 import * as migration from './migration';
 import { LiveChatManager } from './liveChat';
 import * as userManagement from './userManagement';
+import * as otpService from './otpService';
 
 // Load environment variables
 dotenv.config();
@@ -2127,6 +2128,216 @@ app.get('/api/admin/verify', (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Admin] Verify error:', error.message);
     res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// ============================================================
+// SMS SENDING ROUTES
+// ============================================================
+
+// In-memory SMS history (in production, store in database)
+const smsHistory: Array<{
+  timestamp: Date;
+  recipientType: string;
+  recipientCount: number;
+  message: string;
+  sentBy: string;
+}> = [];
+
+/**
+ * Helper function to send SMS using the OTP service
+ */
+async function sendSMSMessage(phoneNumber: string, message: string): Promise<boolean> {
+  try {
+    const apiKey = process.env.SMS_ONLINE_API_KEY;
+    const senderName = process.env.SMS_ONLINE_SENDER || 'AKCB';
+
+    if (!apiKey) {
+      console.warn('[SMS] SMS Online Ghana not configured. Would send:', message);
+      console.log(`[SMS DEV MODE] Phone: ${phoneNumber}, Message: ${message}`);
+      return true;
+    }
+
+    // Format phone number for SMS Online Ghana (233XXXXXXXXX format)
+    let formattedPhone = phoneNumber;
+    if (phoneNumber.startsWith('0')) {
+      formattedPhone = '233' + phoneNumber.substring(1);
+    } else if (phoneNumber.startsWith('+233')) {
+      formattedPhone = phoneNumber.substring(1);
+    } else if (!phoneNumber.startsWith('233')) {
+      formattedPhone = '233' + phoneNumber;
+    }
+
+    // Prepare SMS request data
+    const smsData = {
+      text: message,
+      type: 0, // GSM default encoding
+      sender: senderName,
+      destinations: [formattedPhone]
+    };
+
+    // Create HTTPS agent with CA certificate bundle
+    let httpsAgent;
+    const cacertPath = path.join(process.cwd(), 'cacert.pem');
+    
+    try {
+      if (fs.existsSync(cacertPath)) {
+        const ca = fs.readFileSync(cacertPath);
+        httpsAgent = new https.Agent({
+          ca: ca,
+          rejectUnauthorized: true
+        });
+      } else {
+        httpsAgent = new https.Agent({
+          rejectUnauthorized: true
+        });
+      }
+    } catch (certError) {
+      httpsAgent = new https.Agent({
+        rejectUnauthorized: true
+      });
+    }
+
+    // Send SMS via SMS Online Ghana API
+    const response = await axios.post(
+      'https://api.smsonlinegh.com/v5/message/sms/send',
+      smsData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Host': 'api.smsonlinegh.com',
+          'Authorization': `key ${apiKey}`
+        },
+        httpsAgent,
+        timeout: 10000
+      }
+    );
+
+    if (response.status === 200 && response.data.handshake?.id === 0) {
+      console.log(`[SMS] Message sent successfully to ${formattedPhone}`);
+      return true;
+    } else {
+      console.error('[SMS] SMS API returned non-success status:', response.data);
+      return false;
+    }
+  } catch (error: any) {
+    console.error('[SMS] Failed to send SMS:', error.response?.data || error.message);
+    return false;
+  }
+}
+
+// Admin: Send SMS
+app.post('/api/admin/send-sms', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const { recipientType, phoneNumbers, message, scheduled, scheduleTime } = req.body;
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    if (scheduled && scheduleTime) {
+      // TODO: Implement scheduled SMS (would need a job queue)
+      return res.status(400).json({ error: 'Scheduled SMS not yet implemented' });
+    }
+
+    let recipients: string[] = [];
+    let sent = 0;
+    let failed = 0;
+
+    // Determine recipients
+    if (recipientType === 'single' && phoneNumbers && phoneNumbers.length > 0) {
+      recipients = [phoneNumbers[0]];
+    } else if (recipientType === 'multiple' && phoneNumbers && phoneNumbers.length > 0) {
+      recipients = phoneNumbers;
+    } else if (recipientType === 'all-customers') {
+      // Get all customer phone numbers from database
+      try {
+        const query = 'SELECT DISTINCT phone_number FROM customers WHERE phone_number IS NOT NULL AND phone_number != ""';
+        const result = await executeQuery(query);
+        recipients = result.map((row: any) => row.phone_number);
+      } catch (error) {
+        console.error('[SMS] Error fetching customer phone numbers:', error);
+        return res.status(500).json({ error: 'Failed to fetch customer phone numbers' });
+      }
+    } else {
+      return res.status(400).json({ error: 'Invalid recipient type or no recipients provided' });
+    }
+
+    if (recipients.length === 0) {
+      return res.status(400).json({ error: 'No recipients found' });
+    }
+
+    // Send SMS to each recipient
+    const sendPromises = recipients.map(async (phone) => {
+      const success = await sendSMSMessage(phone, message);
+      if (success) {
+        sent++;
+      } else {
+        failed++;
+      }
+    });
+
+    await Promise.all(sendPromises);
+
+    // Log to SMS history
+    smsHistory.unshift({
+      timestamp: new Date(),
+      recipientType,
+      recipientCount: recipients.length,
+      message,
+      sentBy: 'admin'
+    });
+
+    // Keep only last 100 entries
+    if (smsHistory.length > 100) {
+      smsHistory.length = 100;
+    }
+
+    console.log(`[SMS] Sent ${sent} messages, ${failed} failed`);
+
+    return res.json({
+      success: true,
+      sent,
+      failed,
+      total: recipients.length
+    });
+  } catch (error: any) {
+    console.error('[SMS] Send error:', error.message);
+    return res.status(500).json({ error: 'Failed to send SMS' });
+  }
+});
+
+// Admin: Get SMS history
+app.get('/api/admin/sms-history', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const token = authHeader.substring(7);
+    if (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    return res.json({
+      success: true,
+      history: smsHistory.slice(0, 50) // Return last 50 entries
+    });
+  } catch (error: any) {
+    console.error('[SMS] History error:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch SMS history' });
   }
 });
 
