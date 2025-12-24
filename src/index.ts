@@ -2973,21 +2973,21 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       executeQuery<any>(
         `SELECT 
           CASE 
-            WHEN branch_code = 'GH1510010' OR branch_code = 'AMANTIN AND KASEI HO.' THEN 'Head Office'
-            WHEN branch_code = 'GH1510011' OR branch_code = 'AMANTIN n KASEI-EJURA' THEN 'Ejura'
-            WHEN branch_code = 'GH1510012' OR branch_code = 'AMANTINnKASEI-KWAME DS' THEN 'Kwame Danso'
-            WHEN branch_code = 'GH1510013' OR branch_code = 'AMANTINnKASEI-ATEBUBU' THEN 'Atebubu'
-            WHEN branch_code = 'GH1510014' OR branch_code = 'AMANTINnKASEI-YEJI' THEN 'Yeji'
-            WHEN branch_code = 'GH1510015' OR branch_code = 'AMANTINnKASEI-AMANTIN' THEN 'Amantin'
-            WHEN branch_code = 'GH1510016' OR branch_code = 'AMANTINnKASEI-AHWIAA' THEN 'Ahwiaa'
-            WHEN branch_code = 'GH1510017' OR branch_code = 'AMANTINnKASEI-KAJEJI' OR branch_code = 'AMANTINnKASEI-KAJAJI' THEN 'Kajeji'
-            WHEN branch_code = 'GH1510018' OR branch_code = 'AMANTINnKASEI-KEJETIA' THEN 'Kejetia'
+            WHEN branch_code IN ('GH1510010', 'AMANTIN AND KASEI HO.') THEN 'Head Office'
+            WHEN branch_code IN ('GH1510011', 'AMANTIN n KASEI-EJURA') THEN 'Ejura'
+            WHEN branch_code IN ('GH1510012', 'AMANTINnKASEI-KWAME DS') THEN 'Kwame Danso'
+            WHEN branch_code IN ('GH1510013', 'AMANTINnKASEI-ATEBUBU') THEN 'Atebubu'
+            WHEN branch_code IN ('GH1510014', 'AMANTINnKASEI-YEJI') THEN 'Yeji'
+            WHEN branch_code IN ('GH1510015', 'AMANTINnKASEI-AMANTIN') THEN 'Amantin'
+            WHEN branch_code IN ('GH1510016', 'AMANTINnKASEI-AHWIAA') THEN 'Ahwiaa'
+            WHEN branch_code IN ('GH1510017', 'AMANTINnKASEI-KAJEJI', 'AMANTINnKASEI-KAJAJI') THEN 'Kajeji'
+            WHEN branch_code IN ('GH1510018', 'AMANTINnKASEI-KEJETIA') THEN 'Kejetia'
             WHEN branch_code = 'GH1510019' THEN 'Other'
             ELSE 'Other'
           END as branch_name,
           COUNT(*) as count 
         FROM customers 
-        GROUP BY branch_name 
+        GROUP BY 1
         ORDER BY count DESC 
         LIMIT 20`
       )
