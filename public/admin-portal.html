@@ -3274,8 +3274,7 @@ https://example.com/products"></textarea>
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>
-                            <div style="font-weight: 500;">${item.branch_name || 'Unknown'}</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">${item.branch_code || 'N/A'}</div>
+                            <div style="font-weight: 500;">${item.branch_name || 'Unknown'} <span style="font-weight: 400; color: #6b7280; font-size: 0.85rem;">(${item.branch_code || 'N/A'})</span></div>
                         </td>
                         <td style="text-align: right;">${Number(item.count).toLocaleString()}</td>
                         <td style="text-align: right;">${percentage}%</td>

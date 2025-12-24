@@ -2917,8 +2917,9 @@ app.get('/api/admin/stats', async (req: Request, res: Response) => {
 // Customer demographics endpoint
 app.get('/api/admin/demographics', async (req: Request, res: Response) => {
   try {
-    // Branch code to name mapping
+    // Branch code to name mapping (supports both codes and full names from CSV)
     const branchMapping: { [key: string]: string } = {
+      // Standard branch codes
       'GH1510010': 'Head Office',
       'GH1510011': 'Ejura',
       'GH1510012': 'Kwame Danso',
@@ -2927,7 +2928,19 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       'GH1510015': 'Amantin',
       'GH1510016': 'Ahwiaa',
       'GH1510017': 'Kajeji',
-      'GH1510018': 'Kejetia'
+      'GH1510018': 'Kejetia',
+      // Full branch names from CSV
+      'AMANTIN AND KASEI HO.': 'Head Office',
+      'AMANTIN n KASEI-EJURA': 'Ejura',
+      'AMANTINnKASEI-KWAME DS': 'Kwame Danso',
+      'AMANTINnKASEI-ATEBUBU': 'Atebubu',
+      'AMANTINnKASEI-YEJI': 'Yeji',
+      'AMANTINnKASEI-AMANTIN': 'Amantin',
+      'AMANTINnKASEI-AHWIAA': 'Ahwiaa',
+      'AMANTINnKASEI-KAJEJI': 'Kajeji',
+      'AMANTINnKASEI-KAJAJI': 'Kajeji',
+      'AMANTINnKASEI-KEJETIA': 'Kejetia',
+      'GH1510019': 'Other'
     };
     // Check authentication
     const authHeader = req.headers.authorization;
@@ -2955,15 +2968,33 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       'SELECT account_type, COUNT(*) as count FROM customers GROUP BY account_type ORDER BY count DESC'
     );
 
-    // Get customers by branch
+    // Get customers by branch - normalize branch codes to standard names first
     const byBranch = await executeQuery<any>(
-      'SELECT branch_code, COUNT(*) as count FROM customers GROUP BY branch_code ORDER BY count DESC LIMIT 20'
+      `SELECT 
+        CASE 
+          WHEN branch_code = 'GH1510010' OR branch_code = 'AMANTIN AND KASEI HO.' THEN 'Head Office'
+          WHEN branch_code = 'GH1510011' OR branch_code = 'AMANTIN n KASEI-EJURA' THEN 'Ejura'
+          WHEN branch_code = 'GH1510012' OR branch_code = 'AMANTINnKASEI-KWAME DS' THEN 'Kwame Danso'
+          WHEN branch_code = 'GH1510013' OR branch_code = 'AMANTINnKASEI-ATEBUBU' THEN 'Atebubu'
+          WHEN branch_code = 'GH1510014' OR branch_code = 'AMANTINnKASEI-YEJI' THEN 'Yeji'
+          WHEN branch_code = 'GH1510015' OR branch_code = 'AMANTINnKASEI-AMANTIN' THEN 'Amantin'
+          WHEN branch_code = 'GH1510016' OR branch_code = 'AMANTINnKASEI-AHWIAA' THEN 'Ahwiaa'
+          WHEN branch_code = 'GH1510017' OR branch_code = 'AMANTINnKASEI-KAJEJI' OR branch_code = 'AMANTINnKASEI-KAJAJI' THEN 'Kajeji'
+          WHEN branch_code = 'GH1510018' OR branch_code = 'AMANTINnKASEI-KEJETIA' THEN 'Kejetia'
+          WHEN branch_code = 'GH1510019' THEN 'Other'
+          ELSE 'Other'
+        END as branch_name,
+        COUNT(*) as count 
+      FROM customers 
+      GROUP BY branch_name 
+      ORDER BY count DESC 
+      LIMIT 20`
     );
 
-    // Enhance branch data with names
+    // Format branch data with codes for display
     const byBranchWithNames = byBranch.map((branch: any) => ({
-      branch_code: branch.branch_code,
-      branch_name: branchMapping[branch.branch_code] || 'Unknown',
+      branch_code: Object.keys(branchMapping).find(key => branchMapping[key] === branch.branch_name) || 'N/A',
+      branch_name: branch.branch_name,
       count: branch.count
     }));
 
