@@ -647,9 +647,44 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
 }
 
 /**
- * Get friendly account type name from code
+ * Derive account type from account number structure
+ * Position 6 of account number indicates type: 1=Savings, 2=Current
  */
-function getAccountTypeName(code: string): string {
+function getAccountTypeFromNumber(accountNumber: string): string | null {
+  // Remove any non-numeric characters (like 'v' prefix)
+  const cleanNumber = accountNumber.replace(/[^0-9]/g, '');
+  
+  // Check if account number is long enough
+  if (cleanNumber.length < 6) {
+    return null;
+  }
+  
+  // Get character at position 6 (0-indexed position 5)
+  const typeIndicator = cleanNumber.charAt(5);
+  
+  switch (typeIndicator) {
+    case '1':
+      return 'Savings Account';
+    case '2':
+      return 'Current Account';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Get friendly account type name from code or account number
+ */
+function getAccountTypeName(code: string, accountNumber?: string): string {
+  // First, try to derive from account number if provided
+  if (accountNumber) {
+    const derivedType = getAccountTypeFromNumber(accountNumber);
+    if (derivedType) {
+      return derivedType;
+    }
+  }
+  
+  // Fallback to code mapping
   const typeMap: { [key: string]: string } = {
     '1850': 'Savings Account',
     '1800': 'Current Account',
@@ -718,7 +753,7 @@ export function formatAccountBalanceOnly(accountData: any): string {
   return `**Account Balance**\n\n` +
     `Account: ${accountData.accountNumber}\n` +
     `Name: ${accountData.accountName}\n` +
-    `Type: ${getAccountTypeName(accountData.accountType)}\n\n` +
+    `Type: ${getAccountTypeName(accountData.accountType, accountData.accountNumber)}\n\n` +
     `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
     `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
     lastUpdatedText +
@@ -807,7 +842,7 @@ export function formatBalanceResponse(accountData: any): string {
   return `**Account Balance**\n\n` +
     `Account: ${accountData.accountNumber}\n` +
     `Name: ${accountData.accountName}\n` +
-    `Type: ${getAccountTypeName(accountData.accountType)}\n\n` +
+    `Type: ${getAccountTypeName(accountData.accountType, accountData.accountNumber)}\n\n` +
     `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
     `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
     lastUpdatedText +
