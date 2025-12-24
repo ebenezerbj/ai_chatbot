@@ -2966,8 +2966,8 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       // Get customers by status
       executeQuery<any>('SELECT status, COUNT(*) as count FROM customers GROUP BY status ORDER BY count DESC'),
       
-      // Get customers by account type
-      executeQuery<any>('SELECT account_type, COUNT(*) as count FROM customers GROUP BY account_type ORDER BY count DESC'),
+      // Get customers by product name (readable account type)
+      executeQuery<any>('SELECT COALESCE(NULLIF(product_name, \'\'), account_type, \'Unknown\') as account_type, COUNT(*) as count FROM customers GROUP BY 1 ORDER BY count DESC'),
       
       // Get customers by branch - normalize branch codes to standard names first
       executeQuery<any>(
