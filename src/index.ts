@@ -2953,43 +2953,45 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized - Invalid token' });
     }
 
-    // Get total customers
-    const totalCustomers = await querySingle<any>(
-      'SELECT COUNT(*) as count FROM customers'
-    );
-
-    // Get customers by status
-    const byStatus = await executeQuery<any>(
-      'SELECT status, COUNT(*) as count FROM customers GROUP BY status ORDER BY count DESC'
-    );
-
-    // Get customers by account type
-    const byAccountType = await executeQuery<any>(
-      'SELECT account_type, COUNT(*) as count FROM customers GROUP BY account_type ORDER BY count DESC'
-    );
-
-    // Get customers by branch - normalize branch codes to standard names first
-    const byBranch = await executeQuery<any>(
-      `SELECT 
-        CASE 
-          WHEN branch_code = 'GH1510010' OR branch_code = 'AMANTIN AND KASEI HO.' THEN 'Head Office'
-          WHEN branch_code = 'GH1510011' OR branch_code = 'AMANTIN n KASEI-EJURA' THEN 'Ejura'
-          WHEN branch_code = 'GH1510012' OR branch_code = 'AMANTINnKASEI-KWAME DS' THEN 'Kwame Danso'
-          WHEN branch_code = 'GH1510013' OR branch_code = 'AMANTINnKASEI-ATEBUBU' THEN 'Atebubu'
-          WHEN branch_code = 'GH1510014' OR branch_code = 'AMANTINnKASEI-YEJI' THEN 'Yeji'
-          WHEN branch_code = 'GH1510015' OR branch_code = 'AMANTINnKASEI-AMANTIN' THEN 'Amantin'
-          WHEN branch_code = 'GH1510016' OR branch_code = 'AMANTINnKASEI-AHWIAA' THEN 'Ahwiaa'
-          WHEN branch_code = 'GH1510017' OR branch_code = 'AMANTINnKASEI-KAJEJI' OR branch_code = 'AMANTINnKASEI-KAJAJI' THEN 'Kajeji'
-          WHEN branch_code = 'GH1510018' OR branch_code = 'AMANTINnKASEI-KEJETIA' THEN 'Kejetia'
-          WHEN branch_code = 'GH1510019' THEN 'Other'
-          ELSE 'Other'
-        END as branch_name,
-        COUNT(*) as count 
-      FROM customers 
-      GROUP BY branch_name 
-      ORDER BY count DESC 
-      LIMIT 20`
-    );
+    // Run main queries in parallel for better performance
+    const [
+      totalCustomers,
+      byStatus,
+      byAccountType,
+      byBranch
+    ] = await Promise.all([
+      // Get total customers
+      querySingle<any>('SELECT COUNT(*) as count FROM customers'),
+      
+      // Get customers by status
+      executeQuery<any>('SELECT status, COUNT(*) as count FROM customers GROUP BY status ORDER BY count DESC'),
+      
+      // Get customers by account type
+      executeQuery<any>('SELECT account_type, COUNT(*) as count FROM customers GROUP BY account_type ORDER BY count DESC'),
+      
+      // Get customers by branch - normalize branch codes to standard names first
+      executeQuery<any>(
+        `SELECT 
+          CASE 
+            WHEN branch_code = 'GH1510010' OR branch_code = 'AMANTIN AND KASEI HO.' THEN 'Head Office'
+            WHEN branch_code = 'GH1510011' OR branch_code = 'AMANTIN n KASEI-EJURA' THEN 'Ejura'
+            WHEN branch_code = 'GH1510012' OR branch_code = 'AMANTINnKASEI-KWAME DS' THEN 'Kwame Danso'
+            WHEN branch_code = 'GH1510013' OR branch_code = 'AMANTINnKASEI-ATEBUBU' THEN 'Atebubu'
+            WHEN branch_code = 'GH1510014' OR branch_code = 'AMANTINnKASEI-YEJI' THEN 'Yeji'
+            WHEN branch_code = 'GH1510015' OR branch_code = 'AMANTINnKASEI-AMANTIN' THEN 'Amantin'
+            WHEN branch_code = 'GH1510016' OR branch_code = 'AMANTINnKASEI-AHWIAA' THEN 'Ahwiaa'
+            WHEN branch_code = 'GH1510017' OR branch_code = 'AMANTINnKASEI-KAJEJI' OR branch_code = 'AMANTINnKASEI-KAJAJI' THEN 'Kajeji'
+            WHEN branch_code = 'GH1510018' OR branch_code = 'AMANTINnKASEI-KEJETIA' THEN 'Kejetia'
+            WHEN branch_code = 'GH1510019' THEN 'Other'
+            ELSE 'Other'
+          END as branch_name,
+          COUNT(*) as count 
+        FROM customers 
+        GROUP BY branch_name 
+        ORDER BY count DESC 
+        LIMIT 20`
+      )
+    ]);
 
     // Format branch data with codes for display
     const byBranchWithNames = byBranch.map((branch: any) => ({
@@ -2998,113 +3000,116 @@ app.get('/api/admin/demographics', async (req: Request, res: Response) => {
       count: branch.count
     }));
 
-    // Get contact info stats
-    const contactStats = await querySingle<any>(
-      `SELECT 
-        COUNT(*) as total,
-        COUNT(phone_number) as with_phone,
-        COUNT(email) as with_email,
-        COUNT(CASE WHEN phone_number IS NOT NULL AND email IS NOT NULL THEN 1 END) as with_both,
-        COUNT(CASE WHEN phone_number IS NULL AND email IS NULL THEN 1 END) as with_neither
-      FROM customers`
-    );
+    // Run secondary queries in parallel
+    const [
+      contactStats,
+      balanceStats,
+      recentStats,
+      demographicCoverage,
+      byGender,
+      byCustomerType,
+      ageGroups
+    ] = await Promise.all([
+      // Get contact info stats
+      querySingle<any>(
+        `SELECT 
+          COUNT(*) as total,
+          COUNT(phone_number) as with_phone,
+          COUNT(email) as with_email,
+          COUNT(CASE WHEN phone_number IS NOT NULL AND email IS NOT NULL THEN 1 END) as with_both,
+          COUNT(CASE WHEN phone_number IS NULL AND email IS NULL THEN 1 END) as with_neither
+        FROM customers`
+      ),
 
-    // Get account balance statistics
-    const balanceStats = await querySingle<any>(
-      `SELECT 
-        COUNT(*) as total_accounts,
-        COUNT(CASE WHEN ledger_balance > 0 THEN 1 END) as positive_balance,
-        COUNT(CASE WHEN ledger_balance = 0 THEN 1 END) as zero_balance,
-        COUNT(CASE WHEN ledger_balance < 0 THEN 1 END) as negative_balance,
-        COALESCE(SUM(ledger_balance), 0) as total_balance,
-        COALESCE(AVG(ledger_balance), 0) as average_balance,
-        COALESCE(MAX(ledger_balance), 0) as max_balance,
-        COALESCE(MIN(ledger_balance), 0) as min_balance
-      FROM account_balances`
-    );
+      // Get account balance statistics
+      querySingle<any>(
+        `SELECT 
+          COUNT(*) as total_accounts,
+          COUNT(CASE WHEN ledger_balance > 0 THEN 1 END) as positive_balance,
+          COUNT(CASE WHEN ledger_balance = 0 THEN 1 END) as zero_balance,
+          COUNT(CASE WHEN ledger_balance < 0 THEN 1 END) as negative_balance,
+          COALESCE(SUM(ledger_balance), 0) as total_balance,
+          COALESCE(AVG(ledger_balance), 0) as average_balance,
+          COALESCE(MAX(ledger_balance), 0) as max_balance,
+          COALESCE(MIN(ledger_balance), 0) as min_balance
+        FROM account_balances`
+      ),
 
-    // Get recent account creation stats (last 30 days, 60 days, 90 days)
-    const createdDateField = DB_TYPE === 'postgres' 
-      ? `created_at >= CURRENT_DATE - INTERVAL '30 days'`
-      : `created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)`;
-    
-    const recentStats = await querySingle<any>(
-      DB_TYPE === 'postgres'
-        ? `SELECT 
-            COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as last_30_days,
-            COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '60 days' THEN 1 END) as last_60_days,
-            COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '90 days' THEN 1 END) as last_90_days
-          FROM customers`
-        : `SELECT 
-            COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as last_30_days,
-            COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 60 DAY) THEN 1 END) as last_60_days,
-            COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 90 DAY) THEN 1 END) as last_90_days
-          FROM customers`
-    );
+      // Get recent account creation stats
+      querySingle<any>(
+        DB_TYPE === 'postgres'
+          ? `SELECT 
+              COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as last_30_days,
+              COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '60 days' THEN 1 END) as last_60_days,
+              COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '90 days' THEN 1 END) as last_90_days
+            FROM customers`
+          : `SELECT 
+              COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as last_30_days,
+              COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 60 DAY) THEN 1 END) as last_60_days,
+              COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 90 DAY) THEN 1 END) as last_90_days
+            FROM customers`
+      ),
 
-    // Get demographic field coverage stats
-    const demographicCoverage = await querySingle<any>(
-      `SELECT 
-        COUNT(*) as total,
-        COUNT(gender) as with_gender,
-        COUNT(id_type) as with_id_type,
-        COUNT(id_number) as with_id_number,
-        COUNT(date_of_birth) as with_dob,
-        COUNT(home_address) as with_home_address,
-        COUNT(postal_address) as with_postal_address,
-        COUNT(first_name) as with_first_name,
-        COUNT(middle_name) as with_middle_name,
-        COUNT(surname) as with_surname,
-        COUNT(customer_type) as with_customer_type
-      FROM customers`
-    );
+      // Get demographic field coverage stats
+      querySingle<any>(
+        `SELECT 
+          COUNT(*) as total,
+          COUNT(gender) as with_gender,
+          COUNT(id_type) as with_id_type,
+          COUNT(id_number) as with_id_number,
+          COUNT(date_of_birth) as with_dob,
+          COUNT(home_address) as with_home_address,
+          COUNT(postal_address) as with_postal_address,
+          COUNT(first_name) as with_first_name,
+          COUNT(middle_name) as with_middle_name,
+          COUNT(surname) as with_surname,
+          COUNT(customer_type) as with_customer_type
+        FROM customers`
+      ),
 
-    // Get customers by gender
-    const byGender = await executeQuery<any>(
-      'SELECT gender, COUNT(*) as count FROM customers WHERE gender IS NOT NULL AND gender != \'\' GROUP BY gender ORDER BY count DESC'
-    );
+      // Get customers by gender
+      executeQuery<any>('SELECT gender, COUNT(*) as count FROM customers WHERE gender IS NOT NULL AND gender != \'\' GROUP BY gender ORDER BY count DESC'),
 
-    // Get customers by customer type
-    const byCustomerType = await executeQuery<any>(
-      'SELECT customer_type, COUNT(*) as count FROM customers WHERE customer_type IS NOT NULL AND customer_type != \'\' GROUP BY customer_type ORDER BY count DESC'
-    );
+      // Get customers by customer type
+      executeQuery<any>('SELECT customer_type, COUNT(*) as count FROM customers WHERE customer_type IS NOT NULL AND customer_type != \'\' GROUP BY customer_type ORDER BY count DESC'),
 
-    // Calculate age groups from date of birth
-    const ageGroups = await executeQuery<any>(
-      DB_TYPE === 'postgres'
-        ? `SELECT 
-            CASE 
-              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) < 18 THEN 'Under 18'
-              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 18 AND 25 THEN '18-25'
-              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 26 AND 35 THEN '26-35'
-              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 36 AND 45 THEN '36-45'
-              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 46 AND 55 THEN '46-55'
-              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 56 AND 65 THEN '56-65'
-              WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) > 65 THEN 'Over 65'
-              ELSE 'Unknown'
-            END as age_group,
-            COUNT(*) as count
-          FROM customers 
-          WHERE date_of_birth IS NOT NULL
-          GROUP BY age_group
-          ORDER BY age_group`
-        : `SELECT 
-            CASE 
-              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN 'Under 18'
-              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN '18-25'
-              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 26 AND 35 THEN '26-35'
-              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 36 AND 45 THEN '36-45'
-              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 46 AND 55 THEN '46-55'
-              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 56 AND 65 THEN '56-65'
-              WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) > 65 THEN 'Over 65'
-              ELSE 'Unknown'
-            END as age_group,
-            COUNT(*) as count
-          FROM customers 
-          WHERE date_of_birth IS NOT NULL
-          GROUP BY age_group
-          ORDER BY age_group`
-    );
+      // Calculate age groups from date of birth
+      executeQuery<any>(
+        DB_TYPE === 'postgres'
+          ? `SELECT 
+              CASE 
+                WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) < 18 THEN 'Under 18'
+                WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 18 AND 25 THEN '18-25'
+                WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 26 AND 35 THEN '26-35'
+                WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 36 AND 45 THEN '36-45'
+                WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 46 AND 55 THEN '46-55'
+                WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) BETWEEN 56 AND 65 THEN '56-65'
+                WHEN EXTRACT(YEAR FROM AGE(date_of_birth)) > 65 THEN 'Over 65'
+                ELSE 'Unknown'
+              END as age_group,
+              COUNT(*) as count
+            FROM customers 
+            WHERE date_of_birth IS NOT NULL
+            GROUP BY age_group
+            ORDER BY age_group`
+          : `SELECT 
+              CASE 
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN 'Under 18'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN '18-25'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 26 AND 35 THEN '26-35'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 36 AND 45 THEN '36-45'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 46 AND 55 THEN '46-55'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 56 AND 65 THEN '56-65'
+                WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) > 65 THEN 'Over 65'
+                ELSE 'Unknown'
+              END as age_group,
+              COUNT(*) as count
+            FROM customers 
+            WHERE date_of_birth IS NOT NULL
+            GROUP BY age_group
+            ORDER BY age_group`
+      )
+    ]);
 
     res.json({
       totalCustomers: totalCustomers.count,
