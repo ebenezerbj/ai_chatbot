@@ -29,12 +29,7 @@ WHERE LENGTH(REPLACE(account_number, 'v', '')) >= 6
 SELECT 
     SUBSTRING(account_number, 6, 1) as type_indicator,
     account_type,
-    COUNT(*) as count,
-    CASE 
-        WHEN SUBSTRING(REPLACE(account_number, 'v', ''), 6, 1) = '1' THEN 'Should be 1850 (Savings)'
-        WHEN SUBSTRING(REPLACE(account_number, 'v', ''), 6, 1) = '2' THEN 'Should be 1800 (Current)'
-        ELSE 'Unknown pattern'
-    END as expected_type
+    COUNT(*) as count
 FROM customers
 WHERE LENGTH(REPLACE(account_number, 'v', '')) >= 6
 GROUP BY SUBSTRING(account_number, 6, 1), account_type

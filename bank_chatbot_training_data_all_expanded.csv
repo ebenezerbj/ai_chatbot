@@ -165,16 +165,25 @@ profile_update,digital_banking,"Update customer profile (phone, email)",Update m
 profile_update,digital_banking,"Update customer profile (phone, email)",Edit my profile information.
 profile_update,digital_banking,"Update customer profile (phone, email)",How can I update my KYC address?
 profile_update,digital_banking,"Update customer profile (phone, email)",Replace my old email with a new one.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,The app crashes on startup.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,How do I enable biometric login?
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,Mobile app not sending OTPs.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,The app won't update.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,Can't receive OTP on my phone.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,App is slow and keeps freezing.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,How to clear app cache?
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,Biometric login failing—help.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,App login failing after update.
-mobile_app_support,digital_banking,Troubleshoot mobile app issues,Why can't I access certain features on the app?
+mobile_banking_ussd,digital_banking,Access USSD mobile banking service,The app crashes on startup.
+mobile_banking_ussd,digital_banking,Access USSD mobile banking service,How do I use mobile banking?
+mobile_banking_ussd,digital_banking,Access USSD mobile banking service,Mobile banking not working.
+mobile_banking_ussd,digital_banking,Access USSD mobile banking service,How do I access mobile banking?
+mobile_banking_ussd,digital_banking,Access USSD mobile banking service,Can't access mobile banking.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,USSD code not responding.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,How to use *992#?
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,Mobile banking menu not showing.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,Having trouble with USSD banking.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,Why can't I access mobile banking features?
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,*992# not working.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,USSD session keeps timing out.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,I forgot my USSD PIN.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,Wrong PIN on mobile banking.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,My phone is not registered for USSD.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,USSD service unavailable.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,Dial 992 nothing happens.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,Mobile banking has challenges.
+ussd_troubleshooting,digital_banking,Troubleshoot USSD mobile banking issues,USSD code failing.
 loan_products,loans_credit,Provide loan product information,What loans do you offer?
 loan_products,loans_credit,Provide loan product information,Show me your personal loan options.
 loan_products,loans_credit,Provide loan product information,Do you have business loan products?
