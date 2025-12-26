@@ -1764,8 +1764,8 @@ export async function getConversationsWithIntents(options: {
     
     const results = await executeQuery(query, params);
     
-    // For SQLite, manually fetch intents for each session
-    if (DB_TYPE === 'sqlite' && (!intent || intent === 'all')) {
+    // For MySQL/non-Postgres, manually fetch intents for each session when getting all conversations
+    if (DB_TYPE !== 'postgres' && (!intent || intent === 'all')) {
       for (const row of results) {
         const intentsQuery = `
           SELECT DISTINCT intent, confidence, user_message 
