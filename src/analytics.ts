@@ -1781,7 +1781,7 @@ export async function getConversationsWithIntents(options: {
     return results;
   } catch (error: any) {
     console.error('[Analytics] getConversationsWithIntents error:', error);
-    return [];
+    throw error;
   }
 }
 
@@ -1813,7 +1813,7 @@ export async function getConversationCount(intent?: string): Promise<number> {
     return Number(result[0]?.count || 0);
   } catch (error: any) {
     console.error('[Analytics] getConversationCount error:', error);
-    return 0;
+    throw error;
   }
 }
 
