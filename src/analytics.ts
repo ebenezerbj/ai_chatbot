@@ -1679,3 +1679,141 @@ export async function getHighChurnRiskUsers(): Promise<ChurnPrediction[]> {
   return executeQuery<ChurnPrediction>(query, []);
 }
 
+/**
+ * Get all conversations with optional intent filtering and pagination
+ */
+export async function getConversationsWithIntents(options: {
+  intent?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<any[]> {
+  const { intent, limit = 50, offset = 0 } = options;
+  
+  try {
+    let query: string;
+    let params: any[];
+    
+    if (intent && intent !== 'all') {
+      // Filter by specific intent
+      query = DB_TYPE === 'postgres'
+        ? `SELECT DISTINCT 
+             cs.session_id,
+             cs.start_time,
+             cs.updated_at,
+             cs.total_messages,
+             cs.user_messages,
+             cs.bot_messages,
+             ic.intent,
+             ic.confidence,
+             ic.user_message
+           FROM chat_sessions cs
+           INNER JOIN intent_classification ic ON cs.session_id = ic.session_id
+           WHERE ic.intent = $1
+           ORDER BY cs.start_time DESC
+           LIMIT $2 OFFSET $3`
+        : `SELECT DISTINCT 
+             cs.session_id,
+             cs.start_time,
+             cs.updated_at,
+             cs.total_messages,
+             cs.user_messages,
+             cs.bot_messages,
+             ic.intent,
+             ic.confidence,
+             ic.user_message
+           FROM chat_sessions cs
+           INNER JOIN intent_classification ic ON cs.session_id = ic.session_id
+           WHERE ic.intent = ?
+           ORDER BY cs.start_time DESC
+           LIMIT ? OFFSET ?`;
+      params = [intent, limit, offset];
+    } else {
+      // Get all conversations with their intents
+      query = DB_TYPE === 'postgres'
+        ? `SELECT 
+             cs.session_id,
+             cs.start_time,
+             cs.updated_at,
+             cs.total_messages,
+             cs.user_messages,
+             cs.bot_messages,
+             (
+               SELECT json_agg(json_build_object('intent', intent, 'confidence', confidence, 'user_message', user_message))
+               FROM (
+                 SELECT DISTINCT intent, confidence, user_message 
+                 FROM intent_classification 
+                 WHERE session_id = cs.session_id 
+                 LIMIT 5
+               ) intents
+             ) as intents
+           FROM chat_sessions cs
+           ORDER BY cs.start_time DESC
+           LIMIT $1 OFFSET $2`
+        : `SELECT 
+             cs.session_id,
+             cs.start_time,
+             cs.updated_at,
+             cs.total_messages,
+             cs.user_messages,
+             cs.bot_messages
+           FROM chat_sessions cs
+           ORDER BY cs.start_time DESC
+           LIMIT ? OFFSET ?`;
+      params = [limit, offset];
+    }
+    
+    const results = await executeQuery(query, params);
+    
+    // For SQLite, manually fetch intents for each session
+    if (DB_TYPE === 'sqlite' && (!intent || intent === 'all')) {
+      for (const row of results) {
+        const intentsQuery = `
+          SELECT DISTINCT intent, confidence, user_message 
+          FROM intent_classification 
+          WHERE session_id = ? 
+          LIMIT 5
+        `;
+        const sessionIntents = await executeQuery(intentsQuery, [row.session_id]);
+        row.intents = sessionIntents;
+      }
+    }
+    
+    return results;
+  } catch (error: any) {
+    console.error('[Analytics] getConversationsWithIntents error:', error);
+    return [];
+  }
+}
+
+/**
+ * Get total conversation count with optional intent filter
+ */
+export async function getConversationCount(intent?: string): Promise<number> {
+  try {
+    let query: string;
+    let params: any[];
+    
+    if (intent && intent !== 'all') {
+      query = DB_TYPE === 'postgres'
+        ? `SELECT COUNT(DISTINCT cs.session_id) as count
+           FROM chat_sessions cs
+           INNER JOIN intent_classification ic ON cs.session_id = ic.session_id
+           WHERE ic.intent = $1`
+        : `SELECT COUNT(DISTINCT cs.session_id) as count
+           FROM chat_sessions cs
+           INNER JOIN intent_classification ic ON cs.session_id = ic.session_id
+           WHERE ic.intent = ?`;
+      params = [intent];
+    } else {
+      query = `SELECT COUNT(*) as count FROM chat_sessions`;
+      params = [];
+    }
+    
+    const result = await executeQuery<{ count: number | string }>(query, params);
+    return Number(result[0]?.count || 0);
+  } catch (error: any) {
+    console.error('[Analytics] getConversationCount error:', error);
+    return 0;
+  }
+}
+

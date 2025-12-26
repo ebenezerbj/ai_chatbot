@@ -548,6 +548,12 @@
                     </svg>
                     <span>AI/ML Dashboard</span>
                 </div>
+                <div class="nav-item" data-page="conversations">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span>💬 Conversations</span>
+                </div>
                 <div class="nav-item" data-page="balance-upload">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
@@ -1489,6 +1495,51 @@ https://example.com/products"></textarea>
                     </div>
                 </div>
 
+                <!-- Conversations Page -->
+                <div class="page-section" id="page-conversations">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>💬 Customer Conversations & Intent Analysis</h2>
+                        <button class="btn btn-primary" onclick="loadConversations()">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="card" style="margin-bottom: 20px;">
+                        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label for="intentFilter" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Filter by Intent:</label>
+                                <select id="intentFilter" onchange="loadConversations()" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
+                                    <option value="all">All Intents</option>
+                                    <option value="loading">Loading intents...</option>
+                                </select>
+                            </div>
+                            <div style="flex: 0 0 auto; padding-top: 28px;">
+                                <div style="display: flex; gap: 8px; align-items: center; padding: 8px 16px; background: #f3f4f6; border-radius: 8px;">
+                                    <span style="font-weight: 600; color: #6b7280;">Total:</span>
+                                    <span id="conversationCount" style="font-weight: 700; color: #1f2937; font-size: 18px;">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="conversationsContainer">
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
+                            <p style="color: #6b7280; font-size: 16px;">Loading conversations...</p>
+                        </div>
+                    </div>
+
+                    <div id="paginationControls" style="display: none; margin-top: 24px; text-align: center;">
+                        <button class="btn btn-secondary" id="prevPageBtn" onclick="previousPage()" style="margin: 0 8px;">
+                            ← Previous
+                        </button>
+                        <span id="pageInfo" style="margin: 0 16px; font-weight: 600; color: #374151;"></span>
+                        <button class="btn btn-secondary" id="nextPageBtn" onclick="nextPage()" style="margin: 0 8px;">
+                            Next →
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Balance Upload Page -->
                 <div class="page-section" id="page-balance-upload">
                     <div class="card">
@@ -1826,6 +1877,7 @@ https://example.com/products"></textarea>
                 'dashboard': 'Dashboard',
                 'phase1-analytics': 'Phase 1 Analytics',
                 'ai-ml-dashboard': 'AI/ML Dashboard',
+                'conversations': 'Customer Conversations',
                 'balance-upload': 'Balance Upload',
                 'loan-upload': 'Loan Upload',
                 'customer-upload': 'Customer Upload',
@@ -1859,6 +1911,10 @@ https://example.com/products"></textarea>
             }
             if (page === 'ai-ml-dashboard') {
                 loadAIMLDashboard();
+            }
+            if (page === 'conversations') {
+                loadIntentFilterOptions();
+                loadConversations();
             }
             if (page === 'kb-management') {
                 loadKBEntries();
@@ -2629,6 +2685,223 @@ https://example.com/products"></textarea>
                 }
             } catch (error) {
                 alert('Failed to reset ML counters: ' + error.message);
+            }
+        }
+
+        // Conversations Page Functions
+        let currentPage = 0;
+        const conversationsPerPage = 20;
+        let currentIntentFilter = 'all';
+
+        async function loadConversations(page = 0) {
+            currentPage = page;
+            const filter = document.getElementById('intentFilter')?.value || 'all';
+            currentIntentFilter = filter;
+            
+            const container = document.getElementById('conversationsContainer');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                    <p style="color: #6b7280; font-size: 16px;">Loading conversations...</p>
+                </div>
+            `;
+
+            try {
+                const offset = page * conversationsPerPage;
+                const url = `/api/admin/conversations?intent=${filter}&limit=${conversationsPerPage}&offset=${offset}`;
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    renderConversationsList(data.conversations, data.total, data.hasMore);
+                    updatePaginationControls(data.total, data.hasMore);
+                } else {
+                    throw new Error(data.error || 'Failed to load conversations');
+                }
+            } catch (error) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+                        <p style="color: #ef4444; font-size: 16px; font-weight: 600;">Failed to load conversations</p>
+                        <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadConversations()" style="margin-top: 16px;">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderConversationsList(conversations, total, hasMore) {
+            const container = document.getElementById('conversationsContainer');
+            document.getElementById('conversationCount').textContent = total;
+
+            if (!conversations || conversations.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                        <p style="color: #6b7280; font-size: 16px;">No conversations found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div style="display: grid; gap: 16px;">';
+            
+            conversations.forEach(conv => {
+                const sessionId = conv.session_id;
+                const shortId = sessionId.substring(0, 8);
+                const startTime = new Date(conv.start_time);
+                const date = startTime.toLocaleDateString();
+                const time = startTime.toLocaleTimeString();
+                
+                // Handle intents (array or single intent)
+                let intentsHtml = '';
+                if (conv.intents && Array.isArray(conv.intents)) {
+                    intentsHtml = conv.intents.map(int => `
+                        <span style="display: inline-block; padding: 4px 10px; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 12px; margin-right: 6px; margin-bottom: 4px;">
+                            ${int.intent.replace(/_/g, ' ')} (${(int.confidence * 100).toFixed(0)}%)
+                        </span>
+                    `).join('');
+                } else if (conv.intent) {
+                    intentsHtml = `
+                        <span style="display: inline-block; padding: 4px 10px; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 12px;">
+                            ${conv.intent.replace(/_/g, ' ')} (${(conv.confidence * 100).toFixed(0)}%)
+                        </span>
+                    `;
+                }
+
+                html += `
+                    <div class="card" style="cursor: pointer; transition: all 0.2s;" 
+                         onclick="viewConversationDetail('${sessionId}')"
+                         onmouseover="this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'; this.style.transform='translateY(-2px)'"
+                         onmouseout="this.style.boxShadow=''; this.style.transform=''">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 16px; margin-bottom: 4px;">
+                                    Session: ${shortId}...
+                                </div>
+                                <div style="font-size: 14px; color: #6b7280;">
+                                    ${date} at ${time}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 600; color: #667eea; font-size: 20px;">
+                                    ${conv.total_messages || 0}
+                                </div>
+                                <div style="font-size: 12px; color: #6b7280;">
+                                    messages
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${intentsHtml ? `
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px; font-weight: 600;">Detected Intents:</div>
+                                <div>${intentsHtml}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${conv.user_message ? `
+                            <div style="padding: 10px; background: #f9fafb; border-left: 3px solid #667eea; border-radius: 4px; margin-top: 8px;">
+                                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Sample Query:</div>
+                                <div style="font-size: 14px; color: #374151; font-style: italic;">"${conv.user_message}"</div>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 12px; color: #667eea; font-weight: 500;">
+                                👤 ${conv.user_messages || 0} user | 🤖 ${conv.bot_messages || 0} bot
+                            </span>
+                            <span style="font-size: 14px; color: #667eea;">→</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function updatePaginationControls(total, hasMore) {
+            const controls = document.getElementById('paginationControls');
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+            
+            if (total <= conversationsPerPage) {
+                controls.style.display = 'none';
+                return;
+            }
+            
+            controls.style.display = 'block';
+            const start = currentPage * conversationsPerPage + 1;
+            const end = Math.min((currentPage + 1) * conversationsPerPage, total);
+            pageInfo.textContent = `Showing ${start}-${end} of ${total}`;
+            
+            prevBtn.disabled = currentPage === 0;
+            prevBtn.style.opacity = currentPage === 0 ? '0.5' : '1';
+            prevBtn.style.cursor = currentPage === 0 ? 'not-allowed' : 'pointer';
+            
+            nextBtn.disabled = !hasMore;
+            nextBtn.style.opacity = !hasMore ? '0.5' : '1';
+            nextBtn.style.cursor = !hasMore ? 'not-allowed' : 'pointer';
+        }
+
+        function previousPage() {
+            if (currentPage > 0) {
+                loadConversations(currentPage - 1);
+            }
+        }
+
+        function nextPage() {
+            loadConversations(currentPage + 1);
+        }
+
+        async function viewConversationDetail(sessionId) {
+            try {
+                const response = await fetch(`/api/admin/analytics/session/${sessionId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch conversation details');
+                }
+
+                const data = await response.json();
+                renderConversationDetails(data, sessionId, null);
+            } catch (error) {
+                alert('Failed to load conversation: ' + error.message);
+            }
+        }
+
+        async function loadIntentFilterOptions() {
+            try {
+                const response = await fetch('/api/admin/ml/intent-distribution', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const select = document.getElementById('intentFilter');
+                    
+                    if (select && data.distribution) {
+                        let options = '<option value="all">All Intents</option>';
+                        data.distribution.forEach(item => {
+                            options += `<option value="${item.intent}">${item.intent.replace(/_/g, ' ')} (${item.count})</option>`;
+                        });
+                        select.innerHTML = options;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load intent options:', error);
             }
         }
 

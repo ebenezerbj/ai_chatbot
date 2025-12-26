@@ -3632,6 +3632,43 @@ app.get('/api/admin/ml/categories', async (req: Request, res: Response) => {
 });
 
 /**
+ * Get all conversations with intent filtering
+ */
+app.get('/api/admin/conversations', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+  
+  if (!token || (!adminTokens.has(token) && token !== process.env.ADMIN_TOKEN)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const intent = req.query.intent as string | undefined;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+    
+    const conversations = await analytics.getConversationsWithIntents({
+      intent,
+      limit,
+      offset
+    });
+    
+    const totalCount = await analytics.getConversationCount(intent);
+    
+    res.json({ 
+      conversations, 
+      total: totalCount,
+      limit,
+      offset,
+      hasMore: offset + limit < totalCount
+    });
+  } catch (error: any) {
+    console.error('[Admin] Conversations fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch conversations' });
+  }
+});
+
+/**
  * Get high churn risk users
  */
 app.get('/api/admin/ml/churn-risk', async (req: Request, res: Response) => {
