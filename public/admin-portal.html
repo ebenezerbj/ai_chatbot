@@ -483,8 +483,57 @@
             display: none;
         }
 
+        /* Mobile Menu Toggle Button */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 1001;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s;
+        }
+
+        .mobile-menu-btn:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-menu-btn svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary);
+        }
+
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+
             .sidebar {
                 position: fixed;
                 left: -260px;
@@ -498,8 +547,69 @@
                 left: 0;
             }
 
+            .topbar {
+                padding: 16px 60px 16px 60px;
+            }
+
+            .topbar h1 {
+                font-size: 18px;
+            }
+
+            .user-menu span {
+                display: none;
+            }
+
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .content-area {
+                padding: 16px;
+            }
+
+            /* Make tables scrollable on mobile */
+            .card table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            /* Adjust button groups for mobile */
+            .btn-block {
+                width: 100%;
+            }
+
+            /* Stack filters on mobile */
+            .card > div[style*="display: flex"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar {
+                padding: 12px 50px 12px 50px;
+            }
+
+            .topbar h1 {
+                font-size: 16px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .login-card {
+                padding: 24px;
+            }
+
+            .mobile-menu-btn {
+                top: 12px;
+                left: 12px;
             }
         }
     </style>
@@ -523,6 +633,16 @@
 
     <!-- Admin Dashboard -->
     <div class="admin-container" id="adminDashboard">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -1848,6 +1968,28 @@ https://example.com/products"></textarea>
         // Logout from topbar dropdown
         document.getElementById('topbarLogoutBtn').addEventListener('click', logout);
 
+        // Mobile Sidebar Toggle Functions
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+        }
+
+        // Close sidebar when navigating on mobile
+        function closeSidebarOnNavigation() {
+            if (window.innerWidth <= 768) {
+                closeMobileSidebar();
+            }
+        }
+
         // User menu dropdown toggle
         document.getElementById('userMenu').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1896,6 +2038,9 @@ https://example.com/products"></textarea>
             // Show page
             document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
             document.getElementById(`page-${page}`).classList.add('active');
+
+            // Close mobile sidebar after navigation
+            closeSidebarOnNavigation();
 
             if (page === 'demographics') {
                 loadDemographics();
