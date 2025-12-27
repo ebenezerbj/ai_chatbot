@@ -1,4 +1,4 @@
-Write-Host "AKCB Chatbot APK Builder v1.5.0" -ForegroundColor Cyan
+Write-Host "AKCB Chatbot APK Builder v1.6.0" -ForegroundColor Cyan
 Write-Host "================================`n" -ForegroundColor Cyan
 
 Write-Host "[1/5] Checking prerequisites..." -ForegroundColor Yellow
@@ -51,7 +51,7 @@ if (Test-Path $apkPath) {
             Write-Host "Path: $($apk.FullName)`n" -ForegroundColor Gray
         }
         
-        $rootApkPath = "..\AKCB-Chatbot-v1.5.0.apk"
+        $rootApkPath = "..\AKCB-Chatbot-v1.6.0.apk"
         $mainApk = $apkFiles | Where-Object { $_.Name -notlike "*-unsigned*" } | Select-Object -First 1
         if ($mainApk) {
             Copy-Item $mainApk.FullName $rootApkPath -Force

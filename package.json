@@ -1,6 +1,6 @@
 {
   "name": "ai-chatbot",
-  "version": "0.1.0",
+  "version": "1.6.0",
   "private": true,
   "description": "Professional AI customer service chatbot for a financial institution with safety and HCI principles.",
   "main": "dist/index.js",
