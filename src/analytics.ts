@@ -1704,8 +1704,7 @@ export async function getConversationsWithIntents(options: {
              cs.user_messages,
              cs.bot_messages,
              ic.intent,
-             ic.confidence,
-             ic.user_message
+             ic.confidence
            FROM chat_sessions cs
            INNER JOIN intent_classification ic ON cs.session_id = ic.session_id
            WHERE ic.intent = $1
@@ -1719,8 +1718,7 @@ export async function getConversationsWithIntents(options: {
              cs.user_messages,
              cs.bot_messages,
              ic.intent,
-             ic.confidence,
-             ic.user_message
+             ic.confidence
            FROM chat_sessions cs
            INNER JOIN intent_classification ic ON cs.session_id = ic.session_id
            WHERE ic.intent = ?
@@ -1738,9 +1736,9 @@ export async function getConversationsWithIntents(options: {
              cs.user_messages,
              cs.bot_messages,
              (
-               SELECT json_agg(json_build_object('intent', intent, 'confidence', confidence, 'user_message', user_message))
+               SELECT json_agg(json_build_object('intent', intent, 'confidence', confidence))
                FROM (
-                 SELECT DISTINCT intent, confidence, user_message 
+                 SELECT DISTINCT intent, confidence 
                  FROM intent_classification 
                  WHERE session_id = cs.session_id 
                  LIMIT 5
@@ -1768,7 +1766,7 @@ export async function getConversationsWithIntents(options: {
     if (DB_TYPE !== 'postgres' && (!intent || intent === 'all')) {
       for (const row of results) {
         const intentsQuery = `
-          SELECT DISTINCT intent, confidence, user_message 
+          SELECT DISTINCT intent, confidence 
           FROM intent_classification 
           WHERE session_id = ? 
           LIMIT 5
