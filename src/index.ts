@@ -1264,9 +1264,30 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         messageLower.includes('portfolio management') ||
         // Empty/error response
         reply.includes('having trouble processing');
-      
+
       if (suggestHandover) {
         console.log('[Chat] Handover suggested - AI indicated human assistance needed or sensitive topic detected');
+
+        // Detect particularly high-risk/sensitive topics for admin supervision alerts
+        const highRisk =
+          messageLower.includes('complaint') ||
+          messageLower.includes('fraud') ||
+          messageLower.includes('scam') ||
+          messageLower.includes('stolen card') ||
+          messageLower.includes('lost card') ||
+          messageLower.includes('unauthorized transaction') ||
+          messageLower.includes('unauthorised transaction') ||
+          messageLower.includes('account hacked') ||
+          messageLower.includes('blocked account') ||
+          messageLower.includes('freeze my account');
+
+        if (highRisk) {
+          // Fire-and-forget alert so admin can supervise this conversation
+          sendAdminAlert(
+            'High-risk chatbot conversation needs supervision',
+            `Session: ${effectiveSessionId}, Message: ${message.substring(0, 120)}${message.length > 120 ? '...' : ''}`
+          );
+        }
       }
       
       // Log bot response
@@ -1299,6 +1320,8 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
   } catch (err: any) {
     console.error('[Chat] Error:', err.message);
     console.error('[Chat] Stack:', err.stack);
+    // Fire-and-forget alert to system administrator for monitoring
+    sendAdminAlert('Chatbot runtime error', err?.message || String(err));
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1861,6 +1884,12 @@ app.post('/api/handover', async (req: Request, res: Response) => {
             message || 'Callback requested',
             targetLocation
           );
+
+          // Notify system administrator about the escalation for supervision
+          sendAdminAlert(
+            'Customer escalation submitted',
+            `Ticket: ${ticketId}, Branch: ${targetLocation}, Name: ${name || 'Customer'}, Phone: ${phone || 'Not provided'}`
+          );
         }
       } catch (smsError: any) {
         console.error('[Handover] SMS notification failed:', smsError.message);
@@ -2143,6 +2172,37 @@ const smsHistory: Array<{
   message: string;
   sentBy: string;
 }> = [];
+
+// System administrator alert phone (for supervision/monitoring alerts)
+const ADMIN_ALERT_PHONE = process.env.ADMIN_ALERT_PHONE || '0243082750';
+
+/**
+ * Send high-priority alert to system administrator via SMS
+ */
+async function sendAdminAlert(subject: string, details?: string): Promise<void> {
+  if (!ADMIN_ALERT_PHONE) {
+    console.warn('[AdminAlert] ADMIN_ALERT_PHONE not configured');
+    return;
+  }
+
+  const maxDetailsLength = 140;
+  let body = `[AKCB BOT ALERT]\n${subject}`;
+  if (details) {
+    const trimmed = details.length > maxDetailsLength
+      ? details.substring(0, maxDetailsLength) + '...'
+      : details;
+    body += `\n${trimmed}`;
+  }
+
+  try {
+    const ok = await sendSMSMessage(ADMIN_ALERT_PHONE, body);
+    if (!ok) {
+      console.error('[AdminAlert] Failed to send alert SMS');
+    }
+  } catch (err: any) {
+    console.error('[AdminAlert] Error while sending alert SMS:', err.message || err);
+  }
+}
 
 /**
  * Helper function to send SMS using the OTP service
