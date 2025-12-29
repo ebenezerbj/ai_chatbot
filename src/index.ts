@@ -733,7 +733,38 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         console.log('[Chat] Session authenticated, fetching account data');
         
         const authSession = customerAuth.getOrCreateSession(effectiveSessionId);
-        const accountData = await customerAuth.getCustomerAccountData(authSession.accountNumber!);
+        
+        // Check if user wants to see all their accounts
+        if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
+          if (/(list|show|view|all)\s+(my\s+)?(accounts?)/i.test(message) || 
+              /how\s+many\s+accounts?/i.test(message) ||
+              /what\s+accounts?\s+do\s+i\s+have/i.test(message)) {
+            const response = customerAuth.formatAllAccountsList(authSession.availableAccounts);
+            
+            // Log bot response
+            await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
+              console.error('[Analytics] Failed to log bot message:', e)
+            );
+            
+            return res.json({ 
+              reply: response,
+              source: 'authenticated',
+              sessionId: effectiveSessionId
+            });
+          }
+        }
+        
+        // Check if user is requesting a specific account (if they have multiple)
+        let accountNumberToQuery = authSession.accountNumber!;
+        if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
+          const specificAccount = customerAuth.extractAccountNumberFromQuery(message, authSession.availableAccounts);
+          if (specificAccount) {
+            console.log('[Chat] User requesting specific account:', specificAccount);
+            accountNumberToQuery = specificAccount;
+          }
+        }
+        
+        const accountData = await customerAuth.getCustomerAccountData(accountNumberToQuery);
         
         // Add personalized greeting if this is first query after authentication
         let greeting = '';
@@ -764,6 +795,14 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         // Fallback: show complete info
         else {
           response = greeting + customerAuth.formatBalanceResponse(accountData);
+        }
+        
+        // Add note about multiple accounts if applicable
+        if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
+          const otherAccounts = authSession.availableAccounts.filter(acc => acc.accountNumber !== accountNumberToQuery);
+          if (otherAccounts.length > 0) {
+            response += `\n\n*💡 Note: You have ${authSession.availableAccounts.length} accounts with us. To check your other account${otherAccounts.length > 1 ? 's' : ''}, mention the account number or type "show all my accounts".*`;
+          }
         }
           
         // Log bot response

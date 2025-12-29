@@ -719,6 +719,25 @@ export function formatLoanResponse(accountData: any): string {
 }
 
 /**
+ * Format list of all customer accounts (when they have multiple)
+ */
+export function formatAllAccountsList(availableAccounts: Array<{accountNumber: string; accountName: string; accountType: string}>): string {
+  let response = `**Your Accounts**\n\n`;
+  response += `You have ${availableAccounts.length} account${availableAccounts.length > 1 ? 's' : ''} with us:\n\n`;
+  
+  availableAccounts.forEach((account, index) => {
+    response += `${index + 1}. **${getAccountTypeName(account.accountType, account.accountNumber)}**\n`;
+    response += `   Account: ${account.accountNumber}\n`;
+    response += `   Name: ${account.accountName}\n\n`;
+  });
+  
+  response += `To check the balance of a specific account, please mention the account number in your message.\n\n`;
+  response += `For example, you can ask: "What's the balance of account ${availableAccounts[0].accountNumber}?"`;
+  
+  return response;
+}
+
+/**
  * Format account balance only (without loans)
  */
 export function formatAccountBalanceOnly(accountData: any): string {
@@ -935,7 +954,7 @@ export async function selectAccount(
   session.accountNumber = selectedAccount.accountNumber;
   session.customerName = selectedAccount.accountName;
   session.awaitingAccountSelection = false;
-  session.availableAccounts = undefined; // Clear the accounts list after selection
+  // Keep availableAccounts so user can query other accounts later
   session.isAuthenticated = true;
   session.authenticatedAt = new Date();
   session.expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
@@ -959,6 +978,42 @@ export async function selectAccount(
     session,
     awaitingOTP: false
   };
+}
+
+/**
+ * Extract account number from message if customer specifies one
+ */
+export function extractAccountNumberFromQuery(message: string, availableAccounts?: Array<{accountNumber: string; accountName: string; accountType: string}>): string | null {
+  if (!availableAccounts || availableAccounts.length === 0) {
+    return null;
+  }
+  
+  // Look for account number patterns (13-16 digits typically)
+  const accountPattern = /\b(\d{13,16})\b/g;
+  const matches = message.match(accountPattern);
+  
+  if (matches) {
+    // Check if any matched number is in the available accounts
+    for (const match of matches) {
+      const found = availableAccounts.find(acc => 
+        acc.accountNumber.replace(/\s+/g, '') === match.replace(/\s+/g, '')
+      );
+      if (found) {
+        return found.accountNumber;
+      }
+    }
+  }
+  
+  // Check for partial matches or account references
+  const normalizedMessage = message.toLowerCase().replace(/\s+/g, '');
+  for (const account of availableAccounts) {
+    const normalizedAccount = account.accountNumber.replace(/\s+/g, '');
+    if (normalizedMessage.includes(normalizedAccount)) {
+      return account.accountNumber;
+    }
+  }
+  
+  return null;
 }
 
 /**
