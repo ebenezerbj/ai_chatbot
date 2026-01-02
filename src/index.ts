@@ -1811,15 +1811,15 @@ app.post('/api/handover', async (req: Request, res: Response) => {
 
     // AKCB Branch locations with coordinates (Amantin & Kasei Community Bank)
     const branches = [
-      { code: 'GH1510010', name: 'AMANTIN AND KASEI HO.', lat: 6.70, lng: -1.62, location: 'Head Office', phone: '' },
-      { code: 'GH1510011', name: 'AMANTIN n KASEI-EJURA', lat: 7.3833, lng: -1.3667, location: 'Ejura', phone: '+233202055172' },
-      { code: 'GH1510012', name: 'AMANTINnKASEI-KWAME DS', lat: 7.35, lng: -1.40, location: 'Kwame Danso', phone: '+233202055174' },
-      { code: 'GH1510013', name: 'AMANTINnKASEI-ATEBUBU', lat: 7.75, lng: -0.98, location: 'Atebubu', phone: '+233202055173' },
-      { code: 'GH1510014', name: 'AMANTINnKASEI-YEJI', lat: 7.82, lng: -0.22, location: 'Yeji', phone: '+233202055175' },
-      { code: 'GH1510015', name: 'AMANTINnKASEI-AMANTIN', lat: 6.73, lng: -1.74, location: 'Amantin', phone: '' },
-      { code: 'GH1510016', name: 'AMANTINnKASEI-AHWIAA', lat: 6.62, lng: -1.55, location: 'Ahwiaa', phone: '+233202099931' },
-      { code: 'GH1510017', name: 'AMANTINnKASEI-KAJAJI', lat: 6.70, lng: -1.60, location: 'Kajeji', phone: '+233240526372' },
-      { code: 'GH1510018', name: 'AMANTINnKASEI-KEJETIA', lat: 6.6880, lng: -1.6229, location: 'Kejetia', phone: '+233248698267' }
+      { code: 'GH1510010', name: 'HEAD OFFICE', lat: 6.70, lng: -1.62, location: 'Head Office', phone: '' },
+      { code: 'GH1510011', name: 'EJURA', lat: 7.3833, lng: -1.3667, location: 'Ejura', phone: '+233202055172' },
+      { code: 'GH1510012', name: 'KWAME DANSO', lat: 7.35, lng: -1.40, location: 'Kwame Danso', phone: '+233202055174' },
+      { code: 'GH1510013', name: 'ATEBUBU', lat: 7.75, lng: -0.98, location: 'Atebubu', phone: '+233202055173' },
+      { code: 'GH1510014', name: 'YEJI', lat: 7.82, lng: -0.22, location: 'Yeji', phone: '+233202055175' },
+      { code: 'GH1510015', name: 'AMANTIN', lat: 6.73, lng: -1.74, location: 'Amantin', phone: '' },
+      { code: 'GH1510016', name: 'AHWIAA', lat: 6.62, lng: -1.55, location: 'Ahwiaa', phone: '+233202099931' },
+      { code: 'GH1510017', name: 'KAJEJI', lat: 6.70, lng: -1.60, location: 'Kajeji', phone: '+233240526372' },
+      { code: 'GH1510018', name: 'KEJETIA', lat: 6.6880, lng: -1.6229, location: 'Kejetia', phone: '+233248698267' }
     ];
 
     // Determine target branch based on location (if provided)
