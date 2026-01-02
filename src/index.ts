@@ -1553,6 +1553,28 @@ app.get('/api/admin/analytics/export', async (req: Request, res: Response) => {
   }
 });
 
+// Cleanup empty sessions (0 messages)
+app.post('/api/admin/analytics/cleanup-empty-sessions', async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!isValidAdminToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const olderThanHours = req.body.olderThanHours || 24;
+    const deletedCount = await analytics.cleanupEmptySessions(olderThanHours);
+    
+    res.json({ 
+      success: true, 
+      deletedCount,
+      message: `Cleaned up ${deletedCount} empty sessions older than ${olderThanHours} hours`
+    });
+  } catch (error: any) {
+    console.error('[Analytics] Error cleaning up empty sessions:', error);
+    res.status(500).json({ error: 'Failed to cleanup empty sessions' });
+  }
+});
+
 // ===== Phase 2: User Engagement Endpoints =====
 
 // Get personalized greeting and recommendations
@@ -3978,6 +4000,28 @@ const server = process.env.RENDER
       console.log(`✓ KB: ${kb.length} entries loaded`);
       console.log(`✓ OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
       console.log(`✓ Live Chat: Enabled`);
+      
+      // Schedule periodic cleanup of empty sessions (runs every 6 hours)
+      setInterval(async () => {
+        try {
+          console.log('[Cleanup] Running scheduled cleanup of empty sessions...');
+          const deletedCount = await analytics.cleanupEmptySessions(24);
+          console.log(`[Cleanup] Completed: ${deletedCount} empty sessions removed`);
+        } catch (error) {
+          console.error('[Cleanup] Error during scheduled cleanup:', error);
+        }
+      }, 6 * 60 * 60 * 1000); // 6 hours
+      
+      // Run initial cleanup after 1 minute of startup
+      setTimeout(async () => {
+        try {
+          console.log('[Cleanup] Running initial cleanup of empty sessions...');
+          const deletedCount = await analytics.cleanupEmptySessions(24);
+          console.log(`[Cleanup] Initial cleanup completed: ${deletedCount} empty sessions removed`);
+        } catch (error) {
+          console.error('[Cleanup] Error during initial cleanup:', error);
+        }
+      }, 60 * 1000); // 1 minute
     })
   : httpServer.listen(port, () => {
       console.log(`[Startup] Server callback fired`);
@@ -3985,6 +4029,28 @@ const server = process.env.RENDER
       console.log(`✓ KB: ${kb.length} entries loaded`);
       console.log(`✓ OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
       console.log(`✓ Live Chat: Enabled`);
+      
+      // Schedule periodic cleanup of empty sessions (runs every 6 hours)
+      setInterval(async () => {
+        try {
+          console.log('[Cleanup] Running scheduled cleanup of empty sessions...');
+          const deletedCount = await analytics.cleanupEmptySessions(24);
+          console.log(`[Cleanup] Completed: ${deletedCount} empty sessions removed`);
+        } catch (error) {
+          console.error('[Cleanup] Error during scheduled cleanup:', error);
+        }
+      }, 6 * 60 * 60 * 1000); // 6 hours
+      
+      // Run initial cleanup after 1 minute of startup
+      setTimeout(async () => {
+        try {
+          console.log('[Cleanup] Running initial cleanup of empty sessions...');
+          const deletedCount = await analytics.cleanupEmptySessions(24);
+          console.log(`[Cleanup] Initial cleanup completed: ${deletedCount} empty sessions removed`);
+        } catch (error) {
+          console.error('[Cleanup] Error during initial cleanup:', error);
+        }
+      }, 60 * 1000); // 1 minute
     });
 
 server.on('error', (err: any) => {

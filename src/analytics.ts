@@ -538,6 +538,25 @@ export async function endSession(sessionId: string): Promise<void> {
 }
 
 /**
+ * Cleanup sessions with 0 messages
+ * Removes empty sessions older than specified hours (default 24 hours)
+ */
+export async function cleanupEmptySessions(olderThanHours: number = 24): Promise<number> {
+  const query = DB_TYPE === 'postgres'
+    ? `DELETE FROM chat_sessions 
+       WHERE total_messages = 0 
+       AND start_time < NOW() - INTERVAL '${olderThanHours} hours'`
+    : `DELETE FROM chat_sessions 
+       WHERE total_messages = 0 
+       AND start_time < DATE_SUB(NOW(), INTERVAL ${olderThanHours} HOUR)`;
+  
+  const result = await executeQuery(query);
+  const deletedCount = (result as any)?.rowCount || (result as any)?.affectedRows || 0;
+  console.log(`[Analytics] Cleaned up ${deletedCount} empty sessions older than ${olderThanHours} hours`);
+  return deletedCount;
+}
+
+/**
  * Log a conversation message
  */
 export async function logMessage(
