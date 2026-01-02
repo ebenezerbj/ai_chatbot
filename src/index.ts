@@ -839,6 +839,13 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         awaitingOTP: authResult.awaitingOTP || false
       };
       
+      // Check if escalation is required (account not found or no phone number)
+      if (authResult.requiresEscalation) {
+        console.log('[Auth] Authentication failure requires escalation - account not found or no phone number on record');
+        responseData.requiresEscalation = true;
+        responseData.suggestHandover = true;
+      }
+      
       // If customer has multiple accounts, show selection buttons
       if (authResult.session.awaitingAccountSelection && authResult.session.availableAccounts) {
         responseData.buttons = authResult.session.availableAccounts.map((acc, index) => ({

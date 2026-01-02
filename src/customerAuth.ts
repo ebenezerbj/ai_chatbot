@@ -210,6 +210,7 @@ export async function validateCredentials(
   accountNumber?: string;
   multipleAccounts?: boolean;
   accounts?: Array<{accountNumber: string; accountName: string; accountType: string}>;
+  requiresEscalation?: boolean;
 }> {
   try {
     // Must have at least one identifier
@@ -261,7 +262,8 @@ export async function validateCredentials(
       const identifier = accountNumber ? 'account number' : 'phone number';
       return {
         valid: false,
-        reason: `No active account found with the provided ${identifier}. Please verify your details.`
+        reason: `No active account found with the provided ${identifier}. Please verify your details.`,
+        requiresEscalation: true
       };
     }
     
@@ -302,7 +304,8 @@ export async function validateCredentials(
       console.log('[Auth] Customer account found but no phone number on record');
       return {
         valid: false,
-        reason: `We found your account, but there's no phone number associated with it in our records.\n\nTo update your contact details and complete verification, please visit any AKCB branch with a valid ID. Our staff will help you update your information so you can access your account through our digital channels.\n\nWould you like me to connect you with a customer representative via live chat for more assistance, or would you prefer to know the nearest branch location?`
+        reason: `We found your account, but there's no phone number associated with it in our records.\n\nTo update your contact details and complete verification, please visit any AKCB branch with a valid ID. Our staff will help you update your information so you can access your account through our digital channels.\n\nWould you like me to connect you with a customer representative via live chat for more assistance, or would you prefer to know the nearest branch location?`,
+        requiresEscalation: true
       };
     }
     
@@ -343,7 +346,7 @@ export async function authenticateCustomer(
   accountNumber?: string,
   phoneNumber?: string,
   otp?: string
-): Promise<{ success: boolean; message: string; session: CustomerSession; awaitingOTP?: boolean }> {
+): Promise<{ success: boolean; message: string; session: CustomerSession; awaitingOTP?: boolean; requiresEscalation?: boolean }> {
   const session = getOrCreateSession(sessionId);
   
   // If OTP is provided, verify it
@@ -500,7 +503,8 @@ export async function authenticateCustomer(
     success: false,
     message: validation.reason || "Unable to verify your details. Please check your account number or phone number.",
     session,
-    awaitingOTP: false
+    awaitingOTP: false,
+    requiresEscalation: validation.requiresEscalation
   };
 }
 
