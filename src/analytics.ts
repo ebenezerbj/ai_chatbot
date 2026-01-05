@@ -512,8 +512,8 @@ export async function startSession(
   userAgent?: string
 ): Promise<void> {
   const query = DB_TYPE === 'postgres'
-    ? 'INSERT INTO chat_sessions (session_id, ip_address, user_agent) VALUES ($1, $2, $3) ON CONFLICT (session_id) DO NOTHING'
-    : 'INSERT IGNORE INTO chat_sessions (session_id, ip_address, user_agent) VALUES (?, ?, ?)';
+    ? 'INSERT INTO chat_sessions (session_id, ip_address, user_agent, total_messages, user_messages, bot_messages) VALUES ($1, $2, $3, 0, 0, 0) ON CONFLICT (session_id) DO NOTHING'
+    : 'INSERT IGNORE INTO chat_sessions (session_id, ip_address, user_agent, total_messages, user_messages, bot_messages) VALUES (?, ?, ?, 0, 0, 0)';
   
   await executeQuery(query, [sessionId, ipAddress, userAgent]);
   console.log(`[Analytics] Session started: ${sessionId}`);
