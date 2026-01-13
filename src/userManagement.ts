@@ -41,7 +41,7 @@ function hashPassword(password: string): string {
 export async function initializeUsersTable(): Promise<void> {
   const createTableSQL = `
     CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       username VARCHAR(50) UNIQUE NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash VARCHAR(64) NOT NULL,
@@ -49,26 +49,26 @@ export async function initializeUsersTable(): Promise<void> {
       full_name VARCHAR(255) NOT NULL,
       is_active BOOLEAN DEFAULT true,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       last_login TIMESTAMP NULL
     )
   `;
 
   await executeQuery(createTableSQL, []);
   
-  // Create indexes separately (MySQL doesn't support IF NOT EXISTS for indexes before 8.0)
+  // Create indexes separately using IF NOT EXISTS for PostgreSQL
   try {
-    await executeQuery('CREATE INDEX idx_users_username ON users(username)', []);
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)', []);
   } catch (error) {
     // Index might already exist
   }
   try {
-    await executeQuery('CREATE INDEX idx_users_email ON users(email)', []);
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)', []);
   } catch (error) {
     // Index might already exist
   }
   try {
-    await executeQuery('CREATE INDEX idx_users_role ON users(role)', []);
+    await executeQuery('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)', []);
   } catch (error) {
     // Index might already exist
   }
@@ -77,7 +77,7 @@ export async function initializeUsersTable(): Promise<void> {
 
   // Check if default admin exists
   const adminExists = await querySingle<{ count: number }>(
-    'SELECT COUNT(*) as count FROM users WHERE role = ?',
+    'SELECT COUNT(*) as count FROM users WHERE role = $1',
     ['admin']
   );
 
@@ -103,7 +103,7 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
   
   const sql = `
     INSERT INTO users (username, email, password_hash, role, full_name)
-    VALUES (?, ?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4, $5)
   `;
 
   await executeQuery(sql, [
@@ -136,7 +136,7 @@ export async function authenticateUser(
     const sql = `
       SELECT id, username, email, role, full_name, is_active, created_at, updated_at, last_login
       FROM users
-      WHERE username = ? AND password_hash = ?
+      WHERE username = $1 AND password_hash = $2
     `;
 
     const result = await executeQuery<User>(sql, [username, passwordHash]);
@@ -153,7 +153,7 @@ export async function authenticateUser(
 
     // Update last login
     await executeQuery(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
       [user.id]
     );
 
@@ -171,7 +171,7 @@ export async function getUserById(userId: number): Promise<User | null> {
   const sql = `
     SELECT id, username, email, role, full_name, is_active, created_at, updated_at, last_login
     FROM users
-    WHERE id = ?
+    WHERE id = $1
   `;
 
   const result = await executeQuery<User>(sql, [userId]);
@@ -185,7 +185,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
   const sql = `
     SELECT id, username, email, role, full_name, is_active, created_at, updated_at, last_login
     FROM users
-    WHERE username = ?
+    WHERE username = $1
   `;
 
   const result = await executeQuery<User>(sql, [username]);
@@ -203,7 +203,7 @@ export async function listUsers(role?: 'admin' | 'customer_rep'): Promise<User[]
   
   const params: any[] = [];
   if (role) {
-    sql += ' WHERE role = ?';
+    sql += ' WHERE role = $1';
     params.push(role);
   }
   
@@ -221,22 +221,22 @@ export async function updateUser(userId: number, payload: UpdateUserPayload): Pr
   const params: any[] = [];
 
   if (payload.email !== undefined) {
-    updates.push('email = ?');
+    updates.push(`email = $${params.length + 1}`);
     params.push(payload.email);
   }
 
   if (payload.full_name !== undefined) {
-    updates.push('full_name = ?');
+    updates.push(`full_name = $${params.length + 1}`);
     params.push(payload.full_name);
   }
 
   if (payload.is_active !== undefined) {
-    updates.push('is_active = ?');
+    updates.push(`is_active = $${params.length + 1}`);
     params.push(payload.is_active);
   }
 
   if (payload.password !== undefined) {
-    updates.push('password_hash = ?');
+    updates.push(`password_hash = $${params.length + 1}`);
     params.push(hashPassword(payload.password));
   }
 
@@ -245,7 +245,7 @@ export async function updateUser(userId: number, payload: UpdateUserPayload): Pr
   const sql = `
     UPDATE users
     SET ${updates.join(', ')}
-    WHERE id = ?
+    WHERE id = $${params.length}
   `;
 
   await executeQuery(sql, params);
@@ -263,7 +263,7 @@ export async function updateUser(userId: number, payload: UpdateUserPayload): Pr
  * Delete user (soft delete by setting is_active to false)
  */
 export async function deleteUser(userId: number): Promise<void> {
-  const sql = 'UPDATE users SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+  const sql = 'UPDATE users SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1';
   await executeQuery(sql, [userId]);
 }
 
@@ -271,7 +271,7 @@ export async function deleteUser(userId: number): Promise<void> {
  * Hard delete user (permanently remove from database)
  */
 export async function hardDeleteUser(userId: number): Promise<void> {
-  const sql = 'DELETE FROM users WHERE id = ?';
+  const sql = 'DELETE FROM users WHERE id = $1';
   await executeQuery(sql, [userId]);
 }
 
@@ -292,7 +292,7 @@ export async function changePassword(
 
     const oldPasswordHash = hashPassword(oldPassword);
     const result = await executeQuery<{ count: number }>(
-      'SELECT COUNT(*) as count FROM users WHERE id = ? AND password_hash = ?',
+      'SELECT COUNT(*) as count FROM users WHERE id = $1 AND password_hash = $2',
       [userId, oldPasswordHash]
     );
 
@@ -303,7 +303,7 @@ export async function changePassword(
     // Update to new password
     const newPasswordHash = hashPassword(newPassword);
     await executeQuery(
-      'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
       [newPasswordHash, userId]
     );
 
