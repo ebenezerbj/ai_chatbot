@@ -383,6 +383,11 @@ const publicPath = path.join(process.cwd(), 'public');
 console.log('[Static] Serving static files from:', publicPath);
 app.use(express.static(publicPath));
 
+// Serve assets folder
+const assetsPath = path.join(process.cwd(), 'assets');
+console.log('[Static] Serving assets from:', assetsPath);
+app.use('/assets', express.static(assetsPath));
+
 // API info endpoint
 app.get('/api', (req: Request, res: Response) => {
   res.json({
