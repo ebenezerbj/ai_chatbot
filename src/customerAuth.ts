@@ -921,14 +921,24 @@ export function formatBalanceResponse(accountData: any): string {
 export function formatTransactionsResponse(accountData: any): string {
   let response = `**Recent Transactions**\n\n`;
   
-  accountData.recentTransactions.forEach((txn: any) => {
-    const sign = txn.amount >= 0 ? '+' : '';
-    response += `${txn.date}: ${txn.description}\n`;
-    response += `Amount: ${sign}GHS ${txn.amount.toFixed(2)}\n`;
-    response += `Balance: GHS ${txn.balance.toFixed(2)}\n\n`;
-  });
-  
-  response += `For a detailed statement, please visit any branch or use our mobile banking app.`;
+  if (!accountData.recentTransactions || accountData.recentTransactions.length === 0) {
+    response += `No recent transactions found for this account.\n\n`;
+    response += `This could mean:\n`;
+    response += `• Your account is newly opened\n`;
+    response += `• No transactions have been recorded yet\n\n`;
+    response += `For more information, please visit any branch or contact customer service.`;
+  } else {
+    accountData.recentTransactions.forEach((txn: any) => {
+      const sign = txn.amount >= 0 ? '+' : '';
+      response += `📅 **${txn.date}**\n`;
+      response += `${txn.description}\n`;
+      response += `Amount: ${sign}GHS ${txn.amount.toFixed(2)}\n`;
+      response += `Balance: GHS ${txn.balance.toFixed(2)}\n`;
+      response += `Ref: ${txn.reference}\n\n`;
+    });
+    
+    response += `_For a detailed statement, please visit any branch or use our mobile banking app._`;
+  }
   
   return response;
 }

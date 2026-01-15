@@ -4037,6 +4037,41 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
+// Debug endpoint for database queries (admin only)
+app.post('/api/admin/db-query', async (req: Request, res: Response) => {
+  try {
+    // Check admin authorization
+    const authHeader = req.headers.authorization;
+    const adminToken = process.env.ADMIN_TOKEN || 'mysecretadmintoken';
+    
+    if (!authHeader || authHeader !== `Bearer ${adminToken}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { query, params = [] } = req.body;
+    
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ error: 'Query is required' });
+    }
+
+    console.log('[Admin] Executing query:', query, 'with params:', params);
+    
+    const results = await executeQuery(query, params);
+    
+    res.json({
+      success: true,
+      rowCount: results.length,
+      rows: results
+    });
+  } catch (error: any) {
+    console.error('[Admin] Query error:', error);
+    res.status(500).json({ 
+      error: 'Query failed',
+      message: error.message 
+    });
+  }
+});
+
 // Global error handler for multer and other errors
 app.use((err: any, req: Request, res: Response, next: any) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
