@@ -4072,6 +4072,109 @@ app.post('/api/admin/db-query', async (req: Request, res: Response) => {
   }
 });
 
+// Backfill opening balance transactions (one-time operation)
+app.post('/api/admin/backfill-opening-balances', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const adminToken = process.env.ADMIN_TOKEN || 'mysecretadmintoken';
+    
+    if (!authHeader || authHeader !== `Bearer ${adminToken}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    console.log('[Admin] Starting Opening Balance backfill...');
+    
+    // Find accounts with balances but no transactions
+    const accountsQuery = DB_TYPE === 'postgres'
+      ? `SELECT ab.account_number, ab.ledger_balance
+         FROM account_balances ab
+         WHERE ab.ledger_balance <> 0
+           AND NOT EXISTS (
+             SELECT 1 FROM transactions t 
+             WHERE t.account_number = ab.account_number
+           )
+         ORDER BY ab.account_number`
+      : `SELECT ab.account_number, ab.ledger_balance
+         FROM account_balances ab
+         WHERE ab.ledger_balance <> 0
+           AND NOT EXISTS (
+             SELECT 1 FROM transactions t 
+             WHERE t.account_number = ab.account_number
+           )
+         ORDER BY ab.account_number`;
+    
+    const accountsToProcess = await executeQuery<any>(accountsQuery);
+    
+    console.log(`[Admin] Found ${accountsToProcess.length} accounts needing Opening Balance transactions`);
+    
+    if (accountsToProcess.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No accounts need backfilling',
+        processed: 0
+      });
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (let i = 0; i < accountsToProcess.length; i++) {
+      const account = accountsToProcess[i];
+      
+      try {
+        const timestamp = Date.now() + i;
+        const referenceNumber = `OB-${account.account_number}-${timestamp}`;
+        const balance = parseFloat(account.ledger_balance);
+        
+        const insertQuery = DB_TYPE === 'postgres'
+          ? `INSERT INTO transactions (
+               account_number, transaction_date, description,
+               debit_amount, credit_amount, balance_after,
+               reference_number, transaction_type, channel
+             ) VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4, $5, $6, $7, $8)`
+          : `INSERT INTO transactions (
+               account_number, transaction_date, description,
+               debit_amount, credit_amount, balance_after,
+               reference_number, transaction_type, channel
+             ) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?, ?)`;
+        
+        await executeQuery(insertQuery, [
+          account.account_number,
+          `Opening Balance - GHS ${balance.toFixed(2)}`,
+          0,
+          balance,
+          balance,
+          referenceNumber,
+          'Opening Balance',
+          'Internal'
+        ]);
+        
+        successCount++;
+      } catch (error: any) {
+        errorCount++;
+        console.error(`[Admin] Error processing account ${account.account_number}:`, error.message);
+      }
+    }
+    
+    console.log(`[Admin] Backfill complete: ${successCount} success, ${errorCount} errors`);
+    
+    res.json({
+      success: true,
+      message: 'Opening Balance backfill completed',
+      processed: successCount,
+      errors: errorCount,
+      total: accountsToProcess.length
+    });
+    
+  } catch (error: any) {
+    console.error('[Admin] Backfill error:', error);
+    res.status(500).json({ 
+      error: 'Backfill failed',
+      message: error.message 
+    });
+  }
+});
+
 // Global error handler for multer and other errors
 app.use((err: any, req: Request, res: Response, next: any) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
