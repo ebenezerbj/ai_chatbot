@@ -5,18 +5,18 @@ param(
 
 $adminToken = "mysecretadmintoken"
 
-Write-Host "╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║   Opening Balance Backfill - One-Time Operation           ║" -ForegroundColor Cyan
-Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "========================================================" -ForegroundColor Cyan
+Write-Host "   Opening Balance Backfill - One-Time Operation      " -ForegroundColor Cyan
+Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host ""
 
 Write-Host "WARNING: This will create Opening Balance transactions" -ForegroundColor Yellow
-Write-Host "   for ALL accounts that have balances but no transaction history." -ForegroundColor Yellow
+Write-Host "for ALL accounts that have balances but no transaction history." -ForegroundColor Yellow
 Write-Host ""
-Write-Host "   This operation:" -ForegroundColor White
-Write-Host "   • Will NOT affect accounts that already have transactions" -ForegroundColor White
-Write-Host "   • Will NOT modify any existing balances" -ForegroundColor White
-Write-Host "   • Creates read-only transaction records for historical reference" -ForegroundColor White
+Write-Host "This operation:" -ForegroundColor White
+Write-Host "  - Will NOT affect accounts that already have transactions" -ForegroundColor White
+Write-Host "  - Will NOT modify any existing balances" -ForegroundColor White
+Write-Host "  - Creates read-only transaction records for historical reference" -ForegroundColor White
 Write-Host ""
 
 $confirmation = Read-Host "Type 'YES' to proceed with backfill"
@@ -27,8 +27,10 @@ if ($confirmation -ne "YES") {
     exit 0
 }
 
-Write-Host "`nStarting backfill operation..." -ForegroundColor Cyan
-Write-Host "This may take several minutes for large databases.`n" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "Starting backfill operation..." -ForegroundColor Cyan
+Write-Host "This may take several minutes for large databases." -ForegroundColor Yellow
+Write-Host ""
 
 try {
     $headers = @{

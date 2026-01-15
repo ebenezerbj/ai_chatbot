@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     credit_amount DECIMAL(15,2) DEFAULT 0.00,
     balance_after DECIMAL(15,2) NOT NULL,
     reference_number VARCHAR(50) UNIQUE,
-    transaction_type VARCHAR(20) DEFAULT 'Other' CHECK (transaction_type IN ('Deposit', 'Withdrawal', 'Transfer', 'Fee', 'Interest', 'Reversal', 'Other')),
+    transaction_type VARCHAR(20) DEFAULT 'Other' CHECK (transaction_type IN ('Deposit', 'Withdrawal', 'Transfer', 'Fee', 'Interest', 'Reversal', 'Opening Balance', 'Other')),
     channel VARCHAR(20) DEFAULT 'Internal' CHECK (channel IN ('ATM', 'Branch', 'Mobile', 'Online', 'POS', 'Agent', 'Internal')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
