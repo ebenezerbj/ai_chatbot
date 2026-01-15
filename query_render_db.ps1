@@ -1,7 +1,7 @@
 # Query Render PostgreSQL through the deployed API
 param(
     [string]$Query = "SELECT COUNT(*) as count FROM transactions WHERE reference_number LIKE 'BAL-%'",
-    [string]$BaseUrl = "https://ai-chatbot-8g44.onrender.com"
+    [string]$BaseUrl = "https://ai-chatbot-1-a596.onrender.com"
 )
 
 $adminToken = "mysecretadmintoken"

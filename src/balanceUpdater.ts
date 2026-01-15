@@ -361,14 +361,34 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
         ]);
       }
 
-      // Step 5: Record transaction if balance changed
-      if (existingBalance !== null && existingBalance !== update.ledgerBalance) {
+      // Step 5: Record transaction for balance changes or new accounts
+      let shouldCreateTransaction = false;
+      let transactionDescription = '';
+      let debitAmount = 0;
+      let creditAmount = 0;
+      let transactionType = '';
+      
+      if (existingBalance === null && update.ledgerBalance !== 0) {
+        // New account with initial balance - create Opening Balance transaction
+        shouldCreateTransaction = true;
+        transactionDescription = `Opening Balance - GHS ${update.ledgerBalance.toFixed(2)}`;
+        creditAmount = update.ledgerBalance;
+        debitAmount = 0;
+        transactionType = 'Opening Balance';
+      } else if (existingBalance !== null && existingBalance !== update.ledgerBalance) {
+        // Existing account with balance change
+        shouldCreateTransaction = true;
         const difference = update.ledgerBalance - existingBalance;
         const isCredit = difference > 0;
-        const transactionType = isCredit ? 'Deposit' : 'Withdrawal';
-        const debitAmount = isCredit ? 0 : Math.abs(difference);
-        const creditAmount = isCredit ? difference : 0;
-        
+        transactionType = isCredit ? 'Deposit' : 'Withdrawal';
+        debitAmount = isCredit ? 0 : Math.abs(difference);
+        creditAmount = isCredit ? difference : 0;
+        transactionDescription = isCredit 
+          ? `Balance Upload - Deposit of GHS ${creditAmount.toFixed(2)}`
+          : `Balance Upload - Withdrawal of GHS ${debitAmount.toFixed(2)}`;
+      }
+      
+      if (shouldCreateTransaction) {
         // Generate a unique reference number
         const timestamp = Date.now();
         const referenceNumber = `BAL-${update.accountNumber}-${timestamp}`;
@@ -385,13 +405,9 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
                reference_number, transaction_type, channel
              ) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?, ?)`;
         
-        const description = isCredit 
-          ? `Balance Upload - Deposit of GHS ${creditAmount.toFixed(2)}`
-          : `Balance Upload - Withdrawal of GHS ${debitAmount.toFixed(2)}`;
-        
         await executeQuery(transactionQuery, [
           update.accountNumber,
-          description,
+          transactionDescription,
           debitAmount,
           creditAmount,
           update.ledgerBalance,
