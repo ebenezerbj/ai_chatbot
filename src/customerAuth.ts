@@ -28,6 +28,7 @@ export interface CustomerSession {
   awaitingVisitorInfo?: boolean; // Waiting for non-customer form submission
   availableAccounts?: Array<{accountNumber: string; accountName: string; accountType: string}>; // Multiple accounts for selection
   awaitingAccountSelection?: boolean; // Waiting for user to select account
+  requestedAction?: 'balance' | 'transactions' | 'loans' | 'account_details'; // Track what user originally asked for
 }
 
 // In-memory session store (for production, use Redis or database)
@@ -97,6 +98,35 @@ export function needsAuthentication(message: string): boolean {
   ];
   
   return authRequiredPatterns.some(pattern => pattern.test(message));
+}
+
+/**
+ * Detect what the user is requesting (to preserve intent through authentication flow)
+ */
+export function detectRequestedAction(message: string): 'balance' | 'transactions' | 'loans' | 'account_details' | undefined {
+  const lowerMessage = message.toLowerCase();
+  
+  // Check for transaction requests (most specific first)
+  if (/(transaction|statement|history|mini.?statement)/i.test(message)) {
+    return 'transactions';
+  }
+  
+  // Check for loan requests
+  if (/\b(loan|owe)\b/i.test(message) && !/\baccount\b/i.test(message)) {
+    return 'loans';
+  }
+  
+  // Check for balance requests
+  if (/balance/i.test(message)) {
+    return 'balance';
+  }
+  
+  // Check for general account details
+  if (/account\s+(details|information|info)/i.test(message)) {
+    return 'account_details';
+  }
+  
+  return undefined;
 }
 
 /**

@@ -733,6 +733,14 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     if ((customerAuth.needsAuthentication(message) || hasAuthCredentials) && userSession.isCustomer !== false) {
       console.log('[Chat] Authentication required for this query or credentials detected');
       
+      // Store what the user is requesting (before authentication starts)
+      const requestedAction = customerAuth.detectRequestedAction(message);
+      if (requestedAction) {
+        const session = customerAuth.getOrCreateSession(effectiveSessionId);
+        session.requestedAction = requestedAction;
+        console.log('[Chat] Stored requested action:', requestedAction);
+      }
+      
       // Check if already authenticated
       if (customerAuth.isSessionAuthenticated(effectiveSessionId)) {
         console.log('[Chat] Session authenticated, fetching account data');
@@ -781,8 +789,26 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         // Determine what info they want - distinguish between account, loan, or both
         let response: string;
         
+        // First, check if we have a stored requested action from before authentication
+        if (authSession.requestedAction) {
+          console.log('[Chat] Using stored requested action:', authSession.requestedAction);
+          
+          if (authSession.requestedAction === 'transactions') {
+            response = greeting + customerAuth.formatTransactionsResponse(accountData);
+          } else if (authSession.requestedAction === 'loans') {
+            response = greeting + customerAuth.formatLoanResponse(accountData);
+          } else if (authSession.requestedAction === 'balance') {
+            response = greeting + customerAuth.formatBalanceResponse(accountData);
+          } else {
+            response = greeting + customerAuth.formatAccountBalanceOnly(accountData);
+          }
+          
+          // Clear the stored action after using it
+          delete authSession.requestedAction;
+        }
+        // Otherwise, check the current message for intent
         // Check if specifically asking about loans only
-        if (/\b(loan|owe)\b/i.test(message) && !/\baccount\b/i.test(message)) {
+        else if (/\b(loan|owe)\b/i.test(message) && !/\baccount\b/i.test(message)) {
           response = greeting + customerAuth.formatLoanResponse(accountData);
         }
         // Check if specifically asking about account balance only (not loans)
