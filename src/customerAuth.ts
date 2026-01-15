@@ -544,14 +544,25 @@ export async function authenticateCustomer(
 export function isSessionAuthenticated(sessionId: string): boolean {
   const session = sessions.get(sessionId);
   
+  console.log('[Auth] isSessionAuthenticated check:', {
+    sessionId,
+    sessionExists: !!session,
+    isAuthenticated: session?.isAuthenticated,
+    expiresAt: session?.expiresAt,
+    now: new Date(),
+    expired: session ? session.expiresAt < new Date() : 'N/A'
+  });
+  
   if (!session) return false;
   if (!session.isAuthenticated) return false;
   if (session.expiresAt < new Date()) {
     // Session expired
+    console.log('[Auth] ⚠️ Session expired');
     session.isAuthenticated = false;
     return false;
   }
   
+  console.log('[Auth] ✅ Session is authenticated and valid');
   return true;
 }
 

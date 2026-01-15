@@ -732,9 +732,18 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // Check if session is already authenticated FIRST to avoid re-authentication
     const isAlreadyAuthenticated = customerAuth.isSessionAuthenticated(effectiveSessionId);
     
+    console.log('[Chat] Authentication check:', {
+      sessionId: effectiveSessionId,
+      message: message.substring(0, 50),
+      needsAuth: customerAuth.needsAuthentication(message),
+      hasAuthCredentials,
+      isAlreadyAuthenticated,
+      isCustomer: userSession.isCustomer
+    });
+    
     // If user is authenticated and asking for account info, handle it directly
     if (isAlreadyAuthenticated && customerAuth.needsAuthentication(message)) {
-      console.log('[Chat] Authenticated user requesting account info, processing directly');
+      console.log('[Chat] ✅ Authenticated user requesting account info, processing directly');
       
       // Store what the user is requesting
       const requestedAction = customerAuth.detectRequestedAction(message);
