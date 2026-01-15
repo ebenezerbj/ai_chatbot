@@ -729,21 +729,23 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     const authDetails = customerAuth.extractAuthDetails(message);
     const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
     
+    // Check if session is already authenticated FIRST to avoid re-authentication
+    const isAlreadyAuthenticated = customerAuth.isSessionAuthenticated(effectiveSessionId);
+    
     // Only allow authentication for identified customers
     if ((customerAuth.needsAuthentication(message) || hasAuthCredentials) && userSession.isCustomer !== false) {
-      console.log('[Chat] Authentication required for this query or credentials detected');
       
-      // Store what the user is requesting (before authentication starts)
-      const requestedAction = customerAuth.detectRequestedAction(message);
-      if (requestedAction) {
-        const session = customerAuth.getOrCreateSession(effectiveSessionId);
-        session.requestedAction = requestedAction;
-        console.log('[Chat] Stored requested action:', requestedAction);
-      }
-      
-      // Check if already authenticated
-      if (customerAuth.isSessionAuthenticated(effectiveSessionId)) {
-        console.log('[Chat] Session authenticated, fetching account data');
+      // If already authenticated, process the request directly without re-authenticating
+      if (isAlreadyAuthenticated) {
+        console.log('[Chat] Session already authenticated, processing request directly');
+        
+        // Store what the user is requesting
+        const requestedAction = customerAuth.detectRequestedAction(message);
+        if (requestedAction) {
+          const session = customerAuth.getOrCreateSession(effectiveSessionId);
+          session.requestedAction = requestedAction;
+          console.log('[Chat] Stored requested action:', requestedAction);
+        }
         
         const authSession = customerAuth.getOrCreateSession(effectiveSessionId);
         
@@ -849,6 +851,16 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       }
       
       // Not authenticated - attempt authentication with OTP flow
+      console.log('[Chat] User not authenticated, initiating authentication flow');
+      
+      // Store what the user is requesting (before authentication starts)
+      const requestedAction = customerAuth.detectRequestedAction(message);
+      if (requestedAction) {
+        const session = customerAuth.getOrCreateSession(effectiveSessionId);
+        session.requestedAction = requestedAction;
+        console.log('[Chat] Stored requested action for after auth:', requestedAction);
+      }
+      
       const authResult = await customerAuth.authenticateCustomer(
         effectiveSessionId,
         authDetails.accountNumber,
