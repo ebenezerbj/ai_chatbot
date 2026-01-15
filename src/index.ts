@@ -732,54 +732,51 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // Check if session is already authenticated FIRST to avoid re-authentication
     const isAlreadyAuthenticated = customerAuth.isSessionAuthenticated(effectiveSessionId);
     
-    // Only allow authentication for identified customers
-    if ((customerAuth.needsAuthentication(message) || hasAuthCredentials) && userSession.isCustomer !== false) {
+    // If user is authenticated and asking for account info, handle it directly
+    if (isAlreadyAuthenticated && customerAuth.needsAuthentication(message)) {
+      console.log('[Chat] Authenticated user requesting account info, processing directly');
       
-      // If already authenticated, process the request directly without re-authenticating
-      if (isAlreadyAuthenticated) {
-        console.log('[Chat] Session already authenticated, processing request directly');
-        
-        // Store what the user is requesting
-        const requestedAction = customerAuth.detectRequestedAction(message);
-        if (requestedAction) {
-          const session = customerAuth.getOrCreateSession(effectiveSessionId);
-          session.requestedAction = requestedAction;
-          console.log('[Chat] Stored requested action:', requestedAction);
+      // Store what the user is requesting
+      const requestedAction = customerAuth.detectRequestedAction(message);
+      if (requestedAction) {
+        const session = customerAuth.getOrCreateSession(effectiveSessionId);
+        session.requestedAction = requestedAction;
+        console.log('[Chat] Stored requested action:', requestedAction);
+      }
+      
+      const authSession = customerAuth.getOrCreateSession(effectiveSessionId);
+      
+      // Check if user wants to see all their accounts
+      if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
+        if (/(list|show|view|all)\s+(my\s+)?(accounts?)/i.test(message) || 
+            /how\s+many\s+accounts?/i.test(message) ||
+            /what\s+accounts?\s+do\s+i\s+have/i.test(message)) {
+          const response = customerAuth.formatAllAccountsList(authSession.availableAccounts);
+          
+          // Log bot response
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
+          return res.json({ 
+            reply: response,
+            source: 'authenticated',
+            sessionId: effectiveSessionId
+          });
         }
-        
-        const authSession = customerAuth.getOrCreateSession(effectiveSessionId);
-        
-        // Check if user wants to see all their accounts
-        if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
-          if (/(list|show|view|all)\s+(my\s+)?(accounts?)/i.test(message) || 
-              /how\s+many\s+accounts?/i.test(message) ||
-              /what\s+accounts?\s+do\s+i\s+have/i.test(message)) {
-            const response = customerAuth.formatAllAccountsList(authSession.availableAccounts);
-            
-            // Log bot response
-            await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', response).catch(e =>
-              console.error('[Analytics] Failed to log bot message:', e)
-            );
-            
-            return res.json({ 
-              reply: response,
-              source: 'authenticated',
-              sessionId: effectiveSessionId
-            });
-          }
+      }
+      
+      // Check if user is requesting a specific account (if they have multiple)
+      let accountNumberToQuery = authSession.accountNumber!;
+      if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
+        const specificAccount = customerAuth.extractAccountNumberFromQuery(message, authSession.availableAccounts);
+        if (specificAccount) {
+          console.log('[Chat] User requesting specific account:', specificAccount);
+          accountNumberToQuery = specificAccount;
         }
-        
-        // Check if user is requesting a specific account (if they have multiple)
-        let accountNumberToQuery = authSession.accountNumber!;
-        if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
-          const specificAccount = customerAuth.extractAccountNumberFromQuery(message, authSession.availableAccounts);
-          if (specificAccount) {
-            console.log('[Chat] User requesting specific account:', specificAccount);
-            accountNumberToQuery = specificAccount;
-          }
-        }
-        
-        const accountData = await customerAuth.getCustomerAccountData(accountNumberToQuery);
+      }
+      
+      const accountData = await customerAuth.getCustomerAccountData(accountNumberToQuery);
         
         // Add personalized greeting if this is first query after authentication
         let greeting = '';
@@ -848,9 +845,10 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           source: 'authenticated',
           sessionId: effectiveSessionId
         });
-      }
-      
-      // Not authenticated - attempt authentication with OTP flow
+    }
+    
+    // If not authenticated but needs authentication, start auth flow
+    if ((customerAuth.needsAuthentication(message) || hasAuthCredentials) && userSession.isCustomer !== false) {
       console.log('[Chat] User not authenticated, initiating authentication flow');
       
       // Store what the user is requesting (before authentication starts)
