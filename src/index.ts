@@ -732,14 +732,45 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // Check if session is already authenticated FIRST to avoid re-authentication
     const isAlreadyAuthenticated = customerAuth.isSessionAuthenticated(effectiveSessionId);
     
+    // Detect if this looks like a quick action button click (exact match)
+    const quickActionPatterns = [
+      'What is my account balance?',
+      'Show me my recent transactions',
+      'I want to apply for salary overdraft',
+      'I want to apply for a loan',
+      'Tell me about my loan',
+      'I have another question'
+    ];
+    const isQuickActionButton = quickActionPatterns.some(pattern => 
+      message.trim().toLowerCase() === pattern.toLowerCase()
+    );
+    
     console.log('[Chat] Authentication check:', {
       sessionId: effectiveSessionId,
       message: message.substring(0, 50),
       needsAuth: customerAuth.needsAuthentication(message),
       hasAuthCredentials,
       isAlreadyAuthenticated,
-      isCustomer: userSession.isCustomer
+      isCustomer: userSession.isCustomer,
+      isQuickActionButton
     });
+    
+    // If this looks like a quick action button but user isn't authenticated, there's a session issue
+    if (isQuickActionButton && !isAlreadyAuthenticated && !hasAuthCredentials) {
+      console.log('[Chat] ⚠️ Quick action button clicked but session not authenticated - possible session loss');
+      const sessionLostMessage = `I apologize, but your session has expired. To view your recent transactions, please authenticate again by providing your account number or phone number.`;
+      
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', sessionLostMessage).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      
+      return res.json({
+        reply: sessionLostMessage,
+        source: 'session-expired',
+        sessionId: effectiveSessionId,
+        requiresAuth: true
+      });
+    }
     
     // If user is authenticated and asking for account info, handle it directly
     if (isAlreadyAuthenticated && customerAuth.needsAuthentication(message)) {
