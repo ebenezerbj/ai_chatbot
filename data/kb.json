@@ -772,6 +772,8 @@
     "product": "account_information",
     "patterns": [
       "show last transactions",
+      "show my transactions",
+      "show recent transactions",
       "i want mini statement",
       "list recent transactions",
       "show debit and credit history",
@@ -780,9 +782,17 @@
       "show me what happened on account today",
       "any recent withdrawals",
       "provide recent account history",
-      "show recent activity"
+      "show recent activity",
+      "view transaction history",
+      "my transaction history",
+      "account statement",
+      "mini statement",
+      "show deposits and withdrawals",
+      "what transactions have i made",
+      "check my transaction history",
+      "show me my last 10 transactions"
     ],
-    "answer": "Retrieve recent transactions / mini-statement.\n\nTo retrieve recent transactions / mini-statement, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
+    "answer": "View Recent Transactions\n\nI can show you your recent transactions! To view your transaction history, please authenticate by providing:\n\n1. Your account number or registered phone number\n2. Verify your identity with the OTP sent to your phone\n\nOnce authenticated, I will display your:\n• Last 10 transactions\n• Transaction dates\n• Descriptions (deposits, withdrawals, transfers)\n• Transaction amounts\n• Balance after each transaction\n• Reference numbers\n\nYou can also view detailed statements through our mobile banking app or visit any branch for full account statements."
   },
   {
     "id": "check_loan_balance",
