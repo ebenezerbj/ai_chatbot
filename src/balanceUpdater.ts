@@ -24,6 +24,7 @@ export interface UpdateResult {
   errors: string[];
   summary: string;
   customersCreated?: number;  // Track how many new customers were created
+  transactionsCreated?: number; // Track how many transactions were created
 }
 
 function buildCaseInsensitiveKeyMap(row: Record<string, any>): Record<string, string> {
@@ -189,7 +190,8 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
     errorCount: 0,
     errors: [],
     summary: '',
-    customersCreated: 0
+    customersCreated: 0,
+    transactionsCreated: 0
   };
 
   const toPlainAccountNumber = (raw: string): { value: string } | { error: string } => {
@@ -336,7 +338,15 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
         }
       }
 
-      // Step 3: Update balance
+      // Step 3: Get existing balance before update (for transaction recording)
+      const getBalanceQuery = DB_TYPE === 'postgres'
+        ? 'SELECT ledger_balance FROM account_balances WHERE account_number = $1'
+        : 'SELECT ledger_balance FROM account_balances WHERE account_number = ?';
+      
+      const existingBalanceResult = await executeQuery<any>(getBalanceQuery, [update.accountNumber]);
+      const existingBalance = existingBalanceResult.length > 0 ? parseFloat(existingBalanceResult[0].ledger_balance) : null;
+
+      // Step 4: Update balance
       if (DB_TYPE === 'postgres') {
         await executeQuery(balanceQuery, [
           update.accountNumber,
@@ -350,6 +360,49 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
           update.availableBalance
         ]);
       }
+
+      // Step 5: Record transaction if balance changed
+      if (existingBalance !== null && existingBalance !== update.ledgerBalance) {
+        const difference = update.ledgerBalance - existingBalance;
+        const isCredit = difference > 0;
+        const transactionType = isCredit ? 'Deposit' : 'Withdrawal';
+        const debitAmount = isCredit ? 0 : Math.abs(difference);
+        const creditAmount = isCredit ? difference : 0;
+        
+        // Generate a unique reference number
+        const timestamp = Date.now();
+        const referenceNumber = `BAL-${update.accountNumber}-${timestamp}`;
+        
+        const transactionQuery = DB_TYPE === 'postgres'
+          ? `INSERT INTO transactions (
+               account_number, transaction_date, description, 
+               debit_amount, credit_amount, balance_after, 
+               reference_number, transaction_type, channel
+             ) VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4, $5, $6, $7, $8)`
+          : `INSERT INTO transactions (
+               account_number, transaction_date, description, 
+               debit_amount, credit_amount, balance_after, 
+               reference_number, transaction_type, channel
+             ) VALUES (?, NOW(), ?, ?, ?, ?, ?, ?, ?)`;
+        
+        const description = isCredit 
+          ? `Balance Upload - Deposit of GHS ${creditAmount.toFixed(2)}`
+          : `Balance Upload - Withdrawal of GHS ${debitAmount.toFixed(2)}`;
+        
+        await executeQuery(transactionQuery, [
+          update.accountNumber,
+          description,
+          debitAmount,
+          creditAmount,
+          update.ledgerBalance,
+          referenceNumber,
+          transactionType,
+          'Internal'
+        ]);
+        
+        result.transactionsCreated!++;
+      }
+      
       result.successCount++;
     } catch (error: any) {
       result.errorCount++;
@@ -373,6 +426,10 @@ export async function updateBalances(updates: BalanceUpdate[]): Promise<UpdateRe
   
   if (result.customersCreated! > 0) {
     result.summary += ` (${result.customersCreated} new customers created)`;
+  }
+  
+  if (result.transactionsCreated! > 0) {
+    result.summary += ` (${result.transactionsCreated} transactions recorded)`;
   }
   
   if (result.errorCount > 100) {

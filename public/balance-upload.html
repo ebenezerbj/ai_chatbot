@@ -365,6 +365,8 @@
                 <p><strong>Summary:</strong> ${data.summary}</p>
                 <p><strong>Total Records:</strong> ${data.totalRecords}</p>
                 <p><strong>Successfully Updated:</strong> ${data.successCount}</p>
+                ${data.customersCreated > 0 ? `<p><strong>New Customers Created:</strong> ${data.customersCreated} 🎉</p>` : ''}
+                ${data.transactionsCreated > 0 ? `<p><strong>Transactions Recorded:</strong> ${data.transactionsCreated} 📝</p>` : ''}
                 ${data.errorCount > 0 ? `<p><strong>Errors:</strong> ${data.errorCount}</p>` : ''}
                 ${data.stats ? `
                   <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #c3e6cb;">

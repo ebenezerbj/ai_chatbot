@@ -4042,6 +4042,10 @@ https://example.com/products"></textarea>
                             successMessage += `<br><strong>New Customers Created:</strong> ${data.customersCreated} 🎉`;
                         }
                         
+                        if (data.transactionsCreated > 0) {
+                            successMessage += `<br><strong>Transactions Recorded:</strong> ${data.transactionsCreated} 📝`;
+                        }
+                        
                         if (data.summary) {
                             successMessage += `<br><br>${data.summary}`;
                         }
@@ -4054,7 +4058,7 @@ https://example.com/products"></textarea>
                         }
                         
                         resultDiv.innerHTML = successMessage;
-                        addActivityLog(`Balance upload: ${data.successCount} accounts updated${data.customersCreated > 0 ? ', ' + data.customersCreated + ' new customers' : ''}`, 'success');
+                        addActivityLog(`Balance upload: ${data.successCount} accounts updated${data.customersCreated > 0 ? ', ' + data.customersCreated + ' new customers' : ''}${data.transactionsCreated > 0 ? ', ' + data.transactionsCreated + ' transactions' : ''}`, 'success');
                         loadDashboardData(); // Refresh stats
                     }
                 } else {

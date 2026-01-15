@@ -2942,7 +2942,8 @@ app.post('/api/admin/upload-balances', upload.single('balances'), async (req: Re
         errors: result.errors,
         stats: stats,
         summary: result.summary,
-        customersCreated: result.customersCreated || 0
+        customersCreated: result.customersCreated || 0,
+        transactionsCreated: result.transactionsCreated || 0
       });
     } catch (parseError: any) {
       console.error('[Admin] Balance upload processing error:', parseError.message);
