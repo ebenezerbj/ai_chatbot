@@ -477,6 +477,25 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       console.error('[Analytics] Failed to log user message:', e)
     );
 
+    // ===== Phase 3: ML Analysis (non-blocking) =====
+    // Analyze sentiment and intent in parallel (run early to catch first message)
+    Promise.all([
+      analytics.analyzeSentiment(message, effectiveSessionId, messageIndex),
+      analytics.classifyIntent(message, effectiveSessionId, messageIndex)
+    ]).then(([sentimentResult]) => {
+      // Check if sentiment escalation is needed and send SMS alert
+      if (sentimentResult && sentimentResult.needsEscalation) {
+        console.log(`[Chat] Sentiment escalation detected for session ${effectiveSessionId}`);
+        // Send admin alert for sentiment-based escalation
+        sendAdminAlert(
+          'Sentiment escalation detected',
+          `Session: ${effectiveSessionId}, Sentiment: ${sentimentResult.sentiment}, Score: ${sentimentResult.score.toFixed(2)}`
+        ).catch(err => {
+          console.error('[Chat] Failed to send sentiment escalation SMS:', err.message);
+        });
+      }
+    }).catch(e => console.error('[ML] Analysis failed:', e));
+
     // ===== Customer Identification Check =====
     const userSession = customerAuth.getOrCreateSession(effectiveSessionId);
     console.log('[Chat] Session state:', {
@@ -654,25 +673,6 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       }
     }
 
-    // ===== Phase 3: ML Analysis (non-blocking) =====
-    // Analyze sentiment and intent in parallel
-    Promise.all([
-      analytics.analyzeSentiment(message, effectiveSessionId, messageIndex),
-      analytics.classifyIntent(message, effectiveSessionId, messageIndex)
-    ]).then(([sentimentResult]) => {
-      // Check if sentiment escalation is needed and send SMS alert
-      if (sentimentResult && sentimentResult.needsEscalation) {
-        console.log(`[Chat] Sentiment escalation detected for session ${effectiveSessionId}`);
-        // Send admin alert for sentiment-based escalation
-        sendAdminAlert(
-          'Sentiment escalation detected',
-          `Session: ${effectiveSessionId}, Sentiment: ${sentimentResult.sentiment}, Score: ${sentimentResult.score.toFixed(2)}`
-        ).catch(err => {
-          console.error('[Chat] Failed to send sentiment escalation SMS:', err.message);
-        });
-      }
-    }).catch(e => console.error('[ML] Analysis failed:', e));
-    
     // Trigger churn prediction asynchronously (non-blocking)
     if (ipAddress) {
       analytics.getOrCreateUserProfile(ipAddress)
