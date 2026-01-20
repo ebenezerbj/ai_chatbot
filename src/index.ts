@@ -1901,12 +1901,15 @@ app.post('/api/handover', async (req: Request, res: Response) => {
 
     // Verify session exists
     const sessions = await executeQuery<any>(
-      'SELECT session_id FROM chat_sessions WHERE session_id = $1',
+      DB_TYPE === 'postgres'
+        ? 'SELECT session_id FROM chat_sessions WHERE session_id = $1'
+        : 'SELECT session_id FROM chat_sessions WHERE session_id = ?',
       [sessionId]
     );
 
     if (!sessions || sessions.length === 0) {
-      return res.status(404).json({ error: 'Session not found' });
+      console.log('[Handover] Session not found, creating escalation anyway');
+      // Don't fail - allow escalation even if session doesn't exist
     }
 
     // Generate unique ticket ID
@@ -2035,10 +2038,15 @@ app.post('/api/handover', async (req: Request, res: Response) => {
           );
 
           // Notify system administrator about the escalation for supervision
-          sendAdminAlert(
-            'Customer escalation submitted',
-            `Ticket: ${ticketId}, Branch: ${targetLocation}, Name: ${name || 'Customer'}, Phone: ${phone || 'Not provided'}`
-          );
+          try {
+            await sendAdminAlert(
+              'Customer escalation submitted',
+              `Ticket: ${ticketId}, Branch: ${targetLocation}, Name: ${name || 'Customer'}, Phone: ${phone || 'Not provided'}`
+            );
+          } catch (adminAlertError: any) {
+            console.error('[Handover] Admin alert SMS failed:', adminAlertError.message);
+            // Don't fail the request if admin alert fails
+          }
         }
       } catch (smsError: any) {
         console.error('[Handover] SMS notification failed:', smsError.message);
@@ -2343,13 +2351,18 @@ async function sendAdminAlert(subject: string, details?: string): Promise<void> 
     body += `\n${trimmed}`;
   }
 
+  console.log(`[AdminAlert] Sending alert to ${ADMIN_ALERT_PHONE}:`, subject);
+  
   try {
     const ok = await sendSMSMessage(ADMIN_ALERT_PHONE, body);
     if (!ok) {
-      console.error('[AdminAlert] Failed to send alert SMS');
+      console.error('[AdminAlert] Failed to send alert SMS - sendSMSMessage returned false');
+    } else {
+      console.log('[AdminAlert] Alert SMS sent successfully');
     }
   } catch (err: any) {
     console.error('[AdminAlert] Error while sending alert SMS:', err.message || err);
+    throw err; // Re-throw so caller can handle it
   }
 }
 
@@ -2423,15 +2436,27 @@ async function sendSMSMessage(phoneNumber: string, message: string): Promise<boo
       }
     );
 
-    if (response.status === 200 && response.data.handshake?.id === 0) {
+    // Check for successful response (both id=0 and label='HSHK_OK' indicate success)
+    if (response.status === 200 && 
+        (response.data.handshake?.id === 0 || response.data.handshake?.label === 'HSHK_OK')) {
       console.log(`[SMS] Message sent successfully to ${formattedPhone}`);
+      console.log(`[SMS] Batch ID: ${response.data.data?.batch || 'N/A'}`);
       return true;
     } else {
-      console.error('[SMS] SMS API returned non-success status:', response.data);
+      console.error('[SMS] SMS API returned non-success status:', JSON.stringify(response.data, null, 2));
       return false;
     }
   } catch (error: any) {
-    console.error('[SMS] Failed to send SMS:', error.response?.data || error.message);
+    if (error.response) {
+      console.error('[SMS] Failed to send SMS - Response error:', {
+        status: error.response.status,
+        data: error.response.data
+      });
+    } else if (error.request) {
+      console.error('[SMS] Failed to send SMS - No response received:', error.message);
+    } else {
+      console.error('[SMS] Failed to send SMS - Request setup error:', error.message);
+    }
     return false;
   }
 }
