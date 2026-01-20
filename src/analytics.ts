@@ -1220,6 +1220,13 @@ Emotion tags: happy, satisfied, grateful, confused, disappointed, angry, urgent,
 
     console.log(`[Sentiment] ${sessionId}-${messageId}: ${sentimentAnalysis.sentiment} (${sentimentAnalysis.score.toFixed(2)})`);
     
+    // Send SMS alert if escalation is needed
+    if (sentimentAnalysis.needsEscalation) {
+      console.log(`[Sentiment] Escalation detected for session ${sessionId}, triggering SMS alert`);
+      // Import and call the alert function (will be handled by caller)
+      // We return the analysis and let the caller handle SMS to avoid circular dependency
+    }
+    
     return sentimentAnalysis;
   } catch (error) {
     console.error('[Sentiment] Analysis failed:', error);

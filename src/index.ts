@@ -659,7 +659,19 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     Promise.all([
       analytics.analyzeSentiment(message, effectiveSessionId, messageIndex),
       analytics.classifyIntent(message, effectiveSessionId, messageIndex)
-    ]).catch(e => console.error('[ML] Analysis failed:', e));
+    ]).then(([sentimentResult]) => {
+      // Check if sentiment escalation is needed and send SMS alert
+      if (sentimentResult && sentimentResult.needsEscalation) {
+        console.log(`[Chat] Sentiment escalation detected for session ${effectiveSessionId}`);
+        // Send admin alert for sentiment-based escalation
+        sendAdminAlert(
+          'Sentiment escalation detected',
+          `Session: ${effectiveSessionId}, Sentiment: ${sentimentResult.sentiment}, Score: ${sentimentResult.score.toFixed(2)}`
+        ).catch(err => {
+          console.error('[Chat] Failed to send sentiment escalation SMS:', err.message);
+        });
+      }
+    }).catch(e => console.error('[ML] Analysis failed:', e));
     
     // Trigger churn prediction asynchronously (non-blocking)
     if (ipAddress) {
