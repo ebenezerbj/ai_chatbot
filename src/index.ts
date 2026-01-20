@@ -567,18 +567,22 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       } 
       else if (/^(no|nope|not a customer|not yet|general|information)/i.test(normalizedMessage)) {
         userSession.isCustomer = false;
-        userSession.awaitingVisitorInfo = true;
+        // COMPLIANCE FIX: Allow anonymous browsing, don't force data collection
         
-        const visitorFormMessage = `Welcome to Amantin and Kasei Community Bank! 🏦\n\nPlease fill out the contact form to continue.`;
+        const welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 🏦\n\nI'm here to help with:\n• Branch locations and hours\n• Banking products and services\n• Loan and account information\n• General banking questions\n\nWhat would you like to know?`;
         
-        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', visitorFormMessage).catch(e =>
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', welcomeMessage).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
         );
         
         return res.json({ 
-          response: visitorFormMessage,
-          showVisitorForm: true,
-          sessionId: effectiveSessionId
+          response: welcomeMessage,
+          sessionId: effectiveSessionId,
+          buttons: [
+            { text: 'Find a branch', icon: 'fas fa-map-marker-alt', action: 'send', value: 'Where is the nearest branch?' },
+            { text: 'Open an account', icon: 'fas fa-user-plus', action: 'send', value: 'I want to open an account' },
+            { text: 'Apply for a loan', icon: 'fas fa-hand-holding-usd', action: 'send', value: 'I want to apply for a loan' }
+          ]
         });
       }
     }
@@ -590,7 +594,20 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       try {
         visitorData = JSON.parse(message);
         if (visitorData.__visitorForm) {
-          const { fullname, phone } = visitorData;
+          const { fullname, phone, consent } = visitorData;
+          
+          // COMPLIANCE: Check consent was given
+          if (!consent) {
+            const consentError = `Please confirm that you consent to us collecting your contact information by checking the consent box.`;
+            await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', consentError).catch(e =>
+              console.error('[Analytics] Failed to log bot message:', e)
+            );
+            return res.json({ 
+              response: consentError,
+              formError: 'consent',
+              sessionId: effectiveSessionId
+            });
+          }
           
           // Validate name (at least 2 words, letters and spaces only)
           if (!fullname || fullname.length < 3 || !/^[a-zA-Z\s]+$/.test(fullname) || fullname.split(/\s+/).length < 2) {
@@ -658,6 +675,28 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         response: waitingForForm,
         sessionId: effectiveSessionId
       });
+    }
+    
+    // COMPLIANCE: Check if non-customer is requesting human support/services that need contact info
+    if (userSession.isCustomer === false && !userSession.awaitingVisitorInfo) {
+      const needsContactInfo = /\b(talk to|speak to|contact|call me|representative|agent|human|open (an? )?account|apply for|loan application)\b/i.test(message);
+      
+      if (needsContactInfo) {
+        userSession.awaitingVisitorInfo = true;
+        
+        const contactFormMessage = `To connect you with a specialist or assist with your request, I'll need some contact information.\n\n**Privacy Notice:**\nYour information will be:\n• Used only to respond to your inquiry\n• Stored temporarily (session only)\n• Not shared with third parties\n• Handled per our Privacy Policy\n\nPlease fill out the contact form.`;
+        
+        await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', contactFormMessage).catch(e =>
+          console.error('[Analytics] Failed to log bot message:', e)
+        );
+        
+        return res.json({ 
+          response: contactFormMessage,
+          showVisitorForm: true,
+          requireConsent: true,
+          sessionId: effectiveSessionId
+        });
+      }
     }
     
     // Block authentication for non-customers

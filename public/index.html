@@ -4825,16 +4825,27 @@
           
           const fullname = document.getElementById('visitorFullname').value.trim();
           const phone = document.getElementById('visitorPhone').value.trim();
+          const consent = document.getElementById('visitorConsent').checked;
           
           // Clear previous errors
           document.getElementById('nameError').style.display = 'none';
           document.getElementById('phoneError').style.display = 'none';
+          document.getElementById('consentError').style.display = 'none';
+          
+          // COMPLIANCE: Validate consent
+          if (!consent) {
+            const consentErrorEl = document.getElementById('consentError');
+            consentErrorEl.textContent = 'You must consent to data collection to continue.';
+            consentErrorEl.style.display = 'block';
+            return;
+          }
           
           // Send as special JSON message
           const formData = JSON.stringify({
             __visitorForm: true,
             fullname: fullname,
-            phone: phone
+            phone: phone,
+            consent: consent
           });
           
           // Send to backend
@@ -4862,12 +4873,13 @@
       <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color); font-size: 1.25rem; font-weight: 600;">Contact Information</h3>
       
       <div style="margin: 0 0 1.5rem 0; padding: 1rem; background: var(--primary-50); border-left: 3px solid var(--primary-color); border-radius: 0.5rem;">
-        <p style="margin: 0 0 0.5rem 0; color: var(--gray-800); font-size: 0.875rem; font-weight: 600;">Before we proceed</p>
-        <p style="margin: 0; color: var(--gray-700); font-size: 0.8rem; line-height: 1.5;">We require some basic contact information to:</p>
+        <p style="margin: 0 0 0.5rem 0; color: var(--gray-800); font-size: 0.875rem; font-weight: 600;">Privacy Notice</p>
+        <p style="margin: 0; color: var(--gray-700); font-size: 0.8rem; line-height: 1.5;">Your information will be:</p>
         <ul style="margin: 0.5rem 0 0 1.2rem; padding: 0; color: var(--gray-700); font-size: 0.8rem; line-height: 1.5;">
-          <li>Provide you with accurate and personalized assistance</li>
-          <li>Enable our team to follow up on your inquiry if needed</li>
-          <li>Maintain a record for quality assurance</li>
+          <li>Used only to respond to your inquiry</li>
+          <li>Stored temporarily for this conversation</li>
+          <li>Not shared with third parties</li>
+          <li>Handled according to our <a href="/PRIVACY-POLICY.md" target="_blank" style="color: var(--primary-color); text-decoration: underline;">Privacy Policy</a></li>
         </ul>
       </div>
       
@@ -4897,6 +4909,21 @@
           />
           <span id="phoneError" style="display: none; color: var(--error-color); font-size: 0.75rem; margin-top: 0.25rem;"></span>
         </div>
+        
+        <!-- COMPLIANCE: Consent checkbox -->
+        <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+          <input 
+            type="checkbox" 
+            id="visitorConsent" 
+            name="consent" 
+            required
+            style="margin-top: 0.25rem; cursor: pointer;"
+          />
+          <label for="visitorConsent" style="color: var(--gray-700); font-size: 0.875rem; line-height: 1.4; cursor: pointer;">
+            I consent to AKCB collecting and using my contact information to respond to my inquiry as described in the Privacy Notice above. <span style="color: var(--error-color);">*</span>
+          </label>
+        </div>
+        <span id="consentError" style="display: none; color: var(--error-color); font-size: 0.75rem; margin-top: -0.5rem;"></span>
         
         <button 
           type="submit" 
