@@ -566,6 +566,12 @@ export async function logMessage(
   content: string,
   metadata?: any
 ): Promise<void> {
+  // Ensure session exists (handles cases where sessionId is provided but not pre-created)
+  const ensureSessionQuery = DB_TYPE === 'postgres'
+    ? 'INSERT INTO chat_sessions (session_id, total_messages, user_messages, bot_messages) VALUES ($1, 0, 0, 0) ON CONFLICT (session_id) DO NOTHING'
+    : 'INSERT IGNORE INTO chat_sessions (session_id, total_messages, user_messages, bot_messages) VALUES (?, 0, 0, 0)';
+  await executeQuery(ensureSessionQuery, [sessionId]);
+
   // Increment message counters
   const counterField = role === 'user' ? 'user_messages' : 'bot_messages';
   const updateQuery = DB_TYPE === 'postgres'
