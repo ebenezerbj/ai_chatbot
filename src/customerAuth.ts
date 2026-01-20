@@ -55,7 +55,13 @@ export function createSession(sessionId: string): CustomerSession {
     isAuthenticated: false,
     expiresAt: new Date(Date.now() + SESSION_TIMEOUT),
     attempts: 0,
-    conversationContext: []
+    conversationContext: [],
+    // CRITICAL FIX: Ensure all visitor data is explicitly undefined for new sessions
+    visitorName: undefined,
+    visitorPhone: undefined,
+    isCustomer: undefined,
+    customerIdentified: undefined,
+    awaitingVisitorInfo: undefined
   };
   
   sessions.set(sessionId, session);
@@ -69,10 +75,16 @@ export function getOrCreateSession(sessionId: string): CustomerSession {
   let session = sessions.get(sessionId);
   
   if (!session) {
+    console.log(`[Session] Creating NEW session: ${sessionId.substring(0, 20)}...`);
     session = createSession(sessionId);
   } else if (session.expiresAt < new Date()) {
     // Session expired, create new one
+    console.log(`[Session] Session EXPIRED, creating new: ${sessionId.substring(0, 20)}...`);
+    // Delete the old expired session first to clear all data
+    sessions.delete(sessionId);
     session = createSession(sessionId);
+  } else {
+    console.log(`[Session] Reusing EXISTING session: ${sessionId.substring(0, 20)}... (Visitor: ${session.visitorName || 'none'}, Customer: ${session.isCustomer})`);
   }
   
   return session;

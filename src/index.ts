@@ -452,8 +452,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Message required' });
     }
 
-    // Get or create session ID
-    const effectiveSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Get or create session ID with better uniqueness
+    const effectiveSessionId = sessionId || `session_${Date.now()}_${crypto.randomBytes(16).toString('hex')}_${Math.random().toString(36).substr(2, 9)}`;
     
     const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
     const userAgent = req.headers['user-agent'] as string | undefined;
@@ -509,7 +509,13 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       userSession.customerIdentified = true;
       
       // Check if returning non-customer with stored info
-      const isReturningVisitor = userSession.visitorName && userSession.isCustomer === false;
+      // CRITICAL FIX: Only consider as returning visitor if this is the SAME session (not expired/reused)
+      // A truly returning visitor should have BOTH visitorName AND an active conversation context
+      const isReturningVisitor = userSession.visitorName && 
+                                 userSession.isCustomer === false && 
+                                 userSession.conversationContext && 
+                                 userSession.conversationContext.length > 0 &&
+                                 sessionId; // Must have explicit sessionId from client (not auto-generated)
       
       const welcomeMessage = isReturningVisitor 
         ? `Welcome back, ${userSession.visitorName}! 👋\n\nHow can I assist you today?`
@@ -1468,7 +1474,8 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
 // Session endpoint - for frontend compatibility
 app.post('/api/session', (req: Request, res: Response) => {
   console.log('[Session] Creating session');
-  const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Use same improved session ID generation as in /api/chat
+  const sessionId = `session_${Date.now()}_${crypto.randomBytes(16).toString('hex')}_${Math.random().toString(36).substr(2, 9)}`;
   
   // Start analytics session
   const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
