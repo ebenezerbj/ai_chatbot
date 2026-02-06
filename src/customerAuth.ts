@@ -637,10 +637,12 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
     );
     
     // Get customer loans from historical_loans table
-    // Match by account_number (customer's account) or customer_id
+    // Match by repayment_account (customer's savings account used for repayment)
+    // Note: In historical_loans, repayment_account = customer's savings account
+    //       account_number = loan facility account (not the customer's account)
     let loans: any[] = [];
     
-    console.log('[Auth] Querying loans for account:', accountNumber, 'customer_id:', customer.id);
+    console.log('[Auth] Querying loans for account:', accountNumber);
     
     loans = await executeQuery<any>(
       `SELECT 
@@ -657,7 +659,7 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
         overdue as arrears_amount,
         currency
       FROM historical_loans 
-      WHERE account_number = ? OR customer_id = ?
+      WHERE repayment_account = ?
       ORDER BY 
         CASE 
           WHEN status = 'Current' THEN 1
@@ -668,7 +670,7 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
           ELSE 6
         END,
         opening_date DESC`,
-      [accountNumber, customer.id?.toString()]
+      [accountNumber]
     );
     
     return {
