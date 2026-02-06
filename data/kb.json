@@ -516,7 +516,7 @@
       "loan.*(rate|interest|%)",
       "rate.*loan"
     ],
-    "answer": "Loan rates vary by product (e.g., Salary Loan at 31% p.a.). Rates are subject to change and a final assessment. Please visit a branch for a personalized quote."
+    "answer": "**AKCB Loan Interest Rates:**\n\n• Salaried Workers Loan: 27% per annum\n• Trade Loans/Overdraft: 28% per annum  \n• Micro Finance: 34% per annum\n• Susu Loans: 34% per annum\n• Overdraft (Workers): 10% per month\n• Funeral Loan: 12% per month\n• Agriculture & Inventory: 34% per annum\n\n**Additional Fees:** Loan insurance 0.40%, Processing fees 3.5% (clean) or 2.5% (secured)\n\nRates are subject to change and final approval. Visit any branch or call +233 24 231 2059 for details."
   },
   {
     "id": "savings_rates",
@@ -1107,7 +1107,7 @@
       "when were lorates last updated",
       "what rate do first-time borrowers get"
     ],
-    "answer": "**Current Loan Interest Rates:**\n\n- **Salary Loan**: 31% per annum\n- Other loan products have varying rates depending on the product type and assessment\n\nInterest rates are subject to change and final approval based on your credit assessment. For personalized quotes on other loan products (personal, business, agricultural, mortgage), please visit any branch or call +233 24 231 2059."
+    "answer": "**Current Loan Interest Rates at AKCB:**\n\n- **Salaried Workers Loan**: 27% per annum\n- **Trade Loans/Overdraft**: 28% per annum\n- **Micro Finance Loan**: 34% per annum\n- **Susu Loans**: 34% per annum\n- **Overdraft (Workers)**: 10% per month\n- **Funeral Loan**: 12% per month\n- **Agriculture & Inventory Loans**: 34% per annum\n\n**Additional Charges:**\n- Loan Insurance: 0.40% of loan amount\n- Processing Fees: 3.5% (for clean loan applications) or 2.5% (for secured loan applications)\n\nInterest rates are subject to change and final approval based on your credit assessment. For personalized quotes or specific loan inquiries, please visit any branch or call +233 24 231 2059."
   },
   {
     "id": "savings_info",
