@@ -636,35 +636,40 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
       [accountNumber]
     );
     
-    // Get customer loans - handle both phone formats (0501336873 and 233501336873)
+    // Get customer loans from historical_loans table
+    // Match by account_number (customer's account) or customer_id
     let loans: any[] = [];
-    if (customer.phone_number) {
-      const phoneWithoutCountryCode = customer.phone_number.replace(/^233/, '0');
-      const phoneWithCountryCode = customer.phone_number.startsWith('233') ? customer.phone_number : '233' + customer.phone_number.replace(/^0/, '');
-      
-      console.log('[Auth] Query params:', [customer.phone_number, phoneWithoutCountryCode, phoneWithCountryCode]);
-      
-      loans = await executeQuery<any>(
-        `SELECT 
-          facility_account_number,
-          facility_amount,
-          current_balance,
-          disbursement_date,
-          maturity_date,
-          next_payment_date,
-          facility_term,
-          scheduled_installment,
-          repayment_frequency,
-          facility_status_code,
-          amount_in_arrears
-        FROM loans 
-        WHERE phone_number IN (?, ?, ?) OR customer_id = ?
-        ORDER BY facility_status_code, disbursement_date DESC`,
-        [customer.phone_number, phoneWithoutCountryCode, phoneWithCountryCode, customer.id]
-      );
-    } else {
-      console.log('[Auth] No phone number found for customer, skipping loan lookup');
-    }
+    
+    console.log('[Auth] Querying loans for account:', accountNumber, 'customer_id:', customer.id);
+    
+    loans = await executeQuery<any>(
+      `SELECT 
+        arrangement as loan_account_number,
+        product_name,
+        commitment as original_amount,
+        principal as outstanding_balance,
+        opening_date,
+        first_payment_date,
+        maturity_date,
+        term,
+        interest_rate,
+        status,
+        overdue as arrears_amount,
+        currency
+      FROM historical_loans 
+      WHERE account_number = ? OR customer_id = ?
+      ORDER BY 
+        CASE 
+          WHEN status = 'Current' THEN 1
+          WHEN status = 'Delinquent' THEN 2
+          WHEN status = 'Grace' THEN 3
+          WHEN status = 'Non Accrual' THEN 4
+          WHEN status = 'Expired' THEN 5
+          ELSE 6
+        END,
+        opening_date DESC`,
+      [accountNumber, customer.id?.toString()]
+    );
     
     return {
       accountNumber: customer.account_number,
@@ -677,19 +682,45 @@ export async function getCustomerAccountData(accountNumber: string): Promise<any
         currency: balance?.currency || 'GHS',
         lastUpdated: balance?.last_updated || null
       },
-      loans: loans.map(loan => ({
-        loanNumber: loan.facility_account_number,
-        originalAmount: parseFloat(loan.facility_amount),
-        currentBalance: parseFloat(loan.current_balance),
-        disbursementDate: loan.disbursement_date,
-        maturityDate: loan.maturity_date,
-        nextPaymentDate: loan.next_payment_date,
-        termMonths: parseInt(loan.facility_term),
-        monthlyInstallment: parseFloat(loan.scheduled_installment),
-        repaymentFrequency: loan.repayment_frequency,
-        status: loan.facility_status_code,
-        amountInArrears: parseFloat(loan.amount_in_arrears) || 0
-      })),
+      loans: loans.map(loan => {
+        // Parse term: "365D" → 365 days, "12M" → 12 months
+        let termMonths = 0;
+        if (loan.term) {
+          const termStr = loan.term.toString();
+          if (termStr.endsWith('D')) {
+            // Convert days to months (approximate)
+            const days = parseInt(termStr.replace('D', ''));
+            termMonths = Math.round(days / 30);
+          } else if (termStr.endsWith('M')) {
+            termMonths = parseInt(termStr.replace('M', ''));
+          } else {
+            // Assume it's already in months
+            termMonths = parseInt(termStr) || 0;
+          }
+        }
+        
+        // Calculate monthly installment if not provided
+        // Simple calculation: principal / term months
+        const monthlyInstallment = termMonths > 0 
+          ? parseFloat(loan.outstanding_balance || 0) / termMonths 
+          : 0;
+        
+        return {
+          loanNumber: loan.loan_account_number,
+          loanType: loan.product_name,
+          originalAmount: parseFloat(loan.original_amount || 0),
+          currentBalance: parseFloat(loan.outstanding_balance || 0),
+          disbursementDate: loan.opening_date,
+          maturityDate: loan.maturity_date,
+          nextPaymentDate: loan.first_payment_date,
+          termMonths: termMonths,
+          monthlyInstallment: monthlyInstallment,
+          interestRate: parseFloat(loan.interest_rate || 0),
+          status: loan.status,
+          amountInArrears: parseFloat(loan.arrears_amount || 0),
+          currency: loan.currency || 'GHS'
+        };
+      }),
       recentTransactions: transactions.map(txn => ({
         date: txn.date,
         description: txn.description,
@@ -763,12 +794,83 @@ function getAccountTypeName(code: string, accountNumber?: string): string {
  */
 export function formatLoanResponse(accountData: any): string {
   try {
-    // Same message for all customers - system is being updated
+    if (!accountData.loans || accountData.loans.length === 0) {
+      return `**Loan Information**\n\nI couldn't find any active or historical loans associated with your account. If you believe this is an error or would like to apply for a loan, please contact us at +233 24 231 2059 or visit any branch.`;
+    }
+    
     let response = `**Loan Information**\n\n`;
-    response += `Thank you for your inquiry! 🏦\n\n`;
-    response += `I sincerely apologize for not being able to provide your loan information right now. I understand how important it is for you to access your loan details, balance, and payment schedule.\n\n`;
-    response += `Our loan records system is currently undergoing updates to ensure accuracy. Would you like me to connect you with a customer representative who can provide you with detailed loan information via live chat, or would you prefer to leave a message for a callback?\n\n`;
-    response += `You can also visit your nearest AKCB branch for immediate assistance. We appreciate your understanding! ✨`;
+    response += `You have ${accountData.loans.length} loan${accountData.loans.length > 1 ? 's' : ''} with us:\n\n`;
+    
+    accountData.loans.forEach((loan: any, index: number) => {
+      // Map status from historical_loans
+      let statusDisplay = loan.status || 'Unknown';
+      if (loan.status === 'Current') {
+        statusDisplay = 'Active';
+      } else if (loan.status === 'Expired') {
+        statusDisplay = 'Matured';
+      } else if (loan.status === 'Pending Closure') {
+        statusDisplay = 'Pending Closure';
+      } else if (loan.status === 'Non Accrual') {
+        statusDisplay = 'Non Performing';
+      } else if (loan.status === 'Delinquent') {
+        statusDisplay = 'Overdue';
+      } else if (loan.status === 'Grace') {
+        statusDisplay = 'Grace Period';
+      }
+      
+      const termMonths = loan.termMonths || 0;
+      const termYears = Math.floor(termMonths / 12);
+      const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${termMonths} months`;
+      
+      response += `**Loan ${index + 1}:** ${loan.loanNumber || 'N/A'}\n`;
+      if (loan.loanType) {
+        response += `Type: ${loan.loanType}\n`;
+      }
+      response += `Original Amount: GHS ${(loan.originalAmount || 0).toFixed(2)}\n`;
+      response += `Outstanding Balance: GHS ${(loan.currentBalance || 0).toFixed(2)}\n`;
+      
+      if (loan.monthlyInstallment > 0) {
+        response += `Monthly Payment: GHS ${(loan.monthlyInstallment || 0).toFixed(2)}\n`;
+      }
+      
+      if (loan.interestRate) {
+        response += `Interest Rate: ${loan.interestRate}% per annum\n`;
+      }
+      
+      if (loan.nextPaymentDate) {
+        const nextDate = new Date(loan.nextPaymentDate);
+        response += `Next Payment: ${nextDate.toLocaleDateString('en-GB')}\n`;
+      }
+      
+      if (loan.maturityDate) {
+        const matDate = new Date(loan.maturityDate);
+        const today = new Date();
+        const daysRemaining = Math.ceil((matDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysRemaining > 0) {
+          response += `Maturity Date: ${matDate.toLocaleDateString('en-GB')} (${daysRemaining} days remaining)\n`;
+        } else if (daysRemaining < 0) {
+          response += `Maturity Date: ${matDate.toLocaleDateString('en-GB')} (matured ${Math.abs(daysRemaining)} days ago)\n`;
+        } else {
+          response += `Maturity Date: ${matDate.toLocaleDateString('en-GB')} (matures today)\n`;
+        }
+      }
+      
+      if (termText && termMonths > 0) {
+        response += `Loan Duration: ${termText}\n`;
+      }
+      
+      response += `Status: ${statusDisplay}\n`;
+      
+      if (loan.amountInArrears && loan.amountInArrears > 0) {
+        response += `⚠️ Amount in Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;
+      }
+      
+      response += `\n`;
+    });
+    
+    response += `For assistance or to discuss your loan, please contact us at +233 24 231 2059 or visit any branch.`;
+    
     return response;
   } catch (error: any) {
     console.error('[Auth] Error formatting loan response:', error);
@@ -883,15 +985,40 @@ export function formatBalanceResponse(accountData: any): string {
     loansText = `\n**Loan Information**\n\n`;
     
     accountData.loans.forEach((loan: any, index: number) => {
-      const status = loan.status === 'A' ? 'Active' : loan.status === 'C' ? 'Closed' : 'Dormant';
+      // Map status from historical_loans
+      let statusDisplay = loan.status || 'Unknown';
+      if (loan.status === 'Current') {
+        statusDisplay = 'Active';
+      } else if (loan.status === 'Expired') {
+        statusDisplay = 'Matured';
+      } else if (loan.status === 'Pending Closure') {
+        statusDisplay = 'Pending Closure';
+      } else if (loan.status === 'Non Accrual') {
+        statusDisplay = 'Non Performing';
+      } else if (loan.status === 'Delinquent') {
+        statusDisplay = 'Overdue';
+      } else if (loan.status === 'Grace') {
+        statusDisplay = 'Grace Period';
+      }
+      
       const termMonths = loan.termMonths || 0;
       const termYears = Math.floor(termMonths / 12);
       const termText = termYears > 0 ? `${termYears} year${termYears > 1 ? 's' : ''}` : `${termMonths} months`;
       
       loansText += `Loan ${index + 1}: ${loan.loanNumber || 'N/A'}\n`;
+      if (loan.loanType) {
+        loansText += `Type: ${loan.loanType}\n`;
+      }
       loansText += `Original Amount: GHS ${(loan.originalAmount || 0).toFixed(2)}\n`;
       loansText += `Current Balance: GHS ${(loan.currentBalance || 0).toFixed(2)}\n`;
-      loansText += `Monthly Payment: GHS ${(loan.monthlyInstallment || 0).toFixed(2)}\n`;
+      
+      if (loan.monthlyInstallment > 0) {
+        loansText += `Monthly Payment: GHS ${(loan.monthlyInstallment || 0).toFixed(2)}\n`;
+      }
+      
+      if (loan.interestRate) {
+        loansText += `Interest Rate: ${loan.interestRate}% p.a.\n`;
+      }
       
       if (loan.nextPaymentDate) {
         const nextDate = new Date(loan.nextPaymentDate);
@@ -902,11 +1029,21 @@ export function formatBalanceResponse(accountData: any): string {
         const matDate = new Date(loan.maturityDate);
         const today = new Date();
         const daysRemaining = Math.ceil((matDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        loansText += `Maturity Date: ${matDate.toLocaleDateString('en-GB')}${daysRemaining > 0 ? ` (${daysRemaining} days remaining)` : ''}\n`;
+        
+        if (daysRemaining > 0) {
+          loansText += `Maturity Date: ${matDate.toLocaleDateString('en-GB')} (${daysRemaining} days remaining)\n`;
+        } else if (daysRemaining < 0) {
+          loansText += `Maturity Date: ${matDate.toLocaleDateString('en-GB')} (matured ${Math.abs(daysRemaining)} days ago)\n`;
+        } else {
+          loansText += `Maturity Date: ${matDate.toLocaleDateString('en-GB')} (matures today)\n`;
+        }
       }
       
-      loansText += `Duration: ${termText}\n`;
-      loansText += `Status: ${status}\n`;
+      if (termText && termMonths > 0) {
+        loansText += `Duration: ${termText}\n`;
+      }
+      
+      loansText += `Status: ${statusDisplay}\n`;
       
       if (loan.amountInArrears && loan.amountInArrears > 0) {
         loansText += `⚠️ Arrears: GHS ${loan.amountInArrears.toFixed(2)}\n`;

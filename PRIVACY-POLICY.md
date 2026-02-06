@@ -92,9 +92,9 @@ We may update this Privacy Policy periodically. We will notify you of material c
 
 For privacy-related questions or requests:
 
-**Email**: privacy@akamantinkasei.com  
-**Address**: AKCB Privacy Office, Banking Centre, Accra, Ghana  
-**Phone**: +233 (0) 302 123 456
+**Email**: info@amankacombank.com 
+**Address**: AKCB HEAD OFFICE AMANTIN-BONO EAST, GHANA
+**Phone**: +233 (0) 243 082 750
 
 ## Compliance
 
