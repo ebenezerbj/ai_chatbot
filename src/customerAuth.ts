@@ -1088,7 +1088,7 @@ export function formatTransactionsResponse(accountData: any): string {
       response += `Ref: ${txn.reference}\n\n`;
     });
     
-    response += `_For a detailed statement, please visit any branch or use our mobile banking app._`;
+    response += `_For a detailed statement, please visit any branch or dial *992# (USSD mobile banking)._`;
   }
   
   return response;

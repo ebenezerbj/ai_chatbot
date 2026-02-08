@@ -1001,8 +1001,8 @@ export async function generateRecommendations(sessionId: string): Promise<Recomm
   if (conversationText.includes('branch') || conversationText.includes('location')) {
     recommendations.push({
       type: 'service',
-      title: 'Mobile Banking App',
-      description: 'Bank anywhere, anytime with our mobile app.',
+      title: 'Mobile Banking USSD (*992#)',
+      description: 'Bank anywhere, anytime — dial *992# from your registered phone.',
       relevanceScore: 0.7,
       basedOn: 'Your branch location inquiry'
     });

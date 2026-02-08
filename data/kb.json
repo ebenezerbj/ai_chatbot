@@ -309,7 +309,7 @@
       "register.*app",
       "app.*onboarding"
     ],
-    "answer": "AKCB does not currently have a downloadable mobile banking app on the Play Store or App Store.\\n\\nOur mobile banking service is USSD-based. Dial *992# from your registered phone to access all mobile banking features including:\\n• Balance inquiries\\n• Fund transfers\\n• Bill payments\\n• Mini statements\\n• Airtime purchase\\n\\nNo app download required - just dial *992# and follow the menu.\\n\\nFor Ghana Pay services (separate from AKCB mobile banking), you can use the Ghana Pay app available on Play Store and App Store. Dial *707# or download the Ghana Pay app.\\n\\nFor USSD registration: Visit any AKCB branch with your Ghana Card.\\nFor assistance: Call +233 50 129 0952"
+    "answer": "AKCB does not currently have a downloadable mobile banking app on the Play Store or App Store. A mobile app is under development and we will announce when it is ready.\n\nIn the meantime, our mobile banking service is available via USSD. Simply dial *992# from your registered phone to access all mobile banking features including:\n Balance inquiries\n Fund transfers\n Bill payments\n Mini statements\n Airtime purchase\n\nNo app download required  just dial *992# and follow the menu prompts.\n\nTo register for USSD mobile banking, dial *992# from your registered phone number and follow the setup prompts. Visit any branch if you need help linking your phone number or Ghana Card to your account."
   },
   {
     "id": "smart_banking",
@@ -748,7 +748,7 @@
       "balance enquiry",
       "how much funds are available"
     ],
-    "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
+    "answer": "Retrieve current account balance.\n\nTo retrieve current account balance, please dial *992# on your registered phone (USSD mobile banking) or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
   },
   {
     "id": "balance_update_time",
@@ -792,7 +792,7 @@
       "check my transaction history",
       "show me my last 10 transactions"
     ],
-    "answer": "View Recent Transactions\n\nI can show you your recent transactions! To view your transaction history, please authenticate by providing:\n\n1. Your account number or registered phone number\n2. Verify your identity with the OTP sent to your phone\n\nOnce authenticated, I will display your:\n• Last 10 transactions\n• Transaction dates\n• Descriptions (deposits, withdrawals, transfers)\n• Transaction amounts\n• Balance after each transaction\n• Reference numbers\n\nYou can also view detailed statements through our mobile banking app or visit any branch for full account statements."
+    "answer": "View Recent Transactions\n\nI can show you your recent transactions! To view your transaction history, please authenticate by providing:\n\n1. Your account number or registered phone number\n2. Verify your identity with the OTP sent to your phone\n\nOnce authenticated, I will display your:\n• Last 10 transactions\n• Transaction dates\n• Descriptions (deposits, withdrawals, transfers)\n• Transaction amounts\n• Balance after each transaction\n• Reference numbers\n\nYou can also view detailed statements through our mobile banking USSD (*992#) or visit any branch for full account statements."
   },
   {
     "id": "check_loan_balance",
@@ -843,7 +843,7 @@
     "patterns": [
       "type"
     ],
-    "answer": "\"Provide account details (number.\n\nTo \"provide account details (number, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
+    "answer": "\"Provide account details (number.\n\nTo \"provide account details (number, please dial *992# on your registered phone (USSD mobile banking) or visit any of our branches. You can also call our customer service at +233 50 129 0952 for assistance."
   },
   {
     "id": "make_transfer",
@@ -860,7 +860,7 @@
       "guide me to transfer cash",
       "send funds to this account"
     ],
-    "answer": "Initiate or guide a funds transfer.\n\nFor initiate or guide a funds transfer, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+    "answer": "Initiate or guide a funds transfer.\n\nFor initiate or guide a funds transfer, you can use our mobile banking USSD (*992#), internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
   },
   {
     "id": "transfer_status",
@@ -877,7 +877,7 @@
       "is transfer delayed",
       "did bank receive transfer request"
     ],
-    "answer": "Check status of a transfer.\n\nFor check status of a transfer, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+    "answer": "Check status of a transfer.\n\nFor check status of a transfer, you can use our mobile banking USSD (*992#), internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
   },
   {
     "id": "transfer_fees",
@@ -894,7 +894,7 @@
       "what is cost for sending funds",
       "tell me transfer pricing"
     ],
-    "answer": "Query transfer fees and charges.\n\nFor query transfer fees and charges, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+    "answer": "Query transfer fees and charges.\n\nFor query transfer fees and charges, you can use our mobile banking USSD (*992#), internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
   },
   {
     "id": "international_transfer",
@@ -911,7 +911,7 @@
       "provide swift or routing code",
       "how much does it cost to send money internationally"
     ],
-    "answer": "Cross-border transfers and SWIFT details.\n\nFor cross-border transfers and swift details, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
+    "answer": "Cross-border transfers and SWIFT details.\n\nFor cross-border transfers and swift details, you can use our mobile banking USSD (*992#), internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply."
   },
   {
     "id": "block_card",
@@ -928,7 +928,7 @@
       "deactivate card",
       "prevent unauthorized use of card"
     ],
-    "answer": "Block lost or stolen card immediately.\n\nFor block lost or stolen card immediately, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Block lost or stolen card immediately.\n\nFor block lost or stolen card immediately, please contact our customer service immediately at +233 24 231 2059 or dial *992# for USSD mobile banking. Our team is available to assist you 24/7."
   },
   {
     "id": "request_new_card",
@@ -945,7 +945,7 @@
       "request for new atm card",
       "send me new debit card"
     ],
-    "answer": "Request a replacement or new card.\n\nFor request a replacement or new card, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Request a replacement or new card.\n\nFor request a replacement or new card, please contact our customer service immediately at +233 24 231 2059 or dial *992# for USSD mobile banking. Our team is available to assist you 24/7."
   },
   {
     "id": "card_not_working",
@@ -962,7 +962,7 @@
       "card malfunction—help me",
       "card error at atm"
     ],
-    "answer": "Troubleshoot declined or failing card.\n\nFor troubleshoot declined or failing card, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Troubleshoot declined or failing card.\n\nFor troubleshoot declined or failing card, please contact our customer service immediately at +233 24 231 2059 or dial *992# for USSD mobile banking. Our team is available to assist you 24/7."
   },
   {
     "id": "pin_reset",
@@ -979,7 +979,7 @@
       "pin is blocked",
       "unlock pin"
     ],
-    "answer": "Reset or change card PIN.\n\nFor reset or change card pin, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Reset or change card PIN.\n\nFor reset or change card pin, please contact our customer service immediately at +233 24 231 2059 or dial *992# for USSD mobile banking. Our team is available to assist you 24/7."
   },
   {
     "id": "card_activation",
@@ -996,7 +996,7 @@
       "why is new card inactive",
       "help activate card"
     ],
-    "answer": "Activate a new card.\n\nFor activate a new card, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7."
+    "answer": "Activate a new card.\n\nFor activate a new card, please contact our customer service immediately at +233 24 231 2059 or dial *992# for USSD mobile banking. Our team is available to assist you 24/7."
   },
   {
     "id": "password_reset",
@@ -1013,7 +1013,7 @@
       "forgot login credentials",
       "send password reset instructions"
     ],
-    "answer": "Reset online banking password or help logging in.\n\nTo reset online banking password or help logging in, please use our mobile banking app or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification."
+    "answer": "Reset online banking password or help logging in.\n\nTo reset online banking password or help logging in, please dial *992# (USSD mobile banking) or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification."
   },
   {
     "id": "profile_update",
@@ -1021,7 +1021,7 @@
     "patterns": [
       "email)\""
     ],
-    "answer": "\"Update customer profile (phone.\n\nTo \"update customer profile (phone, please use our mobile banking app or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification."
+    "answer": "\"Update customer profile (phone.\n\nTo \"update customer profile (phone, please dial *992# (USSD mobile banking) or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification."
   },
   {
     "id": "ussd_troubleshooting",
@@ -1183,7 +1183,7 @@
       "how long does kyc verification take",
       "ci add additional id documents to profile"
     ],
-    "answer": "Update KYC / identity documents.\n\nTo update kyc / identity documents, please visit any branch with valid identification documents or use our mobile banking app. Some changes may require in-person verification."
+    "answer": "Update KYC / identity documents.\n\nTo update kyc / identity documents, please visit any branch with valid identification documents or dial *992# (USSD mobile banking). Some changes may require in-person verification."
   },
   {
     "id": "update_personal_details",
@@ -1191,7 +1191,7 @@
     "patterns": [
       "next of kin"
     ],
-    "answer": "\"Change address.\n\nTo \"change address, please visit any branch with valid identification documents or use our mobile banking app. Some changes may require in-person verification."
+    "answer": "\"Change address.\n\nTo \"change address, please visit any branch with valid identification documents or dial *992# (USSD mobile banking). Some changes may require in-person verification."
   },
   {
     "id": "find_branch_atm",
@@ -1208,7 +1208,7 @@
       "where are your atms",
       "which branches have atm"
     ],
-    "answer": "ATM Locations:\n\nWe have ATMs available at:\n• **Kwame Danso Branch** - P8JF+2C6, Kwame Danso\n• **Amantin Branch** (Head Office) - Amantin High Street\n\nFor more branch locations and opening hours, please use our branch locator on the mobile app or visit our website. You can also call +233 24 231 2059 for directions."
+    "answer": "ATM Locations:\n\nWe have ATMs available at:\n• **Kwame Danso Branch** - P8JF+2C6, Kwame Danso\n• **Amantin Branch** (Head Office) - Amantin High Street\n\nFor more branch locations and opening hours, please use our branch locator on the USSD (*992#) service or visit our website. You can also call +233 24 231 2059 for directions."
   },
   {
     "id": "report_fraud",
@@ -1221,7 +1221,7 @@
       "help me dispute suspicious transaction",
       "how do i report identity theft"
     ],
-    "answer": "Report suspected fraud or unauthorized transactions.\n\nFor report suspected fraud or unauthorized transactions, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made through the mobile banking app."
+    "answer": "Report suspected fraud or unauthorized transactions.\n\nFor report suspected fraud or unauthorized transactions, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made by dialing *992# (USSD mobile banking)."
   },
   {
     "id": "transaction_alerts",
@@ -1234,7 +1234,7 @@
       "change phone number for alerts",
       "i want sms alerts for withdrawals above 1000"
     ],
-    "answer": "Manage SMS/email/push transaction alerts.\n\nFor manage sms/email/push transaction alerts, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made through the mobile banking app."
+    "answer": "Manage SMS/email/push transaction alerts.\n\nFor manage sms/email/push transaction alerts, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made by dialing *992# (USSD mobile banking)."
   },
   {
     "id": "bank_products",

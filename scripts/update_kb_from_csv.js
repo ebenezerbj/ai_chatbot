@@ -51,13 +51,13 @@ const newEntries = Object.values(intents).map(intent => {
   // Add intent-specific responses
   switch(intent.intent_group) {
     case 'account_information':
-      answer += `To ${intent.description.toLowerCase()}, please log in to your mobile banking app or visit any of our branches. You can also call our customer service at +233 24 231 2059 for assistance.`;
+      answer += `To ${intent.description.toLowerCase()}, please dial *992# on your registered phone (USSD mobile banking) or visit any of our branches. You can also call our customer service at +233 24 231 2059 for assistance.`;
       break;
     case 'transfers_payments':
-      answer += `For ${intent.description.toLowerCase()}, you can use our mobile banking app, internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply.`;
+      answer += `For ${intent.description.toLowerCase()}, you can use our mobile banking USSD (*992#), internet banking, or visit any branch. Transfers are subject to daily limits and applicable fees may apply.`;
       break;
     case 'card_management':
-      answer += `For ${intent.description.toLowerCase()}, please contact our customer service immediately at +233 24 231 2059 or use the mobile banking app. Our team is available to assist you 24/7.`;
+      answer += `For ${intent.description.toLowerCase()}, please contact our customer service immediately at +233 24 231 2059 or dial *992# for USSD mobile banking. Our team is available to assist you 24/7.`;
       break;
     case 'digital_banking':
       // Special handling for mobile banking registration
@@ -74,7 +74,7 @@ const newEntries = Object.values(intents).map(intent => {
         answer += `Please visit any nearest branch to get your customer details updated if your Ghana Card or phone number is not yet linked to your account.\n\n`;
         answer += `For assistance, contact us at +233 24 231 2059. Thank you!`;
       } else {
-        answer += `To ${intent.description.toLowerCase()}, please use our mobile banking app or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification.`;
+        answer += `To ${intent.description.toLowerCase()}, please dial *992# (USSD mobile banking) or contact customer service at +233 24 231 2059. For security reasons, some actions may require identity verification.`;
       }
       break;
     case 'loans_credit':
@@ -87,13 +87,13 @@ const newEntries = Object.values(intents).map(intent => {
       answer += `For details about ${intent.description.toLowerCase()}, please refer to our fee schedule available at any branch or on our website. You can also contact customer service at +233 24 231 2059.`;
       break;
     case 'customer_profile':
-      answer += `To ${intent.description.toLowerCase()}, please visit any branch with valid identification documents or use our mobile banking app. Some changes may require in-person verification.`;
+      answer += `To ${intent.description.toLowerCase()}, please visit any branch with valid identification documents or dial *992# (USSD mobile banking). Some changes may require in-person verification.`;
       break;
     case 'branch_atm':
-      answer += `To ${intent.description.toLowerCase()}, please use our branch locator on the mobile app or visit our website. You can also call +233 24 231 2059 for directions.`;
+      answer += `To ${intent.description.toLowerCase()}, please visit our website or call +233 24 231 2059 for directions.`;
       break;
     case 'security_fraud':
-      answer += `For ${intent.description.toLowerCase()}, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made through the mobile banking app.`;
+      answer += `For ${intent.description.toLowerCase()}, please contact our fraud hotline immediately at +233 24 231 2059. Time-sensitive reports can also be made by dialing *992# (USSD mobile banking).`;
       break;
     case 'general':
       answer += `For more information about ${intent.description.toLowerCase()}, please visit any branch, check our website, or call customer service at +233 24 231 2059.`;
