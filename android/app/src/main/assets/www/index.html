@@ -1762,37 +1762,8 @@
         hideTyping();
         if (data?.reply) {
           addMsg('assistant', data.reply);
-          
-          // Handle escalation contact form for unauthenticated customers
           try {
-            if (data?.showEscalationContactForm) {
-              console.log('[Frontend] Showing escalation contact form...');
-              setTimeout(() => {
-                showEscalationContactForm(data?.prefillPhone);
-              }, 100);
-            }
-          } catch (err) {
-            console.error('[Frontend] Error showing escalation contact form:', err);
-          }
-          
-          // Handle successful escalation contact submission
-          try {
-            if (data?.escalationContactSuccess) {
-              console.log('[Frontend] Escalation contact info submitted, showing handover options');
-              if (data?.customerInfo) {
-                visitorInfo = {
-                  name: data.customerInfo.name,
-                  phone: data.customerInfo.phone
-                };
-              }
-              setTimeout(() => {
-                renderHandoverCTA();
-              }, 100);
-            }
-          } catch {}
-          
-          try {
-            if (data.suggestHandover && !data?.showEscalationContactForm && !data?.requiresContactInfo) {
+            if (data.suggestHandover) {
               // Check if user just said "yes" to a handover question
               const lastMessages = chatEl.querySelectorAll('.message');
               const lastAssistantMsg = Array.from(lastMessages).slice(-3).find(msg => 
@@ -1812,7 +1783,6 @@
                 const replyContainsHandover = data.reply.includes('Would you like me to facilitate a connection with a customer representative');
                 
                 if (!replyContainsHandover) {
-                  // Only add handover message if not already in the reply
                   addMsg('assistant', 'I appreciate your inquiry; however, this matter lies outside of my expertise. Would you like me to facilitate a connection with a customer representative who can provide the necessary assistance?');
                 }
                 renderHandoverCTA();
@@ -1854,114 +1824,6 @@
       btn.innerHTML = `<i class="fa fa-user-headset" aria-hidden="true"></i><span>Talk to a person</span>`;
       btn.addEventListener('click', openHandoverForm);
       row.appendChild(btn);
-    }
-
-    // Show inline contact form for unauthenticated customers before escalation
-    function showEscalationContactForm(prefillPhone = '') {
-      const nodes = Array.from(chatEl.querySelectorAll('.message.assistant .msg-content'));
-      if (!nodes.length) return;
-      const last = nodes[nodes.length - 1];
-      if (last.querySelector('.escalation-contact-form')) return;
-      
-      const wrap = document.createElement('div');
-      wrap.className = 'escalation-contact-form';
-      wrap.style.marginTop = '0.5rem';
-      wrap.style.padding = '0.75rem';
-      wrap.style.border = '2px solid #f97316';
-      wrap.style.borderRadius = '8px';
-      wrap.style.background = 'rgba(249, 115, 22, 0.05)';
-      
-      wrap.innerHTML = `
-        <div style="font-weight:600; margin-bottom:0.5rem; color:#f97316;">
-          <i class="fa fa-phone" aria-hidden="true"></i> Contact Information Required
-        </div>
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center">
-          <input type="text" id="escalationName" placeholder="Your name" value="" style="flex:1; min-width:140px; padding:0.5rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="tel" id="escalationPhone" placeholder="Phone number *" value="${prefillPhone || ''}" required style="flex:1; min-width:140px; padding:0.5rem; border:2px solid #f97316; border-radius:6px;" />
-        </div>
-        <div style="display:flex; gap:0.5rem; margin-top:0.5rem; align-items:center;">
-          <button type="button" id="escalationSubmit" class="msg-action-btn" style="white-space:nowrap; background: #f97316; border-color: #f97316; color: var(--white); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);" aria-label="Submit contact info" title="Submit contact info">
-            <i class="fa fa-check" aria-hidden="true"></i><span>Continue</span>
-          </button>
-          <span style="font-size:0.8rem; color:var(--gray-600);">* Phone is required so our team can reach you</span>
-        </div>
-        <div id="escalationError" style="margin-top:0.25rem; font-size:0.85rem; color:#dc2626; display:none;"></div>
-      `;
-      last.appendChild(wrap);
-      
-      const submitBtn = wrap.querySelector('#escalationSubmit');
-      submitBtn?.addEventListener('click', submitEscalationContact);
-      
-      const phoneInput = wrap.querySelector('#escalationPhone');
-      const nameInput = wrap.querySelector('#escalationName');
-      if (!prefillPhone && phoneInput) {
-        phoneInput.focus();
-      } else if (nameInput) {
-        nameInput.focus();
-      }
-    }
-    
-    async function submitEscalationContact() {
-      const nameInput = document.getElementById('escalationName');
-      const phoneInput = document.getElementById('escalationPhone');
-      const errorDiv = document.getElementById('escalationError');
-      
-      const name = nameInput?.value?.trim() || '';
-      const phone = phoneInput?.value?.trim() || '';
-      
-      if (!phone || !/^0?\d{9,10}$/.test(phone.replace(/[\s-]/g, ''))) {
-        if (errorDiv) {
-          errorDiv.textContent = 'Please enter a valid phone number (e.g., 0241234567)';
-          errorDiv.style.display = 'block';
-        }
-        phoneInput?.focus();
-        return;
-      }
-      
-      if (errorDiv) errorDiv.style.display = 'none';
-      
-      try {
-        showTyping();
-        const sid = await ensureSession();
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: JSON.stringify({
-              __escalationContactForm: true,
-              name: name,
-              phone: phone
-            }),
-            sessionId: sid
-          })
-        });
-        
-        hideTyping();
-        const data = await response.json();
-        
-        const form = document.querySelector('.escalation-contact-form');
-        if (form) form.remove();
-        
-        visitorInfo = { name: name || 'Customer', phone: phone };
-        
-        const messageText = data?.reply || data?.response || '';
-        if (messageText) {
-          addMsg('assistant', messageText);
-        }
-        
-        if (data?.suggestHandover || data?.escalationContactSuccess) {
-          setTimeout(() => {
-            renderHandoverCTA();
-          }, 100);
-        }
-      } catch (error) {
-        hideTyping();
-        console.error('[Escalation Contact] Error:', error);
-        if (errorDiv) {
-          errorDiv.textContent = 'Failed to submit. Please try again.';
-          errorDiv.style.display = 'block';
-        }
-      }
     }
 
     function openHandoverForm() {
