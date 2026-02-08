@@ -726,7 +726,39 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           });
         }
       } catch (e) {
-        // Not a JSON message - check if it looks like a phone number
+        // Not a JSON message - try to extract name and phone from natural language
+        const nlPhoneMatch = message.match(/(?:phone|number|call\s*me|reach\s*me|contact\s*me)[\s:]*(?:is|at|on)?\s*(0\d{9,10}|\d{9,10})/i) 
+          || message.match(/(0\d{9}|\d{10})/);
+        const nlNameMatch = message.match(/(?:my\s*name\s*is|i\s*am|i'm|call\s*me)\s+([A-Za-z][A-Za-z\s]{1,40}?)(?:\s+and|\s+my|\s*[,.]|$)/i);
+        
+        if (nlPhoneMatch && nlNameMatch) {
+          // Both name and phone found in one message
+          userSession.visitorPhone = nlPhoneMatch[1].trim();
+          userSession.visitorName = nlNameMatch[1].trim();
+          userSession.awaitingContactForEscalation = false;
+          
+          console.log(`[Escalation Contact] NL parsed - Name: ${userSession.visitorName}, Phone: ${userSession.visitorPhone}, Session: ${effectiveSessionId}`);
+          
+          const thankYouMessage = `Thank you, ${userSession.visitorName}! I have your contact information (${userSession.visitorPhone}).\n\nNow let me connect you with our customer service team who can assist you with your concern.`;
+          
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', thankYouMessage).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
+          return res.json({ 
+            response: thankYouMessage,
+            escalationContactSuccess: true,
+            sessionId: effectiveSessionId,
+            suggestHandover: true,
+            customerInfo: {
+              name: userSession.visitorName,
+              phone: userSession.visitorPhone,
+              originalIssue: userSession.pendingEscalationMessage
+            }
+          });
+        }
+        
+        // Check if it looks like just a phone number
         const phoneMatch = message.replace(/[\s-]/g, '').match(/^0?\d{9,10}$/);
         if (phoneMatch) {
           userSession.visitorPhone = message.trim();
