@@ -3514,7 +3514,8 @@
       // Send contact info to backend
       try {
         showTyping();
-        const response = await fetch(BASE_URL + '/api/chat', {
+        const sid = await ensureSession();
+        const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -3523,7 +3524,7 @@
               name: name,
               phone: phone
             }),
-            sessionId: sessionId
+            sessionId: sid
           })
         });
         
