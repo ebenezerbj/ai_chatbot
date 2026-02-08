@@ -677,6 +677,118 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       });
     }
     
+    // Handle contact info submission for escalation (unauthenticated customers)
+    if (userSession.awaitingContactForEscalation && userSession.isCustomer === true) {
+      // Check if this is a contact form submission (JSON format)
+      let contactData;
+      try {
+        contactData = JSON.parse(message);
+        if (contactData.__escalationContactForm) {
+          const { name, phone } = contactData;
+          
+          // Validate phone number (required)
+          if (!phone || !/^0?\d{9,10}$/.test(phone.replace(/[\s-]/g, ''))) {
+            const phoneError = `Please enter a valid Ghana phone number (e.g., 0241234567). This is required so our team can reach you.`;
+            await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', phoneError).catch(e =>
+              console.error('[Analytics] Failed to log bot message:', e)
+            );
+            return res.json({ 
+              response: phoneError,
+              formError: 'phone',
+              showEscalationContactForm: true,
+              sessionId: effectiveSessionId
+            });
+          }
+          
+          // Store contact info
+          userSession.visitorName = name?.trim() || 'Customer';
+          userSession.visitorPhone = phone.trim();
+          userSession.awaitingContactForEscalation = false;
+          
+          console.log(`[Escalation Contact] Name: ${userSession.visitorName}, Phone: ${userSession.visitorPhone}, Session: ${effectiveSessionId}`);
+          
+          const thankYouMessage = `Thank you, ${userSession.visitorName}! I have your contact information.\n\nNow let me connect you with our customer service team who can assist you with your concern.`;
+          
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', thankYouMessage).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
+          return res.json({ 
+            response: thankYouMessage,
+            escalationContactSuccess: true,
+            sessionId: effectiveSessionId,
+            suggestHandover: true,
+            customerInfo: {
+              name: userSession.visitorName,
+              phone: userSession.visitorPhone,
+              originalIssue: userSession.pendingEscalationMessage
+            }
+          });
+        }
+      } catch (e) {
+        // Not a JSON message - check if it looks like a phone number
+        const phoneMatch = message.replace(/[\s-]/g, '').match(/^0?\d{9,10}$/);
+        if (phoneMatch) {
+          userSession.visitorPhone = message.trim();
+          userSession.awaitingContactForEscalation = false;
+          
+          console.log(`[Escalation Contact] Phone provided directly: ${userSession.visitorPhone}, Session: ${effectiveSessionId}`);
+          
+          // Ask for name
+          const askNameMessage = `Thank you! I have your phone number (${userSession.visitorPhone}).\n\nCould you also provide your name so our team knows who to ask for when they call you back?`;
+          userSession.awaitingContactForEscalation = true; // Still need name
+          
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', askNameMessage).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
+          return res.json({ 
+            response: askNameMessage,
+            sessionId: effectiveSessionId,
+            showEscalationContactForm: true,
+            prefillPhone: userSession.visitorPhone
+          });
+        }
+        
+        // Check if they provided a name (after phone)
+        if (userSession.visitorPhone && /^[a-zA-Z\s]{2,}$/.test(message.trim())) {
+          userSession.visitorName = message.trim();
+          userSession.awaitingContactForEscalation = false;
+          
+          console.log(`[Escalation Contact] Name provided: ${userSession.visitorName}, Phone: ${userSession.visitorPhone}, Session: ${effectiveSessionId}`);
+          
+          const thankYouMessage = `Thank you, ${userSession.visitorName}! I have your contact information (${userSession.visitorPhone}).\n\nNow let me connect you with our customer service team who can assist you with your concern.`;
+          
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', thankYouMessage).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
+          return res.json({ 
+            response: thankYouMessage,
+            escalationContactSuccess: true,
+            sessionId: effectiveSessionId,
+            suggestHandover: true,
+            customerInfo: {
+              name: userSession.visitorName,
+              phone: userSession.visitorPhone,
+              originalIssue: userSession.pendingEscalationMessage
+            }
+          });
+        }
+      }
+      
+      // If we reach here, user sent something else while waiting for contact info
+      const waitingForContact = `Before I can connect you with our team, please provide your phone number so they can reach you.\n\nYou can type your phone number (e.g., 0241234567) or use the form above.`;
+      await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', waitingForContact).catch(e =>
+        console.error('[Analytics] Failed to log bot message:', e)
+      );
+      return res.json({ 
+        response: waitingForContact,
+        showEscalationContactForm: true,
+        sessionId: effectiveSessionId
+      });
+    }
+    
     // COMPLIANCE: Check if non-customer is requesting human support/services that need contact info
     if (userSession.isCustomer === false && !userSession.awaitingVisitorInfo) {
       const needsContactInfo = /\b(talk to|speak to|contact|call me|representative|agent|human|open (an? )?account|apply for|loan application)\b/i.test(message);
@@ -1472,6 +1584,31 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
             `Session: ${effectiveSessionId}, Message: ${message.substring(0, 120)}${message.length > 120 ? '...' : ''}`
           );
         }
+        
+        // CRITICAL FIX: For customers who said "yes" but haven't authenticated and don't have contact info,
+        // require contact info before escalation so CSR can follow up
+        if (userSession.isCustomer === true && !userSession.isAuthenticated && !userSession.visitorPhone) {
+          console.log('[Chat] Unauthenticated customer needs contact info before escalation');
+          
+          // Store the original message/complaint
+          userSession.pendingEscalationMessage = message;
+          userSession.awaitingContactForEscalation = true;
+          
+          const contactRequestMessage = `${reply}\n\n📞 **Before I connect you with our team**, please provide your phone number so they can reach you promptly to address your concern.\n\nYou can type your phone number below (e.g., 0241234567).`;
+          
+          // Log bot response
+          await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', contactRequestMessage).catch(e =>
+            console.error('[Analytics] Failed to log bot message:', e)
+          );
+          
+          return res.json({ 
+            reply: contactRequestMessage,
+            source: 'openai',
+            sessionId: effectiveSessionId,
+            requiresContactInfo: true,
+            showEscalationContactForm: true
+          });
+        }
       }
       
       // Log bot response
@@ -1479,12 +1616,23 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         console.error('[Analytics] Failed to log bot message:', e)
       );
       
-      return res.json({ 
+      // If suggestHandover and we have contact info, include it in response for pre-filling
+      const responseData: any = { 
         reply: reply,
         source: 'openai',
         sessionId: effectiveSessionId,
         suggestHandover: suggestHandover
-      });
+      };
+      
+      // Include customer info if available (for pre-filling handover form)
+      if (suggestHandover && (userSession.visitorName || userSession.visitorPhone)) {
+        responseData.customerInfo = {
+          name: userSession.visitorName || userSession.customerName || '',
+          phone: userSession.visitorPhone || userSession.phoneNumber || ''
+        };
+      }
+      
+      return res.json(responseData);
     } catch (error: any) {
       console.error('[OpenAI] Error:', error.message);
       const errorResponse = 'I encountered an issue processing your request. Please try again.';

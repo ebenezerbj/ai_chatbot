@@ -973,6 +973,7 @@
   const useLocationBtn = document.getElementById('useLocationBtn');
 
     let sessionId = null;
+    let visitorInfo = null; // Store customer contact info for escalation
 
     // Initialize with welcome message
     window.addEventListener('DOMContentLoaded', () => {
@@ -1838,10 +1839,15 @@
       wrap.style.padding = '0.5rem';
       wrap.style.border = '1px solid var(--gray-200)';
       wrap.style.borderRadius = '8px';
+      
+      // Pre-populate with visitor info if available
+      const preFillName = visitorInfo?.name || '';
+      const preFillPhone = visitorInfo?.phone || '';
+      
       wrap.innerHTML = `
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center">
-          <input type="text" id="handoverName" placeholder="Your name (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
-          <input type="tel" id="handoverPhone" placeholder="Phone (optional)" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="text" id="handoverName" placeholder="Your name" value="${preFillName}" style="flex:1; min-width:140px; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
+          <input type="tel" id="handoverPhone" placeholder="Phone number *" value="${preFillPhone}" required style="flex:1; min-width:140px; padding:0.4rem; border:2px solid #f97316; border-radius:6px;" />
         </div>
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
           <input type="text" id="handoverMsg" placeholder="Briefly describe the issue" style="flex:1; padding:0.4rem; border:1px solid var(--gray-300); border-radius:6px;" />
@@ -1849,6 +1855,7 @@
         </div>
         <div id="locationStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--primary-color);"></div>
         <div id="handoverStatus" style="margin-top:0.25rem; font-size:0.85rem; color:var(--gray-600);"></div>
+        <p style="margin-top:0.25rem; font-size:0.75rem; color:var(--gray-500);">* Phone number is required so our team can reach you</p>
       `;
       last.appendChild(wrap);
       const sendBtn = wrap.querySelector('#handoverSend');
@@ -1920,8 +1927,18 @@
   const msg = msgEl ? (msgEl.value || '') : '';
       const statusEl = document.getElementById('handoverStatus');
       
-      // Basic phone validation (Ghana): allow +233XXXXXXXXX or 0XXXXXXXXX; ignore spaces/dashes
+      // Phone is REQUIRED - validate that it's provided
       const phoneRaw = (phone || '').replace(/[^\d+]/g, '');
+      if (!phoneRaw) {
+        if (statusEl) {
+          statusEl.style.color = 'var(--danger, #c62828)';
+          statusEl.textContent = 'Please enter your phone number so our team can reach you.';
+        }
+        if (phoneEl) phoneEl.focus();
+        return;
+      }
+      
+      // Basic phone validation (Ghana): allow +233XXXXXXXXX or 0XXXXXXXXX; ignore spaces/dashes
       if (phoneRaw) {
         let ok = false;
         if (phoneRaw.startsWith('+233')) {
@@ -1932,6 +1949,10 @@
         } else if (phoneRaw.startsWith('0')) {
           const digits = phoneRaw.replace(/\D/g, '');
           ok = digits.length === 10; // 0 + 9 digits
+        } else {
+          // Allow 9-digit format without leading 0
+          const digits = phoneRaw.replace(/\D/g, '');
+          ok = digits.length === 9;
         }
         if (!ok) {
           if (statusEl) {

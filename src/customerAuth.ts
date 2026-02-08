@@ -29,6 +29,8 @@ export interface CustomerSession {
   availableAccounts?: Array<{accountNumber: string; accountName: string; accountType: string}>; // Multiple accounts for selection
   awaitingAccountSelection?: boolean; // Waiting for user to select account
   requestedAction?: 'balance' | 'transactions' | 'loans' | 'account_details'; // Track what user originally asked for
+  awaitingContactForEscalation?: boolean; // Waiting for contact info before escalation
+  pendingEscalationMessage?: string; // Store the original complaint/issue message
 }
 
 // In-memory session store (for production, use Redis or database)
