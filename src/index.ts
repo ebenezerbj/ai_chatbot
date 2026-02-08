@@ -1265,14 +1265,24 @@ CONVERSATION GUIDELINES:
    • **Password Reset Requests:** Never reset passwords or provide account access via chat
      Response: "For security reasons, I cannot reset passwords through chat. Please visit any branch with valid ID, or use the 'Forgot Password' feature in the app with proper verification."
 
-5. **When You Cannot Help**:
+5. **When You Cannot Help OR Customer's Issue Persists**:
    - FIRST, apologize sincerely: "I sincerely apologize..." or "I'm truly sorry..."
    - SECOND, show empathy and acknowledge their specific concern (reference what they asked about)
    - THIRD, explain why you can't help: "I don't have that specific information" or "This is outside my current knowledge"
-   - FOURTH, ASK if they want assistance: "Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for a callback?"
+   - FOURTH, ALWAYS offer handover: "Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for a callback?"
    - Wait for their response before showing options
    - This triggers automatic escalation to human assistance
    - NEVER provide phone numbers or contact details - always offer live chat or leave a message options
+   
+   **CRITICAL - Persistent/Unresolved Issues (MUST HANDOVER):**
+   If a customer indicates their issue was NOT resolved after trying your suggestion (e.g., "I visited the branch but they could not resolve it", "I already called but no one helped", "that didn't work", "still not resolved", "the branch couldn't help"), you MUST:
+   1. Apologize sincerely for the continued difficulty
+   2. Acknowledge their frustration
+   3. IMMEDIATELY offer to connect them with a representative - say: "Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for a callback?"
+   - Do NOT suggest calling a phone number again
+   - Do NOT suggest visiting the branch again if they already tried that
+   - Do NOT repeat the same advice that already failed
+   - The customer has exhausted self-service options — they NEED human assistance now
    
    **Example escalation flow:**
    Customer: "What's the CEO's salary?"
@@ -1418,10 +1428,12 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         messageLower.includes('human representative') ||
         messageLower.includes('real person') ||
         (messageLower.includes('agent') && messageLower.length < 30) || // Short message with "agent"
+        // Customer expressing unresolved/persistent issue
+        (messageLower.includes('could not resolve') || messageLower.includes('couldn\'t resolve') || messageLower.includes('couldnt resolve') || messageLower.includes('not resolved') || messageLower.includes('still not') || messageLower.includes('didn\'t help') || messageLower.includes('didnt help') || messageLower.includes('did not help') || messageLower.includes('couldn\'t help') || messageLower.includes('couldnt help') || messageLower.includes('could not help') || messageLower.includes('didn\'t work') || messageLower.includes('didnt work') || messageLower.includes('did not work') || messageLower.includes('not working') || messageLower.includes('still having') || messageLower.includes('issue persists') || messageLower.includes('problem persists') || messageLower.includes('no one helped') || messageLower.includes('nobody helped') || messageLower.includes('unable to help') || messageLower.includes('failed to') || messageLower.includes('not been resolved') || messageLower.includes('yet to be resolved') || messageLower.includes('still unresolved') || messageLower.includes('already tried') || messageLower.includes('already visited') || messageLower.includes('already called')) ||
         // Standard escalation phrases in bot response
         replyLower.includes('call:') || 
         replyLower.includes('email:') ||
-        replyLower.includes('contact') && replyLower.includes('0501290952') ||
+        /\+?233[\s-]?\d{2}[\s-]?\d{3}[\s-]?\d{4}/.test(replyLower) || // Any Ghana phone number in reply
         replyLower.includes('speak to') && replyLower.includes('agent') ||
         replyLower.includes('talk to') && replyLower.includes('agent') ||
         replyLower.includes('connect you with') ||
@@ -1450,6 +1462,9 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         replyLower.includes('this is confidential') ||
         replyLower.includes('confidential information') ||
         replyLower.includes('visit our') && replyLower.includes('office') ||
+        replyLower.includes('customer service') && (replyLower.includes('contact') || replyLower.includes('call') || replyLower.includes('reach')) ||
+        replyLower.includes('recommend contacting') ||
+        replyLower.includes('escalate your request') ||
         // Sensitive topic detection in user query (backup) - catches salary/compensation questions
         (messageLower.includes('salary') || messageLower.includes('compensation') || messageLower.includes('remuneration') || messageLower.includes('allowance')) && 
         (messageLower.includes('ceo') || messageLower.includes('director') || messageLower.includes('staff') || messageLower.includes('employee') || messageLower.includes('board') || messageLower.includes('higher') || messageLower.includes('lower') || messageLower.includes('how much')) ||
