@@ -1197,24 +1197,21 @@ CONVERSATION GUIDELINES:
    - Examples: "Opoku" or "Daniel" → Daniel Opoku (Unit Head, Marketing)
 
 3. **Recognize Your Limits - CRITICAL**:
-   ⚠️ If asked about ANY of these topics, you MUST say "I don't have that specific information" and offer escalation:
+   For sensitive topics below, explain that you don't have that information and suggest they ask a representative — but do NOT proactively push handover buttons or offer to "connect" them unless they ask.
    
-   **Sensitive Topics (Always Escalate):**
+   **Sensitive Topics:**
    - Employee salaries, compensation, or remuneration (CEO, staff, board, directors, allowances)
-   - Questions comparing salaries or asking if salary is "higher/lower" than an amount
    - Tax advice or tax implications
    - Legal advice or legal matters
    - Investment advice or portfolio management
    - Confidential corporate information
-   - Personal financial planning
    
    **Response Template:**
-   "I don't have that specific information. This requires [specialist/detailed records/expertise]. Would you like me to connect you with a customer representative who can assist you?"
+   "I don't have that specific information. For [topic], you would need to speak with [relevant team]. Is there anything else I can help you with?"
    
    **Examples:**
-   - "What's the CEO's salary?" → "I don't have information about executive compensation. Would you like me to connect you with our Corporate Affairs team?"
-   - "Is the CEO's salary higher than X?" → "I don't have information about executive compensation. This is confidential information. Would you like me to connect you with someone who handles these inquiries?"
-   - "Tax implications?" → "I cannot provide tax advice. Would you like me to connect you with a representative who can guide you to appropriate resources?"
+   - "What's the CEO's salary?" → "I don't have information about executive compensation. That's confidential information managed by the Corporate Affairs team. Is there anything else I can help you with?"
+   - "Tax implications?" → "I'm not able to provide tax advice as that requires a qualified tax professional. Is there something else about our products or services I can help with?"
 
 4. **Advanced Reasoning Capabilities**:
    
@@ -1266,37 +1263,28 @@ CONVERSATION GUIDELINES:
      Response: "For security reasons, I cannot reset passwords through chat. Please visit any branch with valid ID, or use the 'Forgot Password' feature in the app with proper verification."
 
 5. **When You Cannot Help OR Customer's Issue Persists**:
-   - FIRST, apologize sincerely: "I sincerely apologize..." or "I'm truly sorry..."
-   - SECOND, show empathy and acknowledge their specific concern (reference what they asked about)
-   - THIRD, explain why you can't help: "I don't have that specific information" or "This is outside my current knowledge"
-   - FOURTH, ALWAYS offer handover: "Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for a callback?"
-   - Wait for their response before showing options
-   - This triggers automatic escalation to human assistance
-   - NEVER provide phone numbers or contact details - always offer live chat or leave a message options
+   - FIRST, try your best to help with the information you have
+   - SECOND, if you truly cannot help, explain why clearly and suggest what they can do
+   - THIRD, if the customer explicitly asks for a representative or their issue persists after your suggestions, THEN offer handover
+   - NEVER proactively push handover unless the customer asks for it or has exhausted your help
+   - NEVER provide phone numbers or contact details
    
-   **CRITICAL - Persistent/Unresolved Issues (MUST HANDOVER):**
-   If a customer indicates their issue was NOT resolved after trying your suggestion (e.g., "I visited the branch but they could not resolve it", "I already called but no one helped", "that didn't work", "still not resolved", "the branch couldn't help"), you MUST:
+   **Persistent/Unresolved Issues:**
+   If a customer indicates their issue was NOT resolved after trying your suggestion (e.g., "that didn't work", "still not resolved", "the branch couldn't help"), then:
    1. Apologize sincerely for the continued difficulty
    2. Acknowledge their frustration
-   3. IMMEDIATELY offer to connect them with a representative - say: "Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for a callback?"
-   - Do NOT suggest calling a phone number again
-   - Do NOT suggest visiting the branch again if they already tried that
+   3. Offer to connect them: "Would you like me to connect you with a representative who can help further?"
    - Do NOT repeat the same advice that already failed
-   - The customer has exhausted self-service options — they NEED human assistance now
-   
-   **Example escalation flow:**
-   Customer: "What's the CEO's salary?"
-   You: "I sincerely apologize for not being able to assist with that. I understand you're looking for information about executive compensation, but this is confidential information that I don't have access to. Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for our management team to follow up with you?"
 
 6. **Handle Requests Intelligently**:
-   - For agent requests: Apologize that you can't fully assist, acknowledge their need, then ask if they'd like to use live chat now or leave a message for callback
+   - For agent requests: Acknowledge their need and offer to connect them
    - For misspellings: Understand intent (e.g., "prodicts" → "products")
    
-   **CRITICAL - Direct Live Chat/Agent Requests:**
-   When a customer directly asks for live chat, agent, or human representative (e.g., "live chat", "I want to talk to an agent", "connect me to someone", "human"), respond with:
-   "Of course! I'll connect you with a customer representative right away. Would you prefer live chat now, or would you like to leave a message for a callback?"
+   **Direct Live Chat/Agent Requests:**
+   When a customer directly asks for live chat, agent, or human representative, respond with:
+   "Of course! I'll connect you with a representative right away."
    
-   Do NOT say you cannot initiate live chat. Do NOT provide phone numbers. Simply offer the two options.
+   Do NOT say you cannot initiate live chat. Do NOT provide phone numbers.
    
    **CRITICAL - Disambiguation for Vague Requests:**
    When a request is vague or ambiguous, ALWAYS ask specific clarifying questions:
@@ -1410,11 +1398,12 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
       
       console.log(`[Chat] OpenAI response: ${reply}`);
       
-      // Detect if AI is suggesting to contact someone or can't help
+      // Detect if user explicitly wants human assistance or if this is a true escalation scenario
       const replyLower = reply.toLowerCase();
       const messageLower = message.toLowerCase();
       
-      // Enhanced escalation detection
+      // Escalation detection: only trigger on explicit user requests for human help
+      // or persistent unresolved issues — NOT on the bot's own response language
       const suggestHandover = 
         // User directly requesting live chat/agent/leave message
         messageLower.includes('live chat') ||
@@ -1423,55 +1412,21 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
         (messageLower.includes('leave') && messageLower.includes('message')) ||
         messageLower.includes('talk to agent') ||
         messageLower.includes('speak to agent') ||
-        messageLower.includes('connect me to') && (messageLower.includes('agent') || messageLower.includes('person') || messageLower.includes('human') || messageLower.includes('representative')) ||
+        (messageLower.includes('connect me to') && (messageLower.includes('agent') || messageLower.includes('person') || messageLower.includes('human') || messageLower.includes('representative'))) ||
         messageLower.includes('chat with agent') ||
         messageLower.includes('human representative') ||
         messageLower.includes('real person') ||
-        (messageLower.includes('agent') && messageLower.length < 30) || // Short message with "agent"
-        // Customer expressing unresolved/persistent issue
-        (messageLower.includes('could not resolve') || messageLower.includes('couldn\'t resolve') || messageLower.includes('couldnt resolve') || messageLower.includes('not resolved') || messageLower.includes('still not') || messageLower.includes('didn\'t help') || messageLower.includes('didnt help') || messageLower.includes('did not help') || messageLower.includes('couldn\'t help') || messageLower.includes('couldnt help') || messageLower.includes('could not help') || messageLower.includes('didn\'t work') || messageLower.includes('didnt work') || messageLower.includes('did not work') || messageLower.includes('not working') || messageLower.includes('still having') || messageLower.includes('issue persists') || messageLower.includes('problem persists') || messageLower.includes('no one helped') || messageLower.includes('nobody helped') || messageLower.includes('unable to help') || messageLower.includes('failed to') || messageLower.includes('not been resolved') || messageLower.includes('yet to be resolved') || messageLower.includes('still unresolved') || messageLower.includes('already tried') || messageLower.includes('already visited') || messageLower.includes('already called')) ||
-        // Standard escalation phrases in bot response
-        replyLower.includes('call:') || 
-        replyLower.includes('email:') ||
-        /\+?233[\s-]?\d{2}[\s-]?\d{3}[\s-]?\d{4}/.test(replyLower) || // Any Ghana phone number in reply
-        replyLower.includes('speak to') && replyLower.includes('agent') ||
-        replyLower.includes('talk to') && replyLower.includes('agent') ||
-        replyLower.includes('connect you with') ||
-        replyLower.includes('i don\'t have that') ||
-        replyLower.includes('i don\'t have specific') ||
-        replyLower.includes('i don\'t have information') ||
-        replyLower.includes('don\'t have that specific') ||
-        replyLower.includes('don\'t have information about') ||
-        replyLower.includes('outside my expertise') ||
-        replyLower.includes('outside of my expertise') ||
-        replyLower.includes('outside my current knowledge') ||
-        replyLower.includes('cannot help') ||
-        replyLower.includes('cannot provide') ||
-        replyLower.includes('i cannot provide') ||
-        replyLower.includes('unable to assist') ||
-        replyLower.includes('would you like me to connect') ||
-        replyLower.includes('connect you with a customer representative') ||
-        replyLower.includes('connect you with a representative') ||
-        replyLower.includes('connect you with our') ||
-        replyLower.includes('live chat option') ||
-        replyLower.includes('use the live chat') ||
-        replyLower.includes('leave a message') ||
-        replyLower.includes('leave message') ||
-        replyLower.includes('via live chat') ||
-        replyLower.includes('this requires') ||
-        replyLower.includes('this is confidential') ||
-        replyLower.includes('confidential information') ||
-        replyLower.includes('visit our') && replyLower.includes('office') ||
-        replyLower.includes('customer service') && (replyLower.includes('contact') || replyLower.includes('call') || replyLower.includes('reach')) ||
-        replyLower.includes('recommend contacting') ||
-        replyLower.includes('escalate your request') ||
-        // Sensitive topic detection in user query (backup) - catches salary/compensation questions
-        (messageLower.includes('salary') || messageLower.includes('compensation') || messageLower.includes('remuneration') || messageLower.includes('allowance')) && 
-        (messageLower.includes('ceo') || messageLower.includes('director') || messageLower.includes('staff') || messageLower.includes('employee') || messageLower.includes('board') || messageLower.includes('higher') || messageLower.includes('lower') || messageLower.includes('how much')) ||
-        messageLower.includes('tax') && (messageLower.includes('advice') || messageLower.includes('implications')) ||
-        messageLower.includes('legal advice') ||
-        messageLower.includes('investment advice') ||
-        messageLower.includes('portfolio management') ||
+        (messageLower.includes('agent') && messageLower.length < 20) ||
+        // Customer expressing persistent unresolved issue (they've already tried and failed)
+        messageLower.includes('not resolved') ||
+        messageLower.includes('still not') && (messageLower.includes('working') || messageLower.includes('resolved') || messageLower.includes('fixed')) ||
+        messageLower.includes('no one helped') ||
+        messageLower.includes('nobody helped') ||
+        messageLower.includes('already tried') ||
+        messageLower.includes('already visited') ||
+        messageLower.includes('already called') ||
+        messageLower.includes('issue persists') ||
+        messageLower.includes('problem persists') ||
         // Empty/error response
         reply.includes('having trouble processing');
 

@@ -3209,12 +3209,11 @@
         if (messageText) {
           console.log('[Adding Message] Text:', messageText, 'Options:', messageOptions);
           
-          // Check if this is a handover situation - if so, skip the bot's response and show options directly
+          // Check if this is a handover situation
           const isHandoverSituation = data?.suggestHandover;
           
-          if (!isHandoverSituation) {
-            addMsg('assistant', messageText, messageOptions);
-          }
+          // Always show the bot's response first
+          addMsg('assistant', messageText, messageOptions);
           
           // Scroll to bottom to ensure thank you message is visible
           if (data?.visitorFormSuccess) {
