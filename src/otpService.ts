@@ -158,7 +158,7 @@ export async function generateAndSendOTP(
 
     // Send SMS
     const name = customerName ? customerName.split(' ')[0] : 'Customer';
-    const message = `Hello ${name}, your AKCB verification code is: ${otp}. Valid for 5 minutes. Do not share this code with anyone.`;
+    const message = `Hi ${name}, your AKCB verification code is: ${otp}. It's valid for 5 minutes. Please don't share this code with anyone.`;
     
     const sent = await sendSMS(phoneNumber, message);
 
@@ -170,7 +170,7 @@ export async function generateAndSendOTP(
       
       return {
         success: true,
-        message: `A 6-digit verification code has been sent to ${phoneNumber}. Please enter the code to continue.`,
+        message: `I've just sent a 6-digit code to ${phoneNumber}. Please enter it here to continue. 📲`,
         sessionKey
       };
     } else {
@@ -247,7 +247,7 @@ export function verifyOTP(
 
     return {
       success: true,
-      message: 'Verification successful! You can now access your account information.',
+      message: 'You\'re all set! ✅ Identity verified — let\'s get you sorted.',
       accountNumber: session.accountNumber
     };
   }

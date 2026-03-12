@@ -655,8 +655,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
                                  sessionId; // Must have explicit sessionId from client (not auto-generated)
       
       const welcomeMessage = isReturningVisitor 
-        ? `Welcome back, ${userSession.visitorName}! 👋\n\nHow can I assist you today?`
-        : `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`;
+        ? `Hey ${userSession.visitorName}, good to see you again! 😊\n\nWhat can I help you with today?`
+        : `Hi there! Welcome to Amantin and Kasei Community Bank 😊\n\nI'm AMA, your banking assistant. Are you already banking with us?`;
       
       const response: any = {
         response: welcomeMessage,
@@ -667,7 +667,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       if (!isReturningVisitor) {
         response.buttons = [
           { text: 'Yes - I\'m a customer', icon: 'fas fa-user-check', action: 'send', value: 'Yes' },
-          { text: 'No - General inquiry', icon: 'fas fa-info-circle', action: 'send', value: 'No' }
+          { text: 'No - Just browsing', icon: 'fas fa-info-circle', action: 'send', value: 'No' }
         ];
       } else {
         // For returning visitors, skip to main menu
@@ -691,7 +691,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       if (/^(yes|yeah|yep|sure|i am|im a customer|customer)/i.test(normalizedMessage)) {
         userSession.isCustomer = true;
         
-        const customerWelcome = `Great! Welcome back! 🏦\n\nTo assist you with your account or loan inquiries, I'll need to verify your identity.\n\nPlease provide:\n• Your **account number**, or\n• Your **phone number**\n\nFor security, you'll receive a verification code via SMS.`;
+        const customerWelcome = `Wonderful, welcome back! 🏦\n\nBefore I pull up your details, I just need to quickly verify it's you — for your security.\n\nCould you share either:\n• Your **account number**, or\n• Your **phone number**\n\nI'll send a quick verification code to your phone.`;
         
         await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', customerWelcome).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
@@ -706,7 +706,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         userSession.isCustomer = false;
         // COMPLIANCE FIX: Allow anonymous browsing, don't force data collection
         
-        const welcomeMessage = `Welcome to Amantin and Kasei Community Bank! 🏦\n\nI'm here to help with:\n• Branch locations and hours\n• Banking products and services\n• Loan and account information\n• General banking questions\n\nWhat would you like to know?`;
+        const welcomeMessage = `No worries at all! Welcome to AKCB 🏦\n\nI'd love to help you out. Feel free to ask me about:\n• Where our branches are and when they're open\n• Our savings, loans, and other products\n• How to open an account\n• Anything else about banking with us\n\nWhat's on your mind?`;
         
         await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', welcomeMessage).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
@@ -716,9 +716,9 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           response: welcomeMessage,
           sessionId: effectiveSessionId,
           buttons: [
-            { text: 'Find a branch', icon: 'fas fa-map-marker-alt', action: 'send', value: 'Where is the nearest branch?' },
-            { text: 'Open an account', icon: 'fas fa-user-plus', action: 'send', value: 'I want to open an account' },
-            { text: 'Apply for a loan', icon: 'fas fa-hand-holding-usd', action: 'send', value: 'I want to apply for a loan' }
+            { text: '📍 Find a branch', icon: 'fas fa-map-marker-alt', action: 'send', value: 'Where is the nearest branch?' },
+            { text: '🏦 Open an account', icon: 'fas fa-user-plus', action: 'send', value: 'I want to open an account' },
+            { text: '💰 Explore loans', icon: 'fas fa-hand-holding-usd', action: 'send', value: 'I want to apply for a loan' }
           ]
         });
       }
@@ -779,7 +779,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           
           console.log(`[Visitor Info] Name: ${userSession.visitorName}, Phone: ${userSession.visitorPhone}, Session: ${effectiveSessionId}`);
           
-          const visitorWelcome = `Thank you, ${userSession.visitorName}! 🏦\n\nI'm happy to help you with:\n• Branch locations and hours\n• Our banking products and services\n• Loan application information\n• Account opening requirements\n• General banking questions\n\nWhat would you like to know?`;
+          const visitorWelcome = `Thanks, ${userSession.visitorName}! Nice to meet you 😊\n\nI'm here to help — feel free to ask me about:\n• Our branch locations and hours\n• Savings, current, and fixed deposit accounts\n• Loan options and how to apply\n• What you need to open an account\n• Any other banking questions\n\nWhat would you like to know?`;
           
           await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', visitorWelcome).catch(e =>
             console.error('[Analytics] Failed to log bot message:', e)
@@ -821,7 +821,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       if (needsContactInfo) {
         userSession.awaitingVisitorInfo = true;
         
-        const contactFormMessage = `To connect you with a specialist or assist with your request, I'll need some contact information.\n\n**Privacy Notice:**\nYour information will be:\n• Used only to respond to your inquiry\n• Stored temporarily (session only)\n• Not shared with third parties\n• Handled per our Privacy Policy\n\nPlease fill out the contact form.`;
+        const contactFormMessage = `To connect you with the right person or help with your request, I'll just need a few details.\n\n**Privacy Notice:**\nYour info will be:\n• Used only for this inquiry\n• Kept temporarily (this session only)\n• Never shared with third parties\n• Handled per our Privacy Policy\n\nPlease fill out the quick form below.`;
         
         await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', contactFormMessage).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
@@ -842,7 +842,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       const hasAuthCredentials = !!(authDetails.accountNumber || authDetails.phoneNumber || authDetails.otp);
       
       if (customerAuth.needsAuthentication(message) || hasAuthCredentials) {
-        const blockMessage = `I sincerely apologize, but I understand you're trying to access account or loan information. However, these details are only available to registered AKCB customers for security reasons.\n\nIf you'd like to become a customer, I can help you with:\n• Account opening requirements\n• Required documents\n• Branch locations\n\nWould you like me to connect you with a customer representative via live chat to discuss opening an account, or would you prefer to leave a message?`;
+        const blockMessage = `I totally understand you'd like to check account or loan details — unfortunately, I can only share those with verified AKCB customers for security reasons.\n\nBut the good news is, joining us is easy! I can help you with:\n• What you need to open an account\n• Documents to bring along\n• Finding your nearest branch\n\nWould you like to get started, or would you prefer to chat with one of our team members?`;
         
         await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', blockMessage).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
@@ -952,7 +952,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     // If this looks like a quick action button but user isn't authenticated, there's a session issue
     if (isQuickActionButton && !isAlreadyAuthenticated && !hasAuthCredentials) {
       console.log('[Chat] ⚠️ Quick action button clicked but session not authenticated - possible session loss');
-      const sessionLostMessage = `I apologize, but your session has expired. To view your recent transactions, please authenticate again by providing your account number or phone number.`;
+      const sessionLostMessage = `Oh no, it looks like your session has timed out! 😔 No worries though — just share your account number or phone number and I'll get you verified again in no time.`;
       
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', sessionLostMessage).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
@@ -1016,7 +1016,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         let greeting = '';
         if (authSession.authenticatedAt && 
             (Date.now() - authSession.authenticatedAt.getTime()) < 60000) { // Within 1 minute of auth
-          greeting = `Welcome, ${authSession.customerName || 'valued customer'}! ✨\n\n`;
+          greeting = `Welcome back, ${authSession.customerName || 'there'}! ✨\n\n`;
         }
         
         // Determine what info they want - distinguish between account, loan, or both
@@ -1065,7 +1065,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         if (authSession.availableAccounts && authSession.availableAccounts.length > 1) {
           const otherAccounts = authSession.availableAccounts.filter(acc => acc.accountNumber !== accountNumberToQuery);
           if (otherAccounts.length > 0) {
-            response += `\n\n*💡 Note: You have ${authSession.availableAccounts.length} accounts with us. To check your other account${otherAccounts.length > 1 ? 's' : ''}, mention the account number or type "show all my accounts".*`;
+            response += `\n\n*💡 Tip: You have ${authSession.availableAccounts.length} accounts with us. To check another one, just mention the account number or say "show all my accounts".*`;
           }
         }
           
@@ -1205,7 +1205,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
 
     // Loan application form (web chatbot will render inline form)
     if (loanApplications.shouldOpenLoanApplicationForm(message)) {
-      const reply = `Sure — please fill the loan application form below.`;
+      const reply = `Sure thing — let me bring up the loan application form for you.`;
 
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
@@ -1239,7 +1239,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     if (salaryOverdraft.shouldOpenSalaryOverdraftForm(message)) {
       // Check if user is authenticated
       if (!userSession.isAuthenticated || userSession.isCustomer !== true) {
-        const reply = `Salary overdraft is exclusively available for verified bank customers who are salary workers. Please authenticate first if you have an account with us.`;
+        const reply = `Salary overdraft is available only for verified customers who are salary workers. Could you please log in first by sharing your account number or phone number?`;
 
         await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
           console.error('[Analytics] Failed to log bot message:', e)
@@ -1255,7 +1255,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
         });
       }
 
-      const reply = `Great! I can help you apply for a salary overdraft.\n\n⚠️ **Important:** This facility is exclusively for salary workers whose salary is paid into their AKCB account.\n\nPlease fill in the form below with your employment and salary details.`;
+      const reply = `Of course! Let me pull up the salary overdraft application for you.\n\n⚠️ **Quick note:** This facility is exclusively for salary workers whose salary is paid into their AKCB account.\n\nPlease fill in your employment and salary details below.`;
 
       await analytics.logMessage(effectiveSessionId, messageIndex + 1, 'assistant', reply).catch(e =>
         console.error('[Analytics] Failed to log bot message:', e)
@@ -1311,9 +1311,18 @@ app.post('/api/chat', async (req: Request, res: Response) => {
 
     // Call OpenAI with KB context
     try {
-      const systemPrompt = `You are AMA, a friendly and helpful banking assistant for AKCB - Amantin and Kasei Community Bank PLC, a community bank in Ghana.
+      const systemPrompt = `You are AMA, a warm, friendly, and knowledgeable banking assistant for AKCB - Amantin and Kasei Community Bank PLC, a community bank in Ghana.
 
-Your goal is to have natural, helpful conversations with customers while using the knowledge base to provide accurate information.
+Your goal is to have natural, human-like conversations with customers. Talk to them like a helpful friend who works at the bank — be warm, approachable, and genuinely caring. Avoid sounding robotic or overly formal. Use simple, everyday language while still being professional.
+
+IMPORTANT TONE GUIDELINES:
+- Use casual, friendly language: "Hey!", "No worries!", "Let me check that for you", "That's a great question!"
+- Show empathy: "I totally understand", "That makes sense", "I can see why you'd want to know that"
+- Be encouraging: "Great choice!", "You're making a smart move", "That's definitely doable"
+- Avoid stiff phrasing like: "I sincerely apologize", "Please be advised", "Kindly note"
+- Use contractions naturally: "I'll", "you're", "don't", "can't", "we'd"
+- When doing calculations, explain them in plain language first, then show the numbers
+- For loan calculations, start with the bottom line ("Here's what it would look like...") before the detailed math
 
 KNOWLEDGE BASE:
 ${kbContext}
@@ -1512,26 +1521,28 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
     Total Interest = (PMT × n) − P
     
     **When a customer asks "How much will I pay for a GHS X loan?":**
-    1. Ask what TYPE of loan (salary, trade, etc.) if not clear
-    2. Ask the TERM (months) if not specified
+    1. Ask what TYPE of loan (salary, trade, etc.) if not clear — keep it casual: "What kind of loan are you looking at?"
+    2. Ask the TERM (months) if not specified — "And how long were you thinking? 1 year? 2 years?"
     3. Calculate the monthly payment, total interest, and total cost
-    4. Show a clear breakdown:
+    4. Lead with the headline number first, then break it down:
+       "So for a GHS X loan, you'd be looking at about **GHS X per month**. Here's the full picture:"
        - Monthly Payment: GHS X
        - Total Interest: GHS X  
        - Processing Fee: GHS X (3.5% or 2.5%)
        - Insurance Fee: GHS X (0.40%)
        - Total Cost: GHS X
-    5. Add disclaimer: "This is an estimate. Final terms depend on your credit assessment and approval."
+    5. End warmly: "Of course, these are estimates — the final terms will depend on your credit assessment. But this should give you a good idea!"
     
     **Loan Comparison:** If a customer is choosing between loan types, compare them side by side showing which option costs less overall.
     
     **Prepayment:** If asked about paying off early, explain that extra payments reduce total interest and shorten the term.
     
     **Prequalification / Affordability:** If a customer asks "Can I afford a GHS X loan?" or "How much can I borrow?":
-    - Ask for monthly income and existing debt obligations
+    - Ask for monthly income and existing debt obligations in a friendly way: "To figure that out, could you share your monthly take-home pay and any existing loan payments?"
     - Use 40% debt-to-income ratio as the maximum
     - Calculate the maximum affordable loan amount
-    - Always note: "This is an estimate. Formal approval requires a full credit assessment."
+    - Be encouraging: "Based on your numbers, here's what looks doable for you..."
+    - Always note: "Keep in mind this is a rough estimate — a formal approval involves a full credit check, but this gives you a solid starting point!"
     
     **Budget Planning:** If asked about budgeting or cash flow:
     - Help project monthly income vs expenses vs loan payments
@@ -1544,8 +1555,8 @@ Remember: You're having a real conversation with a real person. Be helpful, be n
     - Maintain a mix of credit types
     - Check credit reports regularly
     
-    **IMPORTANT:** Always include this disclaimer for any financial calculation or advice:
-    "⚠️ Disclaimer: These calculations are estimates for informational purposes only. Actual loan terms, rates, and approval are subject to AKCB's credit assessment, policies, and prevailing conditions. Please consult a loan officer for a formal evaluation."`;
+    **IMPORTANT:** Always include this disclaimer for any financial calculation or advice, but keep it friendly:
+    "⚠️ Just a heads up — these numbers are estimates to help you plan. The actual terms, rates, and approval will depend on AKCB's credit assessment and current conditions. For a proper evaluation, have a chat with one of our loan officers — they'll get you sorted!"`;
 
       // Build messages array with conversation history
       const messages: Array<{ role: string; content: string }> = [
@@ -1937,7 +1948,7 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
     const followUps = await analytics.getPendingFollowUps(userProfile.userId);
     
     res.json({
-      greeting: greeting || `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`,
+      greeting: greeting || `Hi there! Welcome to Amantin and Kasei Community Bank 😊\n\nI'm AMA, your banking assistant. Are you already banking with us?`,
       userSegment: userProfile.segment,
       recommendations,
       followUps,
@@ -1945,20 +1956,20 @@ app.post('/api/greeting', async (req: Request, res: Response) => {
       sessionId: effectiveSessionId,
       buttons: [
         { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
-        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' },
-        { text: '🆘 Assistance', action: 'handover', value: 'assistance' }
+        { text: 'No - Just looking around', action: 'send', value: 'No, I have a general inquiry' },
+        { text: '🆘 Need help', action: 'handover', value: 'assistance' }
       ]
     });
   } catch (error: any) {
     console.error('[Greeting] Error:', error);
     const effectiveSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     res.json({ 
-      greeting: `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`,
+      greeting: `Hi there! Welcome to Amantin and Kasei Community Bank 😊\n\nI'm AMA, your banking assistant. Are you already banking with us?`,
       sessionId: effectiveSessionId,
       buttons: [
         { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
-        { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' },
-        { text: '🆘 Assistance', action: 'handover', value: 'assistance' }
+        { text: 'No - Just looking around', action: 'send', value: 'No, I have a general inquiry' },
+        { text: '🆘 Need help', action: 'handover', value: 'assistance' }
       ]
     });
   }

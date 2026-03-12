@@ -260,7 +260,7 @@ export async function validateCredentials(
     if (!accountNumber && !phoneNumber) {
       return {
         valid: false,
-        reason: "Please provide either your account number or phone number."
+        reason: "Could you share your account number or phone number so I can look you up?"
       };
     }
 
@@ -305,7 +305,7 @@ export async function validateCredentials(
       const identifier = accountNumber ? 'account number' : 'phone number';
       return {
         valid: false,
-        reason: `No active account found with the provided ${identifier}. Please verify your details.`,
+        reason: `Hmm, I couldn't find an active account with that ${identifier}. Could you double-check and try again?`,
         requiresEscalation: true
       };
     }
@@ -320,7 +320,7 @@ export async function validateCredentials(
         console.log('[Auth] Multiple accounts found but no phone number on record');
         return {
           valid: false,
-          reason: `We found ${customers.length} accounts associated with your details, but there's no phone number on record for verification.\n\nTo update your contact details and complete verification, please visit any AKCB branch with a valid ID. Our staff will help you update your information.\n\nWould you like me to connect you with a customer representative via live chat, or would you prefer to know the nearest branch location?`
+          reason: `I found ${customers.length} accounts linked to your details, but there's no phone number on file for verification.\n\nTo update your contact info, please visit any AKCB branch with a valid ID — our team will get it sorted in no time.\n\nWould you like help finding the nearest branch, or would you prefer to chat with someone from our team?`
         };
       }
       
@@ -347,7 +347,7 @@ export async function validateCredentials(
       console.log('[Auth] Customer account found but no phone number on record');
       return {
         valid: false,
-        reason: `We found your account, but there's no phone number associated with it in our records.\n\nTo update your contact details and complete verification, please visit any AKCB branch with a valid ID. Our staff will help you update your information so you can access your account through our digital channels.\n\nWould you like me to connect you with a customer representative via live chat for more assistance, or would you prefer to know the nearest branch location?`,
+        reason: `I found your account, but there's no phone number linked to it in our system.\n\nTo add your phone number and unlock full digital access, just visit any AKCB branch with your ID. It's a quick update!\n\nWant me to help you find the nearest branch, or would you like to chat with a team member?`,
         requiresEscalation: true
       };
     }
@@ -364,7 +364,7 @@ export async function validateCredentials(
     console.error('[Auth] Stack:', error.stack);
     return {
       valid: false,
-      reason: "I sincerely apologize for the inconvenience. I understand you're trying to verify your account, but I'm having technical difficulties accessing our systems right now. Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message?"
+      reason: "Oops, I'm having a little trouble connecting to our systems right now. Would you like to try again in a moment, or shall I connect you with a team member who can help?"
     };
   }
 }
@@ -374,7 +374,7 @@ export async function validateCredentials(
  */
 export function generateAuthPrompt(session: CustomerSession): string {
   if (!session.accountNumber && !session.phoneNumber) {
-    return "To check your account information, I need to verify your identity. Please provide either your account number or registered phone number.";
+    return "To look into your account, I just need to confirm it's you. Could you share your account number or the phone number you registered with?";
   }
   
   // If they provided something, we're validating it
@@ -408,7 +408,7 @@ export async function authenticateCustomer(
         
         return {
           success: false,
-          message: `OTP verified! ✓\n\nYou have ${session.availableAccounts.length} accounts registered. Please select which account you want to access:`,
+          message: `Great, you're verified! ✓\n\nI can see you have ${session.availableAccounts.length} accounts with us. Which one would you like me to look into?`,
           session,
           awaitingOTP: false
         };
@@ -422,11 +422,11 @@ export async function authenticateCustomer(
       
       // Get customer's first name for personalized greeting
       const firstName = session.customerName ? session.customerName.split(' ')[0] : '';
-      const greeting = firstName ? `Welcome back, ${firstName}!` : 'Welcome back!';
+      const greeting = firstName ? `Welcome back, ${firstName}! Great to have you here.` : 'Welcome back! Great to have you here.';
       
       return {
         success: true,
-        message: `${greeting} Your identity has been verified. How can I help you with your account today?`,
+        message: `${greeting} You're all verified ✅ — how can I help you today?`,
         session,
         awaitingOTP: false
       };
@@ -460,7 +460,7 @@ export async function authenticateCustomer(
   if (session.attempts > MAX_AUTH_ATTEMPTS) {
     return {
       success: false,
-      message: "I sincerely apologize for the difficulty. I understand you've tried multiple times to verify your account, and I know this must be frustrating. For your security and to help resolve this quickly, would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message for our security team?",
+      message: "I understand this must be frustrating after multiple tries. For your security, let me connect you with someone who can help sort this out. Would you like to chat with a representative, or leave us a message?",
       session,
       awaitingOTP: false
     };
@@ -494,7 +494,7 @@ export async function authenticateCustomer(
         
         return {
           success: false,
-          message: `${otpResult.message}\n\nOnce verified, you'll be able to select from your ${validation.accounts.length} registered accounts.`,
+      message: `${otpResult.message}\n\nOnce you're verified, I'll show you your ${validation.accounts.length} accounts to choose from.`,
           session,
           awaitingOTP: true
         };
@@ -797,10 +797,10 @@ function getAccountTypeName(code: string, accountNumber?: string): string {
 export function formatLoanResponse(accountData: any): string {
   try {
     if (!accountData.loans || accountData.loans.length === 0) {
-      return `**Loan Information**\n\nI couldn't find any active or historical loans associated with your account. If you believe this is an error or would like to apply for a loan, please contact us at +233 24 231 2059 or visit any branch.`;
+      return `**Loan Information**\n\nGood news — you don't have any active loans on this account! If you're thinking about getting one, I'd be happy to walk you through our options. You can also call us at +233 24 231 2059 or pop into any branch.`;
     }
     
-    let response = `**Loan Information**\n\n`;
+    let response = `**Here's your loan summary** 📊\n\n`;
     response += `You have ${accountData.loans.length} loan${accountData.loans.length > 1 ? 's' : ''} with us:\n\n`;
     
     accountData.loans.forEach((loan: any, index: number) => {
@@ -871,12 +871,12 @@ export function formatLoanResponse(accountData: any): string {
       response += `\n`;
     });
     
-    response += `For assistance or to discuss your loan, please contact us at +233 24 231 2059 or visit any branch.`;
+    response += `If you have any questions about your loan or want to discuss your options, feel free to call us at +233 24 231 2059 or visit any branch — we're here to help!`;
     
     return response;
   } catch (error: any) {
     console.error('[Auth] Error formatting loan response:', error);
-    return `**Loan Information**\n\nI sincerely apologize for the inconvenience. I understand you need your loan information, but I'm experiencing technical difficulties right now. Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message?`;
+    return `**Loan Information**\n\nI'm sorry, I'm having a bit of trouble pulling up your loan details right now. Would you like me to connect you with someone who can help, or would you prefer to try again in a moment?`;
   }
 }
 
@@ -884,7 +884,7 @@ export function formatLoanResponse(accountData: any): string {
  * Format list of all customer accounts (when they have multiple)
  */
 export function formatAllAccountsList(availableAccounts: Array<{accountNumber: string; accountName: string; accountType: string}>): string {
-  let response = `**Your Accounts**\n\n`;
+  let response = `**Your Accounts** 📊\n\n`;
   response += `You have ${availableAccounts.length} account${availableAccounts.length > 1 ? 's' : ''} with us:\n\n`;
   
   availableAccounts.forEach((account, index) => {
@@ -893,8 +893,8 @@ export function formatAllAccountsList(availableAccounts: Array<{accountNumber: s
     response += `   Name: ${account.accountName}\n\n`;
   });
   
-  response += `To check the balance of a specific account, please mention the account number in your message.\n\n`;
-  response += `For example, you can ask: "What's the balance of account ${availableAccounts[0].accountNumber}?"`;
+  response += `Want to check a specific account? Just mention the account number and I'll pull it right up!\n\n`;
+  response += `For example: "What's the balance on ${availableAccounts[0].accountNumber}?"`;
   
   return response;
 }
@@ -905,7 +905,7 @@ export function formatAllAccountsList(availableAccounts: Array<{accountNumber: s
 export function formatAccountBalanceOnly(accountData: any): string {
   // Check if customer has account
   if (!accountData || !accountData.accountNumber || !accountData.balance) {
-    return `**Account Information**\n\nI apologize, but I couldn't find an account associated with your details. If you'd like to open a new account with us, I'd be happy to help! Would you like me to connect you with a customer representative via live chat to discuss account opening options, or would you prefer to leave a message?`;
+    return `**Account Information**\n\nHmm, I couldn't find an account linked to your details. If you'd like to open one, I'd love to help you get started! Just let me know.`;
   }
   
   let lastUpdatedText = '';
@@ -931,14 +931,14 @@ export function formatAccountBalanceOnly(accountData: any): string {
     lastUpdatedText = `Last Updated: ${timeAgo}\n\n`;
   }
   
-  return `**Account Balance**\n\n` +
+  return `**Your Account Balance** 💰\n\n` +
     `Account: ${accountData.accountNumber}\n` +
     `Name: ${accountData.accountName}\n` +
     `Type: ${getAccountTypeName(accountData.accountType, accountData.accountNumber)}\n\n` +
-    `Available Balance: GHS ${accountData.balance.available.toFixed(2)}\n` +
+    `Available Balance: **GHS ${accountData.balance.available.toFixed(2)}**\n` +
     `Ledger Balance: GHS ${accountData.balance.ledger.toFixed(2)}\n` +
     lastUpdatedText +
-    `Is there anything else you'd like to know about your account?`;
+    `Anything else you'd like to know about your account?`;
 }
 
 /**
@@ -951,7 +951,7 @@ export function formatBalanceResponse(accountData: any): string {
   
   // If customer has neither
   if (!hasAccount && !hasLoans) {
-    return `**Account Information**\n\nI apologize, but I couldn't find any accounts or loans associated with your details. If you're interested in opening an account or applying for a loan, I'd be happy to help! Would you like me to connect you with a customer representative via live chat, or would you prefer to leave a message?`;
+    return `**Account Information**\n\nI couldn't find any accounts or loans linked to your details at the moment. If you're interested in opening an account or applying for a loan, I'm here to help — just say the word!`;
   }
   
   // If customer has loans but no account
@@ -1070,14 +1070,14 @@ export function formatBalanceResponse(accountData: any): string {
  * Format transaction history response
  */
 export function formatTransactionsResponse(accountData: any): string {
-  let response = `**Recent Transactions**\n\n`;
+  let response = `**Your Recent Transactions** 📃\n\n`;
   
   if (!accountData.recentTransactions || accountData.recentTransactions.length === 0) {
-    response += `No recent transactions found for this account.\n\n`;
+    response += `No transactions to show just yet.\n\n`;
     response += `This could mean:\n`;
-    response += `• Your account is newly opened\n`;
+    response += `• Your account was recently opened\n`;
     response += `• No transactions have been recorded yet\n\n`;
-    response += `For more information, please visit any branch or contact customer service.`;
+    response += `For more details, feel free to visit any branch or dial *992# on your phone.`;
   } else {
     accountData.recentTransactions.forEach((txn: any) => {
       const sign = txn.amount >= 0 ? '+' : '';
@@ -1088,7 +1088,7 @@ export function formatTransactionsResponse(accountData: any): string {
       response += `Ref: ${txn.reference}\n\n`;
     });
     
-    response += `_For a detailed statement, please visit any branch or dial *992# (USSD mobile banking)._`;
+    response += `_Need a full statement? You can visit any branch or dial *992# on your phone for mobile banking._`;
   }
   
   return response;
@@ -1152,7 +1152,7 @@ export async function selectAccount(
     console.log('[Auth] No account matched for input:', accountNumberOrIndex);
     return {
       success: false,
-      message: "Invalid selection. Please choose a valid account number or option.",
+      message: "That selection doesn't match any of your accounts. Could you try picking one from the list?",
       session
     };
   }
@@ -1177,11 +1177,11 @@ export async function selectAccount(
   
   // Get customer's first name for personalized greeting
   const firstName = selectedAccount.accountName ? selectedAccount.accountName.split(' ')[0] : '';
-  const greeting = firstName ? `Welcome, ${firstName}!` : 'Welcome!';
+  const greeting = firstName ? `Hey ${firstName}!` : 'Hey there!';
   
   return {
     success: true,
-    message: `${greeting} You've selected account ${selectedAccount.accountNumber} (${selectedAccount.accountType}). How can I help you today?`,
+    message: `${greeting} You've selected account ${selectedAccount.accountNumber} (${selectedAccount.accountType}). What can I do for you today?`,
     session,
     awaitingOTP: false
   };

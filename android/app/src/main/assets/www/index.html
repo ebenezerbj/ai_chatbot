@@ -981,10 +981,10 @@
       const titleEl = document.querySelector('.chat-title');
       if (titleEl) titleEl.textContent = assistantName;
 
-  addMsg('assistant', `Welcome to Amantin and Kasei Community Bank! 👋\n\nAre you a customer of AKCB?`, {
+  addMsg('assistant', `Hi there! Welcome to Amantin and Kasei Community Bank 😊\n\nI'm AMA, your banking assistant. Are you already banking with us?`, {
     buttons: [
       { text: 'Yes - I\'m a customer', action: 'send', value: 'Yes, I am a customer of AKCB' },
-      { text: 'No - General inquiry', action: 'send', value: 'No, I have a general inquiry' }
+      { text: 'No - Just looking around', action: 'send', value: 'No, I have a general inquiry' }
     ]
   });
   // Init TTS UI state

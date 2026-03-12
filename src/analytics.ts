@@ -927,20 +927,20 @@ export async function getPersonalizedGreeting(userId: string): Promise<string | 
   const lastTopic = lastTopicResult[0]?.content;
   
   // Generate personalized greeting based on segment
-  let greeting = "Welcome back! ";
+  let greeting = "Hey, welcome back! ";
   
   if (profile.segment === 'vip') {
-    greeting = "Welcome back, valued customer! ";
+    greeting = "Hey there! Always great to see you 😊 ";
   } else if (profile.segment === 'regular') {
-    greeting = "Great to see you again! ";
+    greeting = "Hey, good to have you back! ";
   }
   
   if (lastTopic) {
     const topicHint = lastTopic.substring(0, 50);
-    greeting += `Last time we discussed "${topicHint}...". `;
+    greeting += `Last time we chatted about "${topicHint}...". `;
   }
   
-  greeting += "How can I assist you today?";
+  greeting += "What can I help you with today?";
   
   return greeting;
 }
