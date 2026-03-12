@@ -1,4 +1,5 @@
 import { executeQuery, querySingle, DB_TYPE } from './database';
+import { computePeriodicPayment, AKCB_RATES } from './financeCalculator';
 
 /**
  * Check if user message should trigger salary overdraft form
@@ -115,7 +116,9 @@ export function computeMonthlyRepayment(amount: number, months: number): number 
   const tenor = Number(months);
   if (!Number.isFinite(amt) || amt <= 0) return 0;
   if (!Number.isFinite(tenor) || tenor <= 0) return 0;
-  return Math.round((amt / tenor) * 100) / 100;
+  // Use Trade/Overdraft rate (28% p.a.) for salary overdraft products
+  const annualRate = AKCB_RATES.trade.annualRate ?? 28;
+  return computePeriodicPayment(amt, annualRate, tenor, 'monthly');
 }
 
 // Calculate approved amount based on salary (max 3x monthly salary)

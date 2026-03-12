@@ -19,6 +19,7 @@ import * as loanApplications from './loanApplications';
 import * as accountOpenings from './accountOpenings';
 import * as salaryOverdraft from './salaryOverdraft';
 import * as kbModule from './knowledge/kb';
+import * as financeCalc from './financeCalculator';
 import * as migration from './migration';
 import { LiveChatManager } from './liveChat';
 import * as userManagement from './userManagement';
@@ -83,6 +84,142 @@ app.use((req, res, next) => {
     console.warn('[Server] Database connection failed - authentication and analytics features will not work');
   }
 })();
+
+// ───────────── Finance Calculator API ─────────────
+
+// POST /api/finance/calculate – Loan calculation with amortization
+app.post('/api/finance/calculate', (req: Request, res: Response) => {
+  try {
+    const { principal, annualRate, termMonths, paymentFrequency, processingFeePercent, insuranceFeePercent } = req.body || {};
+    const p = Number(principal);
+    const r = Number(annualRate);
+    const t = Number(termMonths);
+    if (!Number.isFinite(p) || p <= 0 || !Number.isFinite(r) || r < 0 || !Number.isFinite(t) || t <= 0) {
+      return res.status(400).json({ error: 'principal, annualRate, and termMonths are required (positive numbers).' });
+    }
+    const result = financeCalc.generateAmortizationSchedule({
+      principal: p, annualRate: r, termMonths: t,
+      paymentFrequency: paymentFrequency || 'monthly',
+      processingFeePercent: Number(processingFeePercent) || 0,
+      insuranceFeePercent: Number(insuranceFeePercent) || 0,
+    });
+    res.json({
+      success: true,
+      summary: financeCalc.formatLoanSummary(result),
+      amortizationTable: financeCalc.formatAmortizationTable(result.schedule, result.currency),
+      csv: financeCalc.exportScheduleCSV(result),
+      data: {
+        periodicPayment: result.periodicPayment,
+        totalPayment: result.totalPayment,
+        totalInterest: result.totalInterest,
+        totalFees: result.totalFees,
+        totalCost: result.totalCost,
+        effectiveRate: result.effectiveRate,
+        termMonths: result.termMonths,
+        scheduleLength: result.schedule.length,
+      },
+    });
+  } catch (err: any) {
+    console.error('[Finance] Calculate error:', err);
+    res.status(500).json({ error: 'Calculation failed.' });
+  }
+});
+
+// POST /api/finance/compare – Compare multiple loan scenarios
+app.post('/api/finance/compare', (req: Request, res: Response) => {
+  try {
+    const { scenarios } = req.body || {};
+    if (!Array.isArray(scenarios) || scenarios.length < 2 || scenarios.length > 5) {
+      return res.status(400).json({ error: 'Provide 2-5 scenarios, each with principal, annualRate, termMonths.' });
+    }
+    const inputs = scenarios.map((s: any, i: number) => ({
+      principal: Number(s.principal),
+      annualRate: Number(s.annualRate),
+      termMonths: Number(s.termMonths),
+      paymentFrequency: s.paymentFrequency || 'monthly',
+      processingFeePercent: Number(s.processingFeePercent) || 0,
+      insuranceFeePercent: Number(s.insuranceFeePercent) || 0,
+      label: s.label || `Scenario ${i + 1}`,
+    }));
+    for (const s of inputs) {
+      if (!Number.isFinite(s.principal) || s.principal <= 0 || !Number.isFinite(s.annualRate) || !Number.isFinite(s.termMonths) || s.termMonths <= 0) {
+        return res.status(400).json({ error: `Invalid data in scenario "${s.label}".` });
+      }
+    }
+    const result = financeCalc.compareScenarios(inputs);
+    res.json({ success: true, summary: result.summary, scenarios: result.scenarios.map(s => ({ label: s.label, periodicPayment: s.periodicPayment, totalInterest: s.totalInterest, totalCost: s.totalCost, effectiveRate: s.effectiveRate })) });
+  } catch (err: any) {
+    console.error('[Finance] Compare error:', err);
+    res.status(500).json({ error: 'Comparison failed.' });
+  }
+});
+
+// POST /api/finance/prepayment – Prepayment impact analysis
+app.post('/api/finance/prepayment', (req: Request, res: Response) => {
+  try {
+    const { principal, annualRate, termMonths, extraMonthlyPayment } = req.body || {};
+    const p = Number(principal), r = Number(annualRate), t = Number(termMonths), ex = Number(extraMonthlyPayment);
+    if (!Number.isFinite(p) || p <= 0 || !Number.isFinite(r) || !Number.isFinite(t) || t <= 0 || !Number.isFinite(ex) || ex <= 0) {
+      return res.status(400).json({ error: 'principal, annualRate, termMonths, and extraMonthlyPayment are required.' });
+    }
+    const result = financeCalc.prepaymentImpact({ principal: p, annualRate: r, termMonths: t }, ex);
+    res.json({
+      success: true,
+      monthsSaved: result.monthsSaved,
+      interestSaved: result.interestSaved,
+      standardPayment: result.standard.periodicPayment,
+      acceleratedPayment: result.withPrepayment.periodicPayment,
+      standardTotalCost: result.standard.totalCost,
+      acceleratedTotalCost: result.withPrepayment.totalCost,
+    });
+  } catch (err: any) {
+    console.error('[Finance] Prepayment error:', err);
+    res.status(500).json({ error: 'Prepayment calculation failed.' });
+  }
+});
+
+// POST /api/finance/prequalify – Loan prequalification / affordability
+app.post('/api/finance/prequalify', (req: Request, res: Response) => {
+  try {
+    const { monthlyIncome, existingMonthlyDebt, annualRate, termMonths, dtiLimit } = req.body || {};
+    const inc = Number(monthlyIncome), debt = Number(existingMonthlyDebt) || 0;
+    const r = Number(annualRate), t = Number(termMonths);
+    if (!Number.isFinite(inc) || inc <= 0 || !Number.isFinite(r) || !Number.isFinite(t) || t <= 0) {
+      return res.status(400).json({ error: 'monthlyIncome, annualRate, and termMonths are required.' });
+    }
+    const result = financeCalc.prequalify(inc, debt, r, t, Number(dtiLimit) || 40);
+    res.json({ success: true, ...result, formatted: financeCalc.formatPrequalResult(result) });
+  } catch (err: any) {
+    console.error('[Finance] Prequalify error:', err);
+    res.status(500).json({ error: 'Prequalification check failed.' });
+  }
+});
+
+// POST /api/finance/budget – Cash flow projection
+app.post('/api/finance/budget', (req: Request, res: Response) => {
+  try {
+    const { monthlyIncome, monthlyExpenses, loanPayment, months } = req.body || {};
+    const inc = Number(monthlyIncome), exp = Number(monthlyExpenses);
+    if (!Number.isFinite(inc) || inc <= 0 || !Number.isFinite(exp) || exp < 0) {
+      return res.status(400).json({ error: 'monthlyIncome and monthlyExpenses are required.' });
+    }
+    const result = financeCalc.projectCashFlow(inc, exp, Number(loanPayment) || 0, Number(months) || 12);
+    res.json({ success: true, formatted: financeCalc.formatBudgetProjection(result), data: result });
+  } catch (err: any) {
+    console.error('[Finance] Budget error:', err);
+    res.status(500).json({ error: 'Budget projection failed.' });
+  }
+});
+
+// GET /api/finance/rates – AKCB current rates
+app.get('/api/finance/rates', (_req: Request, res: Response) => {
+  res.json({ success: true, rates: financeCalc.AKCB_RATES, fees: financeCalc.AKCB_FEES });
+});
+
+// GET /api/finance/credit-tips – Credit improvement tips
+app.get('/api/finance/credit-tips', (_req: Request, res: Response) => {
+  res.json({ success: true, tips: financeCalc.getCreditScoreTips() });
+});
 
 // Loan application submit endpoint (used by chatbot UI)
 app.post('/api/loan-application', async (req: Request, res: Response) => {
@@ -1352,7 +1489,63 @@ CONVERSATION GUIDELINES:
    - If they specifically ask about a mobile app: "We don't currently have a downloadable mobile app, but our mobile banking is available via USSD — just dial *992# from your registered phone. A mobile app is being developed and we'll announce when it's ready."
    - NEVER say "download our app", "use our mobile app", or "log in to our mobile banking app". Instead direct them to dial *992#.
 
-Remember: You're having a real conversation with a real person. Be helpful, be natural, be smart, show sophisticated reasoning, handle ethical dilemmas properly, and know when to escalate!`;
+Remember: You're having a real conversation with a real person. Be helpful, be natural, be smart, show sophisticated reasoning, handle ethical dilemmas properly, and know when to escalate!
+
+10. **Financial Calculations & Advisory**:
+    You have access to a powerful finance calculator. When a customer asks about loan calculations, payments, interest, amortization, budgeting, or financial planning, perform the calculations inline using these AKCB rates:
+    
+    **AKCB Loan Rates:**
+    - Salaried Workers Loan: 27% p.a.
+    - Trade Loans / Overdraft: 28% p.a.
+    - Micro Finance: 34% p.a.
+    - Susu Loans: 34% p.a.
+    - Workers Overdraft: 10% per month
+    - Funeral Loan: 12% per month
+    - Agriculture & Inventory: 34% p.a.
+    
+    **Fees:** Insurance 0.40% of loan, Processing 3.5% (clean) / 2.5% (secured)
+    
+    **How to calculate (Reducing Balance / Amortization):**
+    Monthly Rate r = Annual Rate / 12 / 100
+    Monthly Payment PMT = P × r × (1+r)^n / ((1+r)^n − 1)
+    where P = principal, n = number of months.
+    Total Interest = (PMT × n) − P
+    
+    **When a customer asks "How much will I pay for a GHS X loan?":**
+    1. Ask what TYPE of loan (salary, trade, etc.) if not clear
+    2. Ask the TERM (months) if not specified
+    3. Calculate the monthly payment, total interest, and total cost
+    4. Show a clear breakdown:
+       - Monthly Payment: GHS X
+       - Total Interest: GHS X  
+       - Processing Fee: GHS X (3.5% or 2.5%)
+       - Insurance Fee: GHS X (0.40%)
+       - Total Cost: GHS X
+    5. Add disclaimer: "This is an estimate. Final terms depend on your credit assessment and approval."
+    
+    **Loan Comparison:** If a customer is choosing between loan types, compare them side by side showing which option costs less overall.
+    
+    **Prepayment:** If asked about paying off early, explain that extra payments reduce total interest and shorten the term.
+    
+    **Prequalification / Affordability:** If a customer asks "Can I afford a GHS X loan?" or "How much can I borrow?":
+    - Ask for monthly income and existing debt obligations
+    - Use 40% debt-to-income ratio as the maximum
+    - Calculate the maximum affordable loan amount
+    - Always note: "This is an estimate. Formal approval requires a full credit assessment."
+    
+    **Budget Planning:** If asked about budgeting or cash flow:
+    - Help project monthly income vs expenses vs loan payments
+    - Show how a new loan would affect their monthly cash flow
+    
+    **Credit Tips:** If asked about improving credit or getting better loan terms:
+    - Pay all bills and instalments on time
+    - Keep credit utilization below 30%
+    - Avoid multiple loan applications in short periods
+    - Maintain a mix of credit types
+    - Check credit reports regularly
+    
+    **IMPORTANT:** Always include this disclaimer for any financial calculation or advice:
+    "⚠️ Disclaimer: These calculations are estimates for informational purposes only. Actual loan terms, rates, and approval are subject to AKCB's credit assessment, policies, and prevailing conditions. Please consult a loan officer for a formal evaluation."`;
 
       // Build messages array with conversation history
       const messages: Array<{ role: string; content: string }> = [

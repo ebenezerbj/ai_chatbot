@@ -4514,6 +4514,64 @@
       sendMessage(message);
     }
 
+    // ───────── Finance Calculator UI Helpers ─────────
+
+    /**
+     * Download text content as a file (CSV, TXT, etc.)
+     */
+    function downloadTextFile(content, filename, mimeType = 'text/csv') {
+      const blob = new Blob([content], { type: mimeType + ';charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+    }
+
+    /**
+     * Call the finance calculator API and display results inline.
+     */
+    async function runLoanCalculation(principal, annualRate, termMonths, loanType) {
+      try {
+        addMsg('user', `Calculate loan: GHS ${Number(principal).toLocaleString()} at ${annualRate}% for ${termMonths} months (${loanType || 'Salary Loan'})`);
+        const resp = await fetch('/api/finance/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            principal: Number(principal),
+            annualRate: Number(annualRate),
+            termMonths: Number(termMonths),
+            processingFeePercent: 3.5,
+            insuranceFeePercent: 0.4,
+          }),
+        });
+        const data = await resp.json();
+        if (!data.success) {
+          addMsg('assistant', 'Sorry, I could not complete that calculation. ' + (data.error || ''));
+          return;
+        }
+        // Build collapsible summary
+        let msg = data.summary + '\n\n';
+        msg += '⚠️ Disclaimer: These calculations are estimates for informational purposes only. Actual loan terms are subject to AKCB credit assessment and policies.';
+        
+        addMsg('assistant', msg, {
+          buttons: [
+            { label: '📋 View Schedule', icon: '', action: () => {
+              addMsg('assistant', '```\n' + data.amortizationTable + '\n```');
+            }},
+            { label: '⬇️ Download CSV', icon: '', action: () => {
+              downloadTextFile(data.csv, `AKCB_Loan_Schedule_GHS${principal}_${termMonths}mo.csv`);
+            }},
+          ]
+        });
+      } catch (err) {
+        console.error('[LoanCalc] Error:', err);
+        addMsg('assistant', 'Sorry, the loan calculator is temporarily unavailable. Please try again or ask me to calculate it for you.');
+      }
+    }
+
     // Auto-resize textarea
     input.addEventListener('input', function() {
       this.style.height = 'auto';

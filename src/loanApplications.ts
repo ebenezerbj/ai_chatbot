@@ -1,4 +1,5 @@
 import { executeQuery, querySingle, DB_TYPE } from './database';
+import { computePeriodicPayment, AKCB_RATES } from './financeCalculator';
 
 export interface LoanApplicationPayload {
   sessionId?: string;
@@ -86,7 +87,9 @@ export function computeMonthlyInstalment(loanAmount: number, loanTenorMonths: nu
   const tenor = Number(loanTenorMonths);
   if (!Number.isFinite(amount) || amount <= 0) return 0;
   if (!Number.isFinite(tenor) || tenor <= 0) return 0;
-  return Math.round((amount / tenor) * 100) / 100;
+  // Use Salary Loan rate (27% p.a.) as the default for loan applications
+  const annualRate = AKCB_RATES.salary.annualRate ?? 27;
+  return computePeriodicPayment(amount, annualRate, tenor, 'monthly');
 }
 
 function normalizePhone(raw: string): string {
