@@ -3243,9 +3243,21 @@
           
           // Unfreeze chat at appropriate points during identification
           if (!userIdentified && !data?.showVisitorForm) {
-            const isCustomerAuthPrompt = messageText.includes('Please provide:') && messageText.includes('account number');
-            const isNonCustomerComplete = messageText.includes('What would you like to know?');
-            
+            // Detect customer verification prompt (server asks for account/phone number)
+            const lowerMsg = (messageText || '').toLowerCase();
+            const mentionsAccount = lowerMsg.includes('account number');
+            const mentionsPhone = lowerMsg.includes('phone number');
+            const isCustomerAuthPrompt =
+              messageText.includes('Please provide:') ||
+              (mentionsAccount && mentionsPhone) ||
+              lowerMsg.includes('verify it') ||
+              lowerMsg.includes('verification code') ||
+              lowerMsg.includes('share your account') ||
+              lowerMsg.includes('share either');
+            const isNonCustomerComplete =
+              messageText.includes('What would you like to know?') ||
+              messageText.includes("What's on your mind?");
+
             if (isCustomerAuthPrompt || isNonCustomerComplete) {
               unfreezeChat();
             }
